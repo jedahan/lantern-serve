@@ -1,0 +1,21 @@
+{
+    "name": "lantern",
+    "version": "0.0.7",
+    "dependencies": {
+        "express": "*",
+        "body-parser": "*",
+        "pouchdb-core": "*",
+        "pouchdb-replication": "*",
+        "pouchdb-adapter-http": "*",
+        "websql": "https://github.com/lantern-works/node-websql/tarball/master",
+        "pouchdb-adapter-node-websql": "*",
+        "express-pouchdb": "*",
+        "request": "*",
+        "fs-extra": "*",
+        "adm-zip": "*"
+    },
+    "scripts": {
+        "preinstall": "npm install sqlite3@4  --build-from-source",
+        "start": "node serve.js"
+    }
+}
