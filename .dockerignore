@@ -4,3 +4,5 @@ Dockerfile
 .git
 .gitignore
 .DS_store
+public
+node_modules

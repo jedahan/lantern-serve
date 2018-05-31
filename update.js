@@ -11,7 +11,7 @@ var AdmZip = require("adm-zip");
 
 var uri = "https://github.com/lantern-works/lantern-web/raw/master/build/latest.zip";
 
-module.exports = function(done) {
+var self = function(done) {
     console.log("[update] download: " + uri);
     request(uri)
         .pipe(fs.createWriteStream('./web.zip'))
@@ -22,6 +22,15 @@ module.exports = function(done) {
             var zip = new AdmZip("./web.zip"); 
             zip.extractAllTo("./public");
             console.log("[update] unzipped archive to public directory");
+            fs.removeSync("./web.zip");
             done();
         });   
 };
+
+if (require.main === module) {
+    self(function() {
+        console.log("[update] complete");
+    });
+} else {
+    module.exports = self;
+}
