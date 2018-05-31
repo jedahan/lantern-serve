@@ -22,6 +22,13 @@ function onServerStarted() {
     console.log(" Lantern App Server");
     console.log("##############################################");
 
+    // # adjust database credentials
+    // echo "updating pouchdb server config..."
+    // DB_PASS=${DB_PASS:-wins}
+    // sed -i -e "s/{{db_pass}}/${DB_PASS}/g" ./db/db-conf.json
+    // chmod go-rw ./db/db-conf.json
+
+
     var db = new index.PouchDB("http://localhost/db/lantern");
     
     /*
@@ -86,10 +93,10 @@ serv.use("/", express.static(static_path));
 /*
 * Unpack latest static web assets
 */
-index.WebUpdate(function() {
-    /*
-    * Start web server
-    */
-    port = (process.env.TERM_PROGRAM ? 8080 : 80);
-    serv.listen(port, onServerStarted);
-});
+index.WebUpdate();
+
+/*
+* Start web server
+*/
+port = (process.env.TERM_PROGRAM ? 8080 : 80);
+serv.listen(port, onServerStarted);
