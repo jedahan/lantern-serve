@@ -1,8 +1,9 @@
 {
-    "name": "lantern",
-    "version": "0.0.7",
+    "name": "lantern-serve",
+    "version": "0.0.8",
     "dependencies": {
         "express": "*",
+        "sqlite3": "4.x",
         "body-parser": "*",
         "pouchdb-core": "*",
         "pouchdb-replication": "*",
@@ -15,7 +16,6 @@
         "adm-zip": "*"
     },
     "scripts": {
-        "preinstall": "npm install sqlite3@4  --build-from-source",
         "start": "node serve.js"
     }
 }
