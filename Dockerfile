@@ -6,4 +6,5 @@ COPY . .
 RUN npm install npm@latest -g
 RUN npm install --build-from-source=sqlite3
 EXPOSE 80
+EXPOSE 443
 CMD ["npm", "start"]
