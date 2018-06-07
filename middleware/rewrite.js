@@ -19,5 +19,10 @@ module.exports = function(req,res,next) {
             }
         }
     }
+
+    if (process.env.CLOUD && req.url == "/") {
+        return res.redirect("/welcome.html");
+    }
+
     next();
 };

@@ -24,13 +24,6 @@ function onServerStarted() {
     console.log(" Lantern App Server");
     console.log("##############################################");
 
-    // # adjust database credentials
-    // echo "updating pouchdb server config..."
-    // DB_PASS=${DB_PASS:-wins}
-    // sed -i -e "s/{{db_pass}}/${DB_PASS}/g" ./db/db-conf.json
-    // chmod go-rw ./db/db-conf.json
-
-
     var db = new index.PouchDB("http://localhost/db/lantern");
     
     /*
@@ -109,10 +102,8 @@ var credentials = {key: private_key, cert: certificate};
 var httpServer = http.createServer(serv);
 var httpsServer = https.createServer(credentials, serv);
 
-httpServer.listen(http_port, function() {
-    console.log("HTTP available on port " + http_port);
-});
-
 httpsServer.listen(https_port, function() {
-    console.log("HTTPS available on port " + https_port);
+    httpServer.listen(http_port, function() {
+        onServerStarted();
+    });
 });
