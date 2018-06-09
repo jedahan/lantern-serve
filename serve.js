@@ -96,8 +96,8 @@ index.WebUpdate();
 */
 http_port = (process.env.TERM_PROGRAM ? 8080 : 80);
 https_port = (process.env.TERM_PROGRAM ? 8443 : 443);
-var private_key  = fs.readFileSync('sslcert/privkey1.pem', 'utf8');
-var certificate = fs.readFileSync('sslcert/cert1.pem', 'utf8');
+var private_key  = fs.readFileSync('/opt/lantern/sslcert/privkey1.pem', 'utf8');
+var certificate = fs.readFileSync('/opt/lantern/sslcert/cert1.pem', 'utf8');
 var credentials = {key: private_key, cert: certificate};
 var httpServer = http.createServer(serv);
 var httpsServer = https.createServer(credentials, serv);
