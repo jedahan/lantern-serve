@@ -56,7 +56,7 @@ module.exports = function(req, res, next) {
             console.log("[captive] serve sign-in page for captive portal");
             // automatically sign-in user on page load   
             markClientConnected();
-            res.redirect("/hotspot/hotspot.html");
+            res.redirect("/hotspot.html");
         }
         else {
             return next();
