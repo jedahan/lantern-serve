@@ -14,8 +14,7 @@
         "request": "*",
         "fs-extra": "*",
         "adm-zip": "*",
-        "node-cmd": "*",
-        "sleep": "*"
+        "pouchdb-dump-cli": "*"
     },
     "scripts": {
         "start": "node serve.js"

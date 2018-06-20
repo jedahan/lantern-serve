@@ -33,6 +33,11 @@ function onServerStarted() {
         .then(function(response) {
             console.log("[db] starting doc count: " + response.doc_count);
             console.log("[db] update sequence: " + response.update_seq);
+
+
+        var maps_db = new index.PouchDB("http://localhost/db/lantern-maps");
+        maps_db.info();
+        
     })
     .catch(function(err) {
         console.log(err);
