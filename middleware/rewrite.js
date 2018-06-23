@@ -1,6 +1,11 @@
 // https://github.com/pouchdb/express-pouchdb/issues/116
 module.exports = function(req,res,next) {
 
+    if (!req.secure) {
+        console.log("upgrading to https...");
+        return res.redirect('https://' + req.headers.host + req.url);
+    }
+
     // PouchDB web admin may need access to some or all of these at the root
     var paths = ['/_session', '/_all_dbs', '/_replicator', "/_uuids", 
         '/_users', '/_utils', "/_active_tasks", "/lantern"];
