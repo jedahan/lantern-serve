@@ -25,7 +25,13 @@ function onServerStarted() {
     console.log(" Lantern App Server");
     console.log("##############################################");
 
-    var db = new index.PouchDB("http://localhost/db/lantern");
+    var db = new index.PouchDB("https://localhost/db/lantern",{
+        ajax: { 
+            rejectUnauthorized: false,
+            requestCert: true,
+            agent: false
+        }
+    });
     
     /*
     * Set up lantern database bucket
@@ -36,7 +42,13 @@ function onServerStarted() {
             console.log("[db] update sequence: " + response.update_seq);
 
 
-        var maps_db = new index.PouchDB("http://localhost/db/lantern-maps");
+        var maps_db = new index.PouchDB("https://localhost/db/lantern-maps", {
+            ajax: { 
+                rejectUnauthorized: false,
+                requestCert: true,
+                agent: false
+            }
+        });
         maps_db.info();
         
     })
