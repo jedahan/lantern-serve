@@ -7,11 +7,12 @@
 *
 **/
 
-var express = require("express");
 var http = require("http");
 var https = require("https");
 var path = require("path");
 var fs = require("fs");
+var express = require("express");
+var compression = require("compression");
 var index = require("./index");
 var serv, http_port, https_port;
 
@@ -53,6 +54,7 @@ function onServerStarted() {
 */
 serv = express();
 serv.disable("x-powered-by");
+serv.use(compression());
 
 
 /*

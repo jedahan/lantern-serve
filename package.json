@@ -5,6 +5,7 @@
         "express": "*",
         "sqlite3": "4.x",
         "body-parser": "*",
+        "compression": "*",
         "pouchdb-core": "*",
         "pouchdb-replication": "*",
         "pouchdb-adapter-http": "*",
