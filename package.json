@@ -14,8 +14,7 @@
         "express-pouchdb": "*",
         "request": "*",
         "fs-extra": "*",
-        "adm-zip": "*",
-        "pouchdb-dump-cli": "*"
+        "adm-zip": "*"
     },
     "scripts": {
         "start": "node serve.js"
