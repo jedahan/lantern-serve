@@ -13,7 +13,7 @@ module.exports = function(req, res, next) {
     }
     // skip over logs for pouchdb web admin interface and pouchdb local checks
     else if (req.url.indexOf("/_utils/") === -1 && req.url.indexOf("/_local/") === -1) {
-        console.log(req.url + " -- " + getClientIP());
+        console.log(req.method + " " + req.url + " -- " + getClientIP());
     }
     next();
 };
