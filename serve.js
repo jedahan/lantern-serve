@@ -6,11 +6,12 @@
 * Useful for hosting on a Raspberry Pi or cloud environment.
 *
 **/
-
+var uuid = require("uuid");
 var http = require("http");
 var https = require("https");
 var path = require("path");
 var fs = require("fs");
+var bodyParser = require("body-parser");
 var express = require("express");
 var compression = require("compression");
 var index = require("./index");
@@ -21,10 +22,10 @@ var serv, http_port, https_port;
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
 
 //----------------------------------------------------------------------------
-function onServerStarted() {
+function onServerStarted(host_id) {
 
     console.log("##############################################");
-    console.log(" Lantern App Server");
+    console.log(" Lantern App Server (" + host_id + ")");
     console.log("##############################################");
 
     var db = new index.PouchDB("https://localhost/db/lantern");
@@ -57,7 +58,7 @@ function onServerStarted() {
 serv = express();
 serv.disable("x-powered-by");
 serv.use(compression());
-
+serv.use(bodyParser.json());
 
 /*
 * Auto-load middleware
@@ -111,8 +112,21 @@ var credentials = {key: private_key, cert: certificate};
 var httpServer = http.createServer(serv);
 var httpsServer = https.createServer(credentials, serv);
 
+
+var config_file_path = path.join("config.json");
+var obj = JSON.parse(fs.readFileSync(config_file_path, "utf8"));
+if (!obj.id || typeof(obj.id) != "string" || obj.id.length != 3) {
+    obj.id = uuid.v4();
+
+    if (!obj.name) {
+        obj.name = obj.id.substr(0, 3);
+    }
+
+    fs.writeFileSync(config_file_path, JSON.stringify(obj), "utf8");
+}
+
 httpsServer.listen(https_port, function() {
     httpServer.listen(http_port, function() {
-        onServerStarted();
+        onServerStarted(obj.id);
     });
 });

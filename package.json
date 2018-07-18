@@ -1,10 +1,11 @@
 {
     "name": "lantern-serve",
-    "version": "0.0.9",
+    "version": "0.1.0",
     "dependencies": {
         "express": "*",
         "sqlite3": "4.x",
         "body-parser": "*",
+        "uuid": "*",
         "compression": "*",
         "pouchdb-core": "*",
         "pouchdb-replication": "*",
