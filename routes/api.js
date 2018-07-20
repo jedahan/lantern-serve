@@ -24,7 +24,7 @@ module.exports = function routeUpdates(serv) {
             console.log("setting name of host to: " + req.body.name);
             var file_path = path.join(__dirname, "..", "config.json");
             var obj = JSON.parse(fs.readFileSync(file_path, "utf8"));
-            obj.name = req.body.name.toUpperCase();
+            obj.name = req.body.name;
             fs.writeFileSync(file_path, JSON.stringify(obj), "utf8");
             return res.status(201).json({"success": true, "name": req.body.name});
         }
