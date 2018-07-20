@@ -1,6 +1,7 @@
 var index = require("../index");
 var fs = require("fs");
 var path = require("path");
+var bodyParser = require("body-parser");
 
 
 /*
@@ -14,7 +15,7 @@ module.exports = function routeUpdates(serv) {
         res.status(200).json({"name":"Lantern (JavaScript)","version": obj.version});
     });
 
-    serv.post("/api/name", function(req, res) {
+    serv.post("/api/name", bodyParser.json(), function(req, res) {
         if (req.body.name && typeof(req.body.name) == "string") {
             console.log("setting identity of host to: " + req.body.name);
             var file_path = path.join(__dirname, "..", "config.json");

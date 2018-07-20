@@ -11,7 +11,6 @@ var http = require("http");
 var https = require("https");
 var path = require("path");
 var fs = require("fs");
-var bodyParser = require("body-parser");
 var express = require("express");
 var compression = require("compression");
 var index = require("./index");
@@ -58,7 +57,6 @@ function onServerStarted(host_id) {
 serv = express();
 serv.disable("x-powered-by");
 serv.use(compression());
-serv.use(bodyParser.json());
 
 /*
 * Auto-load middleware
