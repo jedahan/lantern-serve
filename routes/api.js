@@ -17,12 +17,19 @@ module.exports = function routeUpdates(serv) {
 
     serv.post("/api/name", bodyParser.json(), function(req, res) {
         if (req.body.name && typeof(req.body.name) == "string") {
-            console.log("setting identity of host to: " + req.body.name);
+
+            if (req.body.name.length != 3) {
+                return res.status(409).json({"success": false, "message": "Name must be 3 characters in length"});
+            }
+            console.log("setting name of host to: " + req.body.name);
             var file_path = path.join(__dirname, "..", "config.json");
             var obj = JSON.parse(fs.readFileSync(file_path, "utf8"));
-            obj.name = req.body.name;
+            obj.name = req.body.name.toUpperCase();
             fs.writeFileSync(file_path, JSON.stringify(obj), "utf8");
             return res.status(201).json({"success": true, "name": req.body.name});
+        }
+        else {
+            return res.status(409).json({"success": false, "message": "Required parameter not found: name"});
         }
     });
 

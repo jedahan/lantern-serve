@@ -117,7 +117,7 @@ if (!obj.id || typeof(obj.id) != "string" || obj.id.length != 3) {
     obj.id = uuid.v4();
 
     if (!obj.name) {
-        obj.name = obj.id.substr(0, 3);
+        obj.name = obj.id.substr(0, 3).toUpperCase();
     }
 
     fs.writeFileSync(config_file_path, JSON.stringify(obj), "utf8");

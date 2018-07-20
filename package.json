@@ -1,6 +1,6 @@
 {
     "name": "lantern-serve",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "dependencies": {
         "express": "*",
         "sqlite3": "4.x",
