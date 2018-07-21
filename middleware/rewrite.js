@@ -1,7 +1,6 @@
 // https://github.com/pouchdb/express-pouchdb/issues/116
 module.exports = function(req,res,next) {
-
-    if (!req.secure) {
+    if (!req.secure && process.env.CLOUD == 'true') {
         console.log("upgrading to https...");
         return res.redirect('https://' + req.headers.host + req.url);
     }

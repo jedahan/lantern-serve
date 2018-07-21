@@ -16,10 +16,6 @@ var compression = require("compression");
 var index = require("./index");
 var serv, http_port, https_port;
 
-
-// @todo handle in-full the PouchDB leaflet / first certificate errors
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
-
 //----------------------------------------------------------------------------
 
 /**
@@ -31,7 +27,7 @@ function onServerStarted(config) {
     console.log(" Lantern App Server (" + config.id + ")");
     console.log("##############################################");
 
-    var db = new index.PouchDB("https://localhost/db/lantern");
+    var db = new index.PouchDB("http://localhost/db/lantern");
     
     /*
     * Set up lantern database bucket
@@ -42,7 +38,7 @@ function onServerStarted(config) {
             console.log("[db] update sequence: " + response.update_seq);
 
 
-        var maps_db = new index.PouchDB("https://localhost/db/lantern-maps");
+        var maps_db = new index.PouchDB("http://localhost/db/lantern-maps");
         maps_db.info();
 
         saveDeviceDoc(db, config.id, config.name);

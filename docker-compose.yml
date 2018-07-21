@@ -5,6 +5,6 @@ app_server:
         - 80:80
         - 443:443
     environment:
-        - CLOUD=true
+        - CLOUD=false
     labels:
         - triton.cns.services=lantern
