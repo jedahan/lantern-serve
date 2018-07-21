@@ -13,7 +13,7 @@ module.exports = function(req,res,next) {
     }
 
     // adjust HTTP vs. HTTPS
-    if (!req.secure && process.env.CLOUD == 'true') {
+    if (!req.secure && process.env.CLOUD == 'true' && req.headers.host == "lantern.global") {
         log.debug("upgrading  " + req.headers.host + req.url + " to https...");
         return res.redirect('https://' + req.headers.host + req.url);
     }

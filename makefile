@@ -13,5 +13,5 @@ run:
 	
 deploy:
 	triton profile set-current lantern
-	triton-compose build
-	triton-compose up -d
+	triton-compose -f triton-compose.yml build
+	triton-compose -f triton-compose.yml up -d
