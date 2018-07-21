@@ -14,6 +14,7 @@ var fs = require("fs");
 var express = require("express");
 var compression = require("compression");
 var index = require("./index");
+var updateDeviceDoc = require("./lib/updateDeviceDoc");
 var serv, http_port, https_port;
 
 //----------------------------------------------------------------------------
@@ -37,12 +38,11 @@ function onServerStarted(config) {
             console.log("[db] starting doc count: " + response.doc_count);
             console.log("[db] update sequence: " + response.update_seq);
 
-
         var maps_db = new index.PouchDB("http://localhost/db/lantern-maps");
         maps_db.info();
 
-        saveDeviceDoc(db, config.id, config.name);
-        
+        // make sure we have the device registered in our database pool
+        updateDeviceDoc(config.id, config.name);
     })
     .catch(function(err) {
         console.log(err);
@@ -50,49 +50,6 @@ function onServerStarted(config) {
     });
 }
 
-/**
-* Make sure we have the device registered in our database pool
-*/
-function saveDeviceDoc(db, id, name) {
-
-    var now = new Date();
-
-    db.get("d:"+id)
-        .then(function(existing_doc) {
-            existing_doc.$ua = now;
-            existing_doc.st = 0;
-            db.post(existing_doc)
-                .then(function(res) {
-                    console.log("[db] device updated", res.rev);
-                })
-                .catch(function(err) {
-                    console.log(err);
-                });
-        })
-        .catch(function(err) {
-
-            if (err.error == "not_found") {
-                db.put({
-                        "_id": "d:"+id,
-                        "tt": name, 
-                        "st": 0,
-                        "gp": null,
-                        "$ca": now,
-                        "$ua": now
-                    })
-                    .then(function(res) {
-                        console.log("[db] device registered", res.rev);
-                    });    
-            }
-            else {
-                console.log(err);
-            }
-
-        });
-
-
-
-}
 
 
 

@@ -2,12 +2,19 @@ var index = require("../index");
 var fs = require("fs");
 var path = require("path");
 var bodyParser = require("body-parser");
-
+var updateDeviceDoc = require("../lib/updateDeviceDoc");
 
 /*
 * Allows user to easily load latest web assets onto the server
 */
-module.exports = function routeUpdates(serv) {
+module.exports = function routeAPI(serv) {
+
+
+    function getDeviceIdentifier() {
+        var file_path = path.join(__dirname, "..", "config.json");
+        var obj = JSON.parse(fs.readFileSync(file_path, "utf8"));
+        return obj.id;
+    }
 
     serv.get("/api/version", function(req, res) {
         var file_path = path.join(__dirname, "..", "package.json");
@@ -26,6 +33,7 @@ module.exports = function routeUpdates(serv) {
             var obj = JSON.parse(fs.readFileSync(file_path, "utf8"));
             obj.name = req.body.name;
             fs.writeFileSync(file_path, JSON.stringify(obj), "utf8");
+            updateDeviceDoc(getDeviceIdentifier(), obj.name);
             return res.status(201).json({"success": true, "name": req.body.name});
         }
         else {
@@ -43,9 +51,7 @@ module.exports = function routeUpdates(serv) {
 
 
     serv.get("/api/id", function(req, res) {
-        var file_path = path.join(__dirname, "..", "config.json");
-        var obj = JSON.parse(fs.readFileSync(file_path, "utf8"));
-        res.status(200).send({"id": obj.id});
+        res.status(200).send({"id": getDeviceIdentifier()});
     });
 
 

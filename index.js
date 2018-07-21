@@ -7,7 +7,7 @@
 **/
 
 var self = {
-    WebUpdate: require("./update"),
+    WebUpdate: require("./lib/updateWebInterface"),
     // custom build of PouchDB Server to meet our SQLite requirements
     // also removes extras we do not need that are in full "pouchdb" library
     PouchDB: require('pouchdb-core')
