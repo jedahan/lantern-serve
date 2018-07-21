@@ -4,6 +4,7 @@ var path = require("path");
 var bodyParser = require("body-parser");
 
 var updateDeviceDoc = require("../lib/updateDeviceDoc");
+var updateWebInterface = require("../lib/updateWebInterface");
 var index = require("../index");
 var log = index.Logger;
 
@@ -59,7 +60,7 @@ module.exports = function routeAPI(serv) {
 
 
     serv.post("/api/ui", function(req, res) {
-        index.WebUpdate(function() {
+        updateWebInterface(function() {
             res.status(201).json({success: true});
         });
     });
