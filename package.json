@@ -15,7 +15,8 @@
         "express-pouchdb": "*",
         "request": "*",
         "fs-extra": "*",
-        "adm-zip": "*"
+        "adm-zip": "*",
+        "simple-node-logger": "*"
     },
     "scripts": {
         "start": "node serve.js"

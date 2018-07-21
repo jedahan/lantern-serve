@@ -6,8 +6,16 @@
 *
 **/
 
-var self = {
-    WebUpdate: require("./lib/updateWebInterface"),
+
+var db_logger_opts = {
+    logDirectory:'/opt/lantern/logs/',
+    fileNamePattern:'pouchdb-<DATE>.log',
+    dateFormat:'YYYY.MM.DD'
+};
+
+module.exports = {
+    Logger: require("simple-node-logger").createSimpleLogger("/opt/lantern/logs/http.log"),
+    DBLogger: require('simple-node-logger').createRollingFileLogger( db_logger_opts ),
     // custom build of PouchDB Server to meet our SQLite requirements
     // also removes extras we do not need that are in full "pouchdb" library
     PouchDB: require('pouchdb-core')
@@ -15,5 +23,3 @@ var self = {
         .plugin(require('pouchdb-adapter-http'))
         .plugin(require('pouchdb-replication'))
 };
-
-module.exports = self;

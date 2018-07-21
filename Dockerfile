@@ -7,6 +7,7 @@ EXPOSE 443
 
 WORKDIR /opt/lantern/
 RUN mkdir ./db
+RUN mkdir ./logs
 RUN mkdir ./public
 COPY . .
 RUN npm install

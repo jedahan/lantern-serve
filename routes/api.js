@@ -2,7 +2,10 @@ var index = require("../index");
 var fs = require("fs");
 var path = require("path");
 var bodyParser = require("body-parser");
+
 var updateDeviceDoc = require("../lib/updateDeviceDoc");
+var index = require("../index");
+var log = index.Logger;
 
 /*
 * Allows user to easily load latest web assets onto the server
@@ -28,7 +31,7 @@ module.exports = function routeAPI(serv) {
             if (req.body.name.length != 3) {
                 return res.status(409).json({"success": false, "message": "Name must be 3 characters in length"});
             }
-            console.log("setting name of host to: " + req.body.name);
+            log.info("setting name of host to: " + req.body.name);
             var file_path = path.join(__dirname, "..", "config.json");
             var obj = JSON.parse(fs.readFileSync(file_path, "utf8"));
             obj.name = req.body.name;

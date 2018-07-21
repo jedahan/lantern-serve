@@ -1,11 +1,25 @@
-// https://github.com/pouchdb/express-pouchdb/issues/116
+var index = require("../index");
+var log = index.Logger;
+
 module.exports = function(req,res,next) {
+
+    if (process.env.CLOUD != 'true') {
+        // make sure our request is intended for this server
+        if (req.headers.host != "localhost" && req.headers.host != "lantern.local") {
+            log.debug("return empty / missing for " + req.headers.host + req.url);
+            // not intended for our server
+            return res.status(404).send("");
+        }
+    }
+
+    // adjust HTTP vs. HTTPS
     if (!req.secure && process.env.CLOUD == 'true') {
-        console.log("upgrading to https...");
+        log.debug("upgrading  " + req.headers.host + req.url + " to https...");
         return res.redirect('https://' + req.headers.host + req.url);
     }
 
     // PouchDB web admin may need access to some or all of these at the root
+    // https://github.com/pouchdb/express-pouchdb/issues/116
     var paths = ['/_session', '/_all_dbs', '/_replicator', "/_uuids", 
         '/_users', '/_utils', "/_active_tasks", "/lantern"];
 

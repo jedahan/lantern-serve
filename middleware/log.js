@@ -1,3 +1,7 @@
+var index = require("../index");
+var log = index.Logger;
+var db_log = index.DBLogger;
+
 module.exports = function(req, res, next) {
     
     function getClientIP() {
@@ -13,7 +17,13 @@ module.exports = function(req, res, next) {
     }
     // skip over logs for pouchdb web admin interface and pouchdb local checks
     else if (req.url.indexOf("/_utils/") === -1 && req.url.indexOf("/_local/") === -1) {
-        console.log(req.method + " " + req.url + " -- " + getClientIP());
+
+        if (req.url.indexOf("/db/") !== -1) {
+            db_log.info(req.method + " " + req.url + " -- " + getClientIP());
+        }
+        else {
+            log.info(req.method + " " + req.url + " -- " + getClientIP());
+        }
     }
     next();
 };

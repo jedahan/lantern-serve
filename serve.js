@@ -13,9 +13,13 @@ var path = require("path");
 var fs = require("fs");
 var express = require("express");
 var compression = require("compression");
+
 var index = require("./index");
 var updateDeviceDoc = require("./lib/updateDeviceDoc");
+var updateWebInterface = require("./lib/updateWebInterface");
+
 var serv, http_port, https_port;
+var log = index.Logger;
 
 //----------------------------------------------------------------------------
 
@@ -24,9 +28,11 @@ var serv, http_port, https_port;
 */
 function onServerStarted(config) {
 
-    console.log("##############################################");
-    console.log(" Lantern App Server (" + config.id + ")");
-    console.log("##############################################");
+    log.setLevel(process.env.LOG_LEVEL || "debug");
+
+    log.info("##############################################");
+    log.info(" Lantern App Server (" + config.id + ")");
+    log.info("##############################################");
 
     var db = new index.PouchDB("http://localhost/db/lantern");
     
@@ -35,8 +41,8 @@ function onServerStarted(config) {
     */
     db.info()
         .then(function(response) {
-            console.log("[db] starting doc count: " + response.doc_count);
-            console.log("[db] update sequence: " + response.update_seq);
+            log.debug("[db] starting doc count: " + response.doc_count);
+            log.debug("[db] update sequence: " + response.update_seq);
 
         var maps_db = new index.PouchDB("http://localhost/db/lantern-maps");
         maps_db.info();
@@ -45,7 +51,7 @@ function onServerStarted(config) {
         updateDeviceDoc(config.id, config.name);
     })
     .catch(function(err) {
-        console.log(err);
+        log.error(err);
         throw new Error(err);
     });
 }
@@ -66,7 +72,7 @@ serv.use(compression());
 */
 var middleware_files = fs.readdirSync("./middleware");
 middleware_files.forEach(function(file)  {
-    console.log("[middleware] " + file);
+    log.debug("[middleware] " + file);
     serv.use(require("./middleware/" + file));
 });
 
@@ -75,7 +81,7 @@ middleware_files.forEach(function(file)  {
 */
 var route_files = fs.readdirSync("./routes");
 route_files.forEach(function(file) {
-    console.log("[route] " + file);
+    log.debug("[route] " + file);
     require("./routes/" + file)(serv);
 });
 
@@ -85,7 +91,7 @@ route_files.forEach(function(file) {
 if (fs.existsSync("../../routes")) {
     var extra_route_files = fs.readdirSync("../../routes");
     extra_route_files.forEach(function(file) {        
-        console.log("[route] " + file);
+        log.debug("[route] " + file);
         require("../../routes/" + file)(serv);
     });   
 }
@@ -99,7 +105,7 @@ serv.use("/", express.static(static_path));
 /*
 * Unpack latest static web assets
 */
-index.WebUpdate();
+updateWebInterface();
 
 //----------------------------------------------------------------------------
 /*

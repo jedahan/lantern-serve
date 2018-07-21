@@ -1,4 +1,6 @@
 var accepted_ips = {};
+var index = require("../index");
+var log = index.Logger;
 
 module.exports = function(req, res, next) { 
 
@@ -15,7 +17,7 @@ module.exports = function(req, res, next) {
     }
 
     function markClientConnected() {
-        console.log("[captive] mark client connected");
+        log.debug("[captive] mark client connected");
         accepted_ips[getClientIP()] = new Date();
     }
 
@@ -25,6 +27,12 @@ module.exports = function(req, res, next) {
 
 
     //------------------------------------------------------------------------
+
+    // only work with captive portal requests on the local device
+    if (req.headers.host != "lantern.local") {
+        return next();
+    }
+
 
     // ignore internal requests from device itself 
     if (!isRemoteClient()) {   
@@ -39,21 +47,21 @@ module.exports = function(req, res, next) {
     else if (isCaptiveNetworkSupport()) {
         if (req.url == "/hotspot-detect.html") {
             if (isClientConnected()) {
-                console.log("[captive] success");
+                log.debug("[captive] success");
                 res.send("<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>");
             }
             else {
-                console.log("[captive] client not yet connected");
+                log.debug("[captive] client not yet connected");
                 res.end("NO SUCCESS");
             }
         }
         else {
-            console.log("[captive] unexpected request: " + req.url);
+            log.error("[captive] unexpected request: " + req.url);
         }
     }
     else {
         if (req.url == "/hotspot-detect.html") {
-            console.log("[captive] serve sign-in page for captive portal");
+            log.debug("[captive] serve sign-in page for captive portal");
             // automatically sign-in user on page load   
             markClientConnected();
             res.redirect("/hotspot.html");
