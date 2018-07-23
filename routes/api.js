@@ -21,6 +21,12 @@ module.exports = function routeAPI(serv) {
         return obj.id;
     }
 
+    function getDeviceName() {
+        var file_path = path.join(__dirname, "..", "config.json");
+        var obj = JSON.parse(fs.readFileSync(file_path, "utf8"));
+        return obj.name;
+    }
+
     serv.get("/api/version", function(req, res) {
         var file_path = path.join(__dirname, "..", "package.json");
         var obj = JSON.parse(fs.readFileSync(file_path, 'utf8'));
@@ -49,9 +55,8 @@ module.exports = function routeAPI(serv) {
 
     serv.get("/api/name", function(req, res) {
         var id = getDeviceIdentifier();
-        var file_path = path.join(__dirname, "..", "config.json");
-        var obj = JSON.parse(fs.readFileSync(file_path, "utf8"));
-        res.status(200).send({"id": id, "name": obj.name});
+        var name = getDeviceName();
+        res.status(200).send({"id": id, "name": name});
     });
 
 
@@ -76,8 +81,9 @@ module.exports = function routeAPI(serv) {
 
     serv.post("/api/geo", bodyParser.json(), function(req, res) {
         var id = getDeviceIdentifier();
+        var name = getDeviceName();
         if (req.body.geo && typeof(req.body.geo) == "string") {
-            updateDeviceDoc(id, null, null, req.body.geo)
+            updateDeviceDoc(id, name, null, req.body.geo)
                 .then(function() {
                     res.status(201).send({"success": true, "id": id, "geo": req.body.geo});
                 });
