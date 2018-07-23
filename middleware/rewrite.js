@@ -38,7 +38,7 @@ module.exports = function(req,res,next) {
         }
     }
 
-    if (process.env.CLOUD && req.url == "/") {
+    if (process.env.CLOUD == "true" && req.url == "/") {
         return res.redirect("/welcome.html");
     }
 

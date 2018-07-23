@@ -7,6 +7,7 @@ var updateDeviceDoc = require("../lib/updateDeviceDoc");
 var updateWebInterface = require("../lib/updateWebInterface");
 var index = require("../index");
 var log = index.Logger;
+var db = new index.PouchDB("http://localhost/db/lantern");
 
 /*
 * Allows user to easily load latest web assets onto the server
@@ -27,8 +28,8 @@ module.exports = function routeAPI(serv) {
     });
 
     serv.post("/api/name", bodyParser.json(), function(req, res) {
+        var id = getDeviceIdentifier();
         if (req.body.name && typeof(req.body.name) == "string") {
-
             if (req.body.name.length != 3) {
                 return res.status(409).json({"success": false, "message": "Name must be 3 characters in length"});
             }
@@ -37,21 +38,55 @@ module.exports = function routeAPI(serv) {
             var obj = JSON.parse(fs.readFileSync(file_path, "utf8"));
             obj.name = req.body.name;
             fs.writeFileSync(file_path, JSON.stringify(obj), "utf8");
-            updateDeviceDoc(getDeviceIdentifier(), obj.name);
-            return res.status(201).json({"success": true, "name": req.body.name});
+            updateDeviceDoc(id, obj.name);
+            return res.status(201).json({"success": true, "id": id, "name": req.body.name});
         }
         else {
-            return res.status(409).json({"success": false, "message": "Required parameter not found: name"});
+            return res.status(409).json({"success": false, "id": id, "message": "Required parameter not found: name"});
         }
     });
 
 
     serv.get("/api/name", function(req, res) {
+        var id = getDeviceIdentifier();
         var file_path = path.join(__dirname, "..", "config.json");
         var obj = JSON.parse(fs.readFileSync(file_path, "utf8"));
-        res.status(200).send({"name": obj.name});
+        res.status(200).send({"id": id, "name": obj.name});
     });
 
+
+    serv.get("/api/geo", function(req, res) {
+        var id = getDeviceIdentifier();
+        db.get("d:"+ id)
+            .then(function(doc) {
+
+                if (doc.gp && doc.gp.length) {
+                    res.status(200).send({"id":id, "geo": doc.gp[doc.gp.length-1]});
+                }
+                else {
+                    // return most recent geolocation
+                    res.status(200).send({"id":id, "geo": null});
+                }
+            })
+            .catch(function(err) {
+                log.error(err);
+                res.status(500).send();
+            });
+    });
+
+    serv.post("/api/geo", bodyParser.json(), function(req, res) {
+        var id = getDeviceIdentifier();
+        if (req.body.geo && typeof(req.body.geo) == "string") {
+            updateDeviceDoc(id, null, null, req.body.geo)
+                .then(function() {
+                    res.status(201).send({"success": true, "id": id, "geo": req.body.geo});
+                });
+        }        
+        else {
+            return res.status(409).json({"success": false, "id": id, "message": "Required parameter not found: geo"});
+        }
+
+    });
 
 
     serv.get("/api/id", function(req, res) {
@@ -61,7 +96,7 @@ module.exports = function routeAPI(serv) {
 
     serv.post("/api/ui", function(req, res) {
         updateWebInterface(function() {
-            res.status(201).json({success: true});
+            res.status(201).json({"success": true});
         });
     });
 };

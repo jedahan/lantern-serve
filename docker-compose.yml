@@ -6,3 +6,4 @@ app_server:
         - 443:443
     environment:
         - CLOUD=false
+        - DEV=true

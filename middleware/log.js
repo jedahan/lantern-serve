@@ -9,7 +9,8 @@ module.exports = function(req, res, next) {
     }
 
     function isRemoteClient() {
-        return (getClientIP().indexOf("127.0.0.1") === -1);
+        var ip = getClientIP();
+        return ip && (ip.indexOf("127.0.0.1") === -1);
     }
     
     if (!isRemoteClient()) {   
