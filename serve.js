@@ -13,6 +13,7 @@ var path = require("path");
 var fs = require("fs");
 var express = require("express");
 var compression = require("compression");
+var helmet = require("helmet");
 
 var index = require("./index");
 var updateDeviceDoc = require("./lib/updateDeviceDoc");
@@ -66,6 +67,7 @@ function onServerStarted(config) {
 serv = express();
 serv.disable("x-powered-by");
 serv.use(compression());
+serv.use(helmet()); // secure ssl 
 
 /*
 * Auto-load middleware

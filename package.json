@@ -16,7 +16,8 @@
         "request": "*",
         "fs-extra": "*",
         "adm-zip": "*",
-        "simple-node-logger": "*"
+        "simple-node-logger": "*",
+        "helmet": "*"
     },
     "scripts": {
         "start": "node serve.js"
