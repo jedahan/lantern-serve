@@ -12,6 +12,7 @@
         "pouchdb-adapter-http": "*",
         "websql": "https://github.com/lantern-works/node-websql/tarball/master",
         "pouchdb-adapter-node-websql": "*",
+        "pouchdb-mapreduce": "*",
         "express-pouchdb": "*",
         "request": "*",
         "fs-extra": "*",
