@@ -83,7 +83,7 @@ module.exports = function routeAPI(serv) {
         var id = getDeviceIdentifier();
         var name = getDeviceName();
         if (req.body.geo && typeof(req.body.geo) == "string") {
-            updateDeviceDoc(id, name, null, req.body.geo)
+            updateDeviceDoc(id, name, req.body.geo)
                 .then(function() {
                     res.status(201).send({"success": true, "id": id, "geo": req.body.geo});
                 });
