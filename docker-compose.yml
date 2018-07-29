@@ -7,3 +7,5 @@ app_server:
     environment:
         - CLOUD=false
         - DEV=true
+    volumes:
+        - ./db:/opt/lantern/db
