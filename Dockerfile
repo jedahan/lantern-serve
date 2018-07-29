@@ -9,6 +9,8 @@ WORKDIR /opt/lantern/
 RUN mkdir ./db
 RUN mkdir ./logs
 RUN mkdir ./public
+COPY data/lantern ./db/
+COPY data/lantern-maps ./db/
 COPY . .
 RUN npm install
 
