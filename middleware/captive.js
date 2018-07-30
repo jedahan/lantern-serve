@@ -17,8 +17,9 @@ module.exports = function(req, res, next) {
     }
 
     function markClientConnected() {
-        log.debug("[captive] mark client connected");
-        accepted_ips[getClientIP()] = new Date();
+        var ip = getClientIP();
+        log.info("[captive] mark client " + ip + " connected");
+        accepted_ips[ip] = new Date();
     }
 
     function isCaptiveNetworkSupport() {
@@ -26,33 +27,40 @@ module.exports = function(req, res, next) {
     }
 
 
+    function sendOfflineMessage() {
+        return res.end("NO SUCCESS");
+    }
+
     //------------------------------------------------------------------------
 
     // only work with captive portal requests on the local device
-    if (req.headers.host != "lantern.local") {
+    if (process.env.CLOUD == 'true') {
         return next();
     }
 
-
     // ignore internal requests from device itself 
-    if (!isRemoteClient()) {   
+    if (!isRemoteClient()) {
         return next();
     }
     else if (req.url == "/success.txt") {
         // mozilla checks for working network
-        // skip for now
-        return next();
+        // log.debug('[captive] mozilla captive portal check');
+        sendOfflineMessage();
+    }
+    else if (req.url == "/generate_204") {
+        log.debug("[captive] google captive portal check");        
+        sendOfflineMessage();
     }
     // check for captive portal logic
     else if (isCaptiveNetworkSupport()) {
         if (req.url == "/hotspot-detect.html") {
             if (isClientConnected()) {
-                log.debug("[captive] success");
+                log.debug("[captive] apple captive portal success");
                 res.send("<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>");
             }
             else {
-                log.debug("[captive] client not yet connected");
-                res.end("NO SUCCESS");
+                log.debug("[captive] apple captive portal check");
+                sendOfflineMessage();
             }
         }
         else {
@@ -61,10 +69,10 @@ module.exports = function(req, res, next) {
     }
     else {
         if (req.url == "/hotspot-detect.html") {
-            log.debug("[captive] serve sign-in page for captive portal");
+            log.debug("[captive] apple serve sign-in page for captive portal");
             // automatically sign-in user on page load   
             markClientConnected();
-            res.redirect("/hotspot.html");
+            res.redirect("http://lantern.local/hotspot.html");
         }
         else {
             return next();
