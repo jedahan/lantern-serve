@@ -3,12 +3,13 @@ var log = index.Logger;
 
 module.exports = function(req,res,next) {
 
+
     if (process.env.CLOUD != 'true') {
-        // make sure our request is intended for this server
-        if (req.headers.host != "localhost" && req.headers.host != "lantern.local") {
-            log.debug("return empty / missing for " + req.headers.host + req.url);
-            // not intended for our server
-            return res.status(404).send("");
+        if (req.headers.host && req.headers.host != "localhost" && req.headers.host != "lantern.local") {
+            if (req.headers.host != "lantern.global") {
+                log.debug("[rewrite] ignore: " + req.headers.host + req.url);                
+            }
+            return next();
         }
     }
 
