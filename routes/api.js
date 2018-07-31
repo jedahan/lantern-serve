@@ -7,7 +7,7 @@ var updateDeviceDoc = require("../lib/updateDeviceDoc");
 var updateWebInterface = require("../lib/updateWebInterface");
 var index = require("../index");
 var log = index.Logger;
-var db = new index.PouchDB("http://localhost/db/lantern");
+var db = new index.PouchDB("http://localhost/db/lnt");
 
 /*
 * Allows user to easily load latest web assets onto the server

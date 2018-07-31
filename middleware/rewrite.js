@@ -22,7 +22,7 @@ module.exports = function(req,res,next) {
     // PouchDB web admin may need access to some or all of these at the root
     // https://github.com/pouchdb/express-pouchdb/issues/116
     var paths = ['/_session', '/_all_dbs', '/_replicator', "/_uuids", 
-        '/_users', '/_utils', "/_active_tasks", "/lantern"];
+        '/_users', '/_utils', "/_active_tasks", "/lnt", "/map"];
 
     // if we're requesting one of these, make sure to prefix with "/db"
     for (var i=0; i<paths.length; i++) {
