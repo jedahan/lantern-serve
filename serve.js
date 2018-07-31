@@ -35,7 +35,7 @@ function onServerStarted(config) {
     log.info(" Lantern App Server (" + config.id + ")");
     log.info("##############################################");
 
-    var db = new index.PouchDB("http://localhost/db/lantern");
+    var db = new index.PouchDB("http://localhost/db/lnt");
     
     /*
     * Set up lantern database bucket
@@ -45,7 +45,7 @@ function onServerStarted(config) {
             log.debug("[db] starting doc count: " + response.doc_count);
             log.debug("[db] update sequence: " + response.update_seq);
 
-        var maps_db = new index.PouchDB("http://localhost/db/lantern-maps");
+        var maps_db = new index.PouchDB("http://localhost/db/map");
         maps_db.info();
 
         // make sure we have the device registered in our database pool
