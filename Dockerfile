@@ -10,7 +10,6 @@ WORKDIR /opt/lantern/
 RUN mkdir ./db
 RUN mkdir ./logs
 RUN mkdir ./public
-COPY data/ ./db/
 COPY . .
 RUN npm install
 

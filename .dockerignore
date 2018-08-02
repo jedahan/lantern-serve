@@ -6,4 +6,8 @@ Dockerfile
 .DS_store
 public
 node_modules
-db
+db/_replicator
+db/_users
+db/db-conf.json
+db/db-log.txt
+db/puch__all_dbs__
