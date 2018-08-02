@@ -2,4 +2,8 @@ tmp
 makefile
 Dockerfile
 public
-db
+db/_replicator
+db/_users
+db/db-conf.json
+db/db-log.txt
+db/puch__all_dbs__
