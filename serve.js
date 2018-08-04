@@ -55,6 +55,17 @@ function onServerStarted(config) {
         log.error(err);
         throw new Error(err);
     });
+
+
+    setInterval(function() {
+        var arr = [1, 2, 3, 4, 5, 6, 9, 7, 8, 9, 10];
+        arr.reverse();
+        var used = process.memoryUsage();
+        for (var key in used) {
+          log.debug(key + " "  + Math.round(used[key] / 1024 / 1024 * 100) / 100 + " MB");
+        }
+    }, 30000);
+
 }
 
 
