@@ -13,4 +13,4 @@ RUN mkdir ./public
 COPY . .
 RUN npm install
 
-CMD ["npm", "start"]
+CMD ["node", "serve.js"]
