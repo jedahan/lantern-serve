@@ -135,7 +135,11 @@ var httpServer = http.createServer(serv);
 var httpsServer = https.createServer(credentials, serv);
 
 
+
 var config_file_path = path.join("conf", "lantern.json");
+if (process.env.CLOUD == "true") {
+    config_file_path = path.join("conf", "cloud.json");
+}
 var obj = JSON.parse(fs.readFileSync(config_file_path, "utf8"));
 if (!obj.id || typeof(obj.id) != "string") {
 
