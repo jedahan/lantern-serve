@@ -14,22 +14,26 @@ var db = new index.PouchDB("http://localhost/db/lnt");
 */
 module.exports = function routeAPI(serv) {
 
+    var config_file_path = path.join(__dirname, "..", "conf", "lantern.json");
+
+    if (process.env.CLOUD == "true") {
+        config_file_path = path.join(__dirname, "..", "conf", "cloud.json");
+    }
+
+
 
     function getDeviceIdentifier() {
-        var file_path = path.join(__dirname, "..", "conf", "lantern.json");
-        var obj = JSON.parse(fs.readFileSync(file_path, "utf8"));
+        var obj = JSON.parse(fs.readFileSync(config_file_path, "utf8"));
         return obj.id;
     }
 
     function getDeviceName() {
-        var file_path = path.join(__dirname, "..", "conf", "lantern.json");
-        var obj = JSON.parse(fs.readFileSync(file_path, "utf8"));
+        var obj = JSON.parse(fs.readFileSync(config_file_path, "utf8"));
         return obj.name;
     }
 
     serv.get("/api/version", function(req, res) {
-        var file_path = path.join(__dirname, "..", "package.json");
-        var obj = JSON.parse(fs.readFileSync(file_path, 'utf8'));
+        var obj = JSON.parse(fs.readFileSync(config_file_path, 'utf8'));
         res.status(200).json({"name":"Lantern (JavaScript)","version": obj.version});
     });
 
@@ -40,10 +44,9 @@ module.exports = function routeAPI(serv) {
                 return res.status(409).json({"success": false, "message": "Name must be 3 characters in length"});
             }
             log.info("setting name of host to: " + req.body.name);
-            var file_path = path.join(__dirname, "..", "conf", "lantern.json");
-            var obj = JSON.parse(fs.readFileSync(file_path, "utf8"));
+            var obj = JSON.parse(fs.readFileSync(config_file_path, "utf8"));
             obj.name = req.body.name;
-            fs.writeFileSync(file_path, JSON.stringify(obj), "utf8");
+            fs.writeFileSync(config_file_path, JSON.stringify(obj), "utf8");
             updateDeviceDoc(id, obj.name);
             return res.status(201).json({"success": true, "id": id, "name": req.body.name});
         }
@@ -53,13 +56,23 @@ module.exports = function routeAPI(serv) {
     });
 
 
-    serv.get("/api/name", function(req, res) {
+    serv.get("/api/info", function(req, res) {
         var id = getDeviceIdentifier();
         var name = getDeviceName();
         res.status(200).send({
             "id": id, 
             "name": name,
             "cloud": (process.env.CLOUD == "true")
+        });
+    });
+
+
+    serv.get("/api/name", function(req, res) {
+        var id = getDeviceIdentifier();
+        var name = getDeviceName();
+        res.status(200).send({
+            "id": id, 
+            "name": name
         });
     });
 
