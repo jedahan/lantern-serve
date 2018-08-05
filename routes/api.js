@@ -16,13 +16,13 @@ module.exports = function routeAPI(serv) {
 
 
     function getDeviceIdentifier() {
-        var file_path = path.join(__dirname, "..", "config.json");
+        var file_path = path.join(__dirname, "..", "conf", "lantern.json");
         var obj = JSON.parse(fs.readFileSync(file_path, "utf8"));
         return obj.id;
     }
 
     function getDeviceName() {
-        var file_path = path.join(__dirname, "..", "config.json");
+        var file_path = path.join(__dirname, "..", "conf", "lantern.json");
         var obj = JSON.parse(fs.readFileSync(file_path, "utf8"));
         return obj.name;
     }
@@ -40,7 +40,7 @@ module.exports = function routeAPI(serv) {
                 return res.status(409).json({"success": false, "message": "Name must be 3 characters in length"});
             }
             log.info("setting name of host to: " + req.body.name);
-            var file_path = path.join(__dirname, "..", "config.json");
+            var file_path = path.join(__dirname, "..", "conf", "lantern.json");
             var obj = JSON.parse(fs.readFileSync(file_path, "utf8"));
             obj.name = req.body.name;
             fs.writeFileSync(file_path, JSON.stringify(obj), "utf8");
