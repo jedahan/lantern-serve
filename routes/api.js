@@ -56,7 +56,11 @@ module.exports = function routeAPI(serv) {
     serv.get("/api/name", function(req, res) {
         var id = getDeviceIdentifier();
         var name = getDeviceName();
-        res.status(200).send({"id": id, "name": name});
+        res.status(200).send({
+            "id": id, 
+            "name": name,
+            "cloud": (process.env.CLOUD == "true")
+        });
     });
 
 
@@ -83,9 +87,20 @@ module.exports = function routeAPI(serv) {
         var id = getDeviceIdentifier();
         var name = getDeviceName();
         if (req.body.geo && typeof(req.body.geo) == "string") {
-            updateDeviceDoc(id, name, req.body.geo)
-                .then(function() {
-                    res.status(201).send({"success": true, "id": id, "geo": req.body.geo});
+
+            db.get("d:"+ id)
+                .then(function(doc) {
+
+                    if (doc.gp[doc.gp.length-1] == req.body.geo) {
+                        return res.status(200).json({"success": true, "id": id, "geo": req.body.geo});
+                    }
+                    else {
+
+                        updateDeviceDoc(id, name, req.body.geo)
+                            .then(function() {
+                                res.status(201).send({"success": true, "id": id, "geo": req.body.geo});
+                            });
+                    }
                 });
         }        
         else {
