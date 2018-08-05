@@ -133,7 +133,7 @@ var httpServer = http.createServer(serv);
 var httpsServer = https.createServer(credentials, serv);
 
 
-var config_file_path = path.join("config.json");
+var config_file_path = path.join("conf", "lantern.json");
 var obj = JSON.parse(fs.readFileSync(config_file_path, "utf8"));
 if (!obj.id || typeof(obj.id) != "string") {
 

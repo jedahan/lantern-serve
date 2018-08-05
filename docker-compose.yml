@@ -9,3 +9,4 @@ app_server:
         - DEV=true
     volumes:
         - ./db:/opt/lantern/db
+        - ./conf:/opt/lantern/conf
