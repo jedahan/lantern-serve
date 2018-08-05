@@ -4,19 +4,9 @@ var log = index.Logger;
 module.exports = function(req,res,next) {
 
 
-    if (process.env.CLOUD != 'true') {
-        if (req.headers.host && req.headers.host != "localhost" && req.headers.host != "lantern.local") {
-            if (req.headers.host != "lantern.global") {
-                log.debug("[rewrite] ignore: " + req.headers.host + req.url);                
-            }
-            return next();
-        }
-    }
-
-    // adjust HTTP vs. HTTPS
-    if (!req.secure && process.env.CLOUD == 'true' && req.headers.host == "lantern.global") {
-        log.debug("upgrading  " + req.headers.host + req.url + " to https...");
-        return res.redirect('https://' + req.headers.host + req.url);
+    if (req.headers.host && req.headers.host != "localhost" && req.headers.host != "lantern.global") {
+        log.debug("[rewrite] ignore: " + req.headers.host + req.url);
+        return next();
     }
 
     // PouchDB web admin may need access to some or all of these at the root
