@@ -13,7 +13,7 @@ var path = require("path");
 var fs = require("fs");
 var express = require("express");
 var compression = require("compression");
-var helmet = require("helmet");
+// var helmet = require("helmet");
 
 var index = require("./index");
 var updateDeviceDoc = require("./lib/updateDeviceDoc");
@@ -80,7 +80,7 @@ function onServerStarted(config) {
 serv = express();
 serv.disable("x-powered-by");
 serv.use(compression());
-serv.use(helmet()); // secure ssl 
+//serv.use(helmet()); // secure ssl 
 
 /*
 * Auto-load middleware
@@ -127,6 +127,7 @@ updateWebInterface();
 * Start web server
 */
 http_port = (process.env.TERM_PROGRAM ? 8080 : 80);
+
 https_port = (process.env.TERM_PROGRAM ? 8443 : 443);
 var private_key  = fs.readFileSync('/opt/lantern/sslcert/privkey1.pem', 'utf8');
 var certificate = fs.readFileSync('/opt/lantern/sslcert/fullchain1.pem', 'utf8');

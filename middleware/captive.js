@@ -72,7 +72,7 @@ module.exports = function(req, res, next) {
             log.debug("[captive] apple serve sign-in page for captive portal");
             // automatically sign-in user on page load   
             markClientConnected();
-            res.redirect("http://lantern.local/hotspot.html");
+            res.redirect("http://lantern.global/hotspot.html");
         }
         else {
             return next();
