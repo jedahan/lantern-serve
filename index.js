@@ -22,5 +22,4 @@ module.exports = {
         .plugin(require('pouchdb-adapter-node-websql'))
         .plugin(require('pouchdb-adapter-http'))
         .plugin(require('pouchdb-replication'))
-        .plugin(require('pouchdb-mapreduce'))
 };
