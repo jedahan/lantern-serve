@@ -44,8 +44,8 @@ module.exports = function(req, res, next) {
     }
     else if (req.url == "/success.txt") {
         // mozilla checks for working network
-        // log.debug('[captive] mozilla captive portal check');
-        sendOfflineMessage();
+        log.debug('[captive] mozilla captive portal check');
+        res.status(200).send("SUCCESS\n");
     }
     else if (req.url == "/generate_204") {
         log.debug("[captive] google captive portal check");        
