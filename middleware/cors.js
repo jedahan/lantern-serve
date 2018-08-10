@@ -10,6 +10,8 @@ module.exports = function Cors(req, res, next) {
     res.header('Access-Control-Allow-Headers', 'accept, authorization, x-requested-with, x-http-method-override, content-type, origin, referer, x-csrf-token');
     res.header('Access-Control-Allow-Credentials', true);
 
+    // allow service worker to access all files
+    res.header('Service-Worker-Allowed', '/');
 
     //intercepts OPTIONS method
     if ('OPTIONS' === req.method) {
