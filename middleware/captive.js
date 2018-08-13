@@ -13,13 +13,19 @@ module.exports = function(req, res, next) {
     }
 
     function isClientConnected() {
-        return accepted_ips.hasOwnProperty(getClientIP());
+        var ip = getClientIP();
+        return accepted_ips.hasOwnProperty(ip) && accepted_ips[ip];
     }
 
     function markClientConnected() {
         var ip = getClientIP();
         log.info("[captive] mark client " + ip + " connected");
         accepted_ips[ip] = new Date();
+    }
+
+    function removeClient() {
+        var ip = getClientIP();
+        accepted_ips[ip] = false;
     }
 
     function isCaptiveNetworkSupport() {
@@ -41,6 +47,10 @@ module.exports = function(req, res, next) {
     // ignore internal requests from device itself 
     if (!isRemoteClient()) {
         return next();
+    }
+    else if (req.url == "/logout") {
+        removeClient();
+        res.status(200).send("Successfully Logged Out of Captive Portal");
     }
     else if (req.url == "/success.txt") {
         // mozilla checks for working network
