@@ -1,5 +1,5 @@
 var fs = require("fs");
-var index = require("../index");
+var util = require("../util");
 
 /*
 * Providing direct visibility and access to the PouchDB database through HTTP
@@ -9,7 +9,7 @@ module.exports = function routeDatabase(serv) {
     if (!fs.existsSync(data_dir)) {
         fs.mkdirSync(data_dir);
     }
-    var db_router = require("express-pouchdb")(index.PouchDB.defaults({
+    var db_router = require("express-pouchdb")(util.PouchDB.defaults({
         prefix: data_dir,
         adapter: "websql"
     }), {

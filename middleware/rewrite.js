@@ -1,5 +1,5 @@
-var index = require("../index");
-var log = index.Logger;
+var util = require("../util");
+var log = util.Logger;
 
 module.exports = function(req,res,next) {
 
