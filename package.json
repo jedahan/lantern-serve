@@ -20,6 +20,6 @@
         "helmet": "*"
     },
     "scripts": {
-        "start": "node serve.js"
+        "start": "node index.js"
     }
 }

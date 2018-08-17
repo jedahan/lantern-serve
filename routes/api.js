@@ -1,13 +1,12 @@
-var index = require("../index");
 var fs = require("fs");
 var path = require("path");
 var bodyParser = require("body-parser");
 
+var util = require("../util");
+var log = util.Logger;
+var db = util.CoreDatabase;
 var updateDeviceDoc = require("../lib/updateDeviceDoc");
 var updateWebInterface = require("../lib/updateWebInterface");
-var index = require("../index");
-var log = index.Logger;
-var db = new index.PouchDB("http://localhost/db/lnt");
 
 /*
 * Allows user to easily load latest web assets onto the server

@@ -1,30 +1,21 @@
 var accepted_ips = {};
-var index = require("../index");
-var log = index.Logger;
+var util = require("../util");
+var log = util.Logger;
 
 module.exports = function(req, res, next) { 
 
-    function getClientIP() {
-        return req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    }
-
-    function isRemoteClient() {
-        return (getClientIP().indexOf("127.0.0.1") === -1);
-    }
+    var ip = util.getClientIP(req);
 
     function isClientConnected() {
-        var ip = getClientIP();
         return accepted_ips.hasOwnProperty(ip) && accepted_ips[ip];
     }
 
     function markClientConnected() {
-        var ip = getClientIP();
         log.info("[captive] mark client " + ip + " connected");
         accepted_ips[ip] = new Date();
     }
 
     function removeClient() {
-        var ip = getClientIP();
         accepted_ips[ip] = false;
     }
 
@@ -45,7 +36,7 @@ module.exports = function(req, res, next) {
     }
 
     // ignore internal requests from device itself 
-    if (!isRemoteClient()) {
+    if (!util.isRemoteClient(req)) {
         return next();
     }
     else if (req.url == "/logout") {
@@ -55,7 +46,7 @@ module.exports = function(req, res, next) {
     else if (req.url == "/success.txt") {
         // mozilla checks for working network
         log.debug('[captive] mozilla captive portal check');
-        res.status(200).send("SUCCESS\n");
+        res.status(200).send("success\n");
     }
     else if (req.url == "/generate_204") {
         log.debug("[captive] google captive portal check");        

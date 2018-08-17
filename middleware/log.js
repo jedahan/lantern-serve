@@ -1,30 +1,14 @@
-var index = require("../index");
-var log = index.Logger;
-var db_log = index.DBLogger;
+var util = require("../util");
 
 module.exports = function(req, res, next) {
-    
-    function getClientIP() {
-        return req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    }
 
-    function isRemoteClient() {
-        var ip = getClientIP();
-        return ip && (ip.indexOf("127.0.0.1") === -1);
-    }
-    
-    if (!isRemoteClient()) {   
+    // don't log requests from the local machine
+    if (!util.isRemoteClient(req)) {   
         return next();
     }
-    // skip over logs for pouchdb web admin interface and pouchdb local checks
-    else if (req.url.indexOf("/_utils/") === -1 && req.url.indexOf("/_local/") === -1) {
-
-        if (req.url.indexOf("/db/") !== -1) {
-            db_log.info(req.method + " " + req.url + " -- " + getClientIP());
-        }
-        else {
-            log.info(req.method + " " + req.url + " -- " + getClientIP());
-        }
+    // skip over logs for pouchdb web admin interface and pouchdb databases in general
+    else if (req.url.indexOf("/_utils/") === -1 && req.url.indexOf("/_local/") === -1 && (req.url.indexOf("/db/") !== -1)) {
+        util.Logger.info(req.method + " " + req.url + " -- " + util.getClientIP(req));
     }
     next();
 };
