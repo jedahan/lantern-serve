@@ -13,6 +13,7 @@ var https = require("https");
 var path = require("path");
 var fs = require("fs");
 var express = require("express");
+var request = require("request");
 var compression = require("compression");
 // var helmet = require("helmet");
 
@@ -36,15 +37,15 @@ log.info("##############################################");
 function onServerStarted() {
     db.info()
     .then(function(response) {
-        log.debug("[lnt] starting doc count: " + response.doc_count);
-        log.debug("[lnt] update sequence: " + response.update_seq);
+        log.debug("[db] lnt starting doc count: " + response.doc_count);
+        log.debug("[db] lnt update sequence: " + response.update_seq);
     })
     .then(function() {
         return maps_db.info();
     })
     .then(function(response) {
-        log.debug("[map] starting doc count: " + response.doc_count);
-        log.debug("[map] update sequence: " + response.update_seq);
+        log.debug("[db] map starting doc count: " + response.doc_count);
+        log.debug("[db] map update sequence: " + response.update_seq);
     })
     .then(util.checkInternet)
     .then(util.registerDevice)
@@ -104,5 +105,15 @@ var httpServer = http.createServer(serv);
 var httpsServer = https.createServer(credentials, serv);
 
 httpsServer.listen(https_port, function() {
-    httpServer.listen(http_port, onServerStarted);
+    httpServer.listen(http_port, function() {
+        // verify database server is available and ensure unique identifier
+        request("http://localhost/db/", {"json": true}, function(err, response) {
+            if (err) {
+                throw new Error(err);
+            }
+
+            log.info("[db] uuid: " + response.body.uuid);
+            onServerStarted();
+        });
+    });
 });

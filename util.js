@@ -101,18 +101,20 @@ self.registerDevice = function(status) {
     // file system up-to-date, now save database document
     var doc = {
         "_id": "d:"+id,
-        "tt": id,
+        "tt": id.substr(0,3).toUpperCase(),
         "st": (status ?  1 : 0),
         "gp": [],
         "tg": tag
     }
 
      return self.CoreDatabase.get(doc._id).then(function(existing_doc) {
-        self.Logger.debug("device already registered: " + existing_doc.tt);
+        self.Logger.debug("device already registered: " + doc._id);
+        self.Logger.debug("device name is: " + existing_doc.tt);
 
      }).catch(function(err) {
         if (err.error == "not_found") {
-            self.Logger.debug("registering device in database: " + doc.tt);
+            self.Logger.debug("registering device in database: " + doc._id);
+            self.Logger.debug("device name is: " + doc.tt);
             return self.CoreDatabase.put(doc);
         }
         else {
