@@ -2,7 +2,7 @@ var accepted_ips = {};
 var util = require("../util");
 var log = util.Logger;
 
-module.exports = function(req, res, next) { 
+module.exports = function CaptivePortalMiddleware(req, res, next) { 
 
     var ip = util.getClientIP(req);
 
@@ -22,7 +22,6 @@ module.exports = function(req, res, next) {
     function isCaptiveNetworkSupport() {
         return (req.get('User-Agent') && req.get('User-Agent').indexOf('CaptiveNetworkSupport') !== -1);
     }
-
 
     function sendOfflineMessage() {
         return res.end("NO SUCCESS");

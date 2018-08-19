@@ -1,8 +1,7 @@
 var util = require("../util");
 var log = util.Logger;
 
-module.exports = function(req,res,next) {
-
+module.exports = function RewriteMiddleware(req,res,next) {
 
     if (req.headers.host && req.headers.host != "localhost" && req.headers.host != "lantern.global") {
         log.debug("[rewrite] ignore: " + req.headers.host + req.url);
