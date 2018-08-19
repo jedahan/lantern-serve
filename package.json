@@ -1,11 +1,10 @@
 {
     "name": "lantern-serve",
-    "version": "0.1.6",
+    "version": "0.2.0",
     "dependencies": {
         "express": "*",
         "sqlite3": "4.x",
         "body-parser": "*",
-        "shortid": "*",
         "compression": "*",
         "pouchdb-core": "7.x",
         "pouchdb-replication": "7.x",
@@ -20,6 +19,7 @@
         "helmet": "*"
     },
     "scripts": {
-        "start": "node index.js"
+        "start": "node ./bin/refresh.js && node ./bin/serve.js",
+        "refresh": "node ./bin/refresh.js"
     }
 }
