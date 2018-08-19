@@ -22,16 +22,16 @@ module.exports = function routeAPI(serv) {
         var id = util.getDeviceIdentifier();
         if (req.body.name && typeof(req.body.name) == "string") {
             if (req.body.name.length != 3) {
-                return res.status(409).json({"success": false, "message": "Name must be 3 characters in length"});
+                return res.status(409).json({"ok": false, "message": "Name must be 3 characters in length"});
             }
             log.info("setting name of host to: " + req.body.name);
             
             util.saveDeviceName(req.body.name);
 
-            return res.status(201).json({"success": true, "id": id, "name": req.body.name});
+            return res.status(201).json({"ok": true, "id": id, "name": req.body.name});
         }
         else {
-            return res.status(409).json({"success": false, "id": id, "message": "Required parameter not found: name"});
+            return res.status(409).json({"ok": false, "id": id, "message": "Required parameter not found: name"});
         }
     });
 
@@ -82,11 +82,11 @@ module.exports = function routeAPI(serv) {
         if (req.body.geo && typeof(req.body.geo) == "string") {
             util.saveDeviceLocation(req.body)
                 .then(function() {
-                    res.status(201).send({"success": true, "id": id, "geo": req.body.geo});
+                    res.status(201).send({"ok": true, "id": id, "geo": req.body.geo});
                 });
         }        
         else {
-            return res.status(409).json({"success": false, "id": id, "message": "Required parameter not found: geo"});
+            return res.status(409).json({"ok": false, "id": id, "message": "Required parameter not found: geo"});
         }
     });
 
@@ -98,7 +98,7 @@ module.exports = function routeAPI(serv) {
 
     serv.post("/api/ui", function(req, res) {
         require("../bin/refresh")(function() {
-            res.status(201).json({"success": true});
+            res.status(201).json({"ok": true});
         });
     });
 };
