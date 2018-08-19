@@ -5,48 +5,29 @@ var bodyParser = require("body-parser");
 var util = require("../util");
 var log = util.Logger;
 var db = util.CoreDatabase;
-var updateDeviceDoc = require("../lib/updateDeviceDoc");
-var updateWebInterface = require("../lib/updateWebInterface");
 
 /*
 * Allows user to easily load latest web assets onto the server
 */
 module.exports = function routeAPI(serv) {
 
-    var config_file_path = path.join(__dirname, "..", "conf", "lantern.json");
-
-    if (process.env.CLOUD == "true") {
-        config_file_path = path.join(__dirname, "..", "conf", "cloud.json");
-    }
-
-
-
-    function getDeviceIdentifier() {
-        var obj = JSON.parse(fs.readFileSync(config_file_path, "utf8"));
-        return obj.id;
-    }
-
-    function getDeviceName() {
-        var obj = JSON.parse(fs.readFileSync(config_file_path, "utf8"));
-        return obj.name;
-    }
-
+  
     serv.get("/api/version", function(req, res) {
-        var obj = JSON.parse(fs.readFileSync(config_file_path, 'utf8'));
+        var package_file_path = path.join(__dirname, "..", "package.json");
+        var obj = JSON.parse(fs.readFileSync(package_file_path, 'utf8'));
         res.status(200).json({"name":"Lantern (JavaScript)","version": obj.version});
     });
 
     serv.post("/api/name", bodyParser.json(), function(req, res) {
-        var id = getDeviceIdentifier();
+        var id = util.getDeviceIdentifier();
         if (req.body.name && typeof(req.body.name) == "string") {
             if (req.body.name.length != 3) {
                 return res.status(409).json({"success": false, "message": "Name must be 3 characters in length"});
             }
             log.info("setting name of host to: " + req.body.name);
-            var obj = JSON.parse(fs.readFileSync(config_file_path, "utf8"));
-            obj.name = req.body.name;
-            fs.writeFileSync(config_file_path, JSON.stringify(obj), "utf8");
-            updateDeviceDoc(id, obj.name);
+            
+            util.saveDeviceName(req.body.name);
+
             return res.status(201).json({"success": true, "id": id, "name": req.body.name});
         }
         else {
@@ -56,31 +37,32 @@ module.exports = function routeAPI(serv) {
 
 
     serv.get("/api/info", function(req, res) {
-        var id = getDeviceIdentifier();
-        var name = getDeviceName();
-        res.status(200).send({
-            "id": id, 
-            "name": name,
-            "cloud": (process.env.CLOUD == "true")
+        var id = util.getDeviceIdentifier();
+        util.getDeviceName().then(function(name) {
+            res.status(200).send({
+                "id": id, 
+                "name": name,
+                "cloud": (process.env.CLOUD == "true")
+            });
         });
     });
 
 
     serv.get("/api/name", function(req, res) {
-        var id = getDeviceIdentifier();
-        var name = getDeviceName();
-        res.status(200).send({
-            "id": id, 
-            "name": name
+        var id = util.getDeviceIdentifier();
+        util.getDeviceName().then(function(name) {
+            res.status(200).send({
+                "id": id, 
+                "name": name
+            });
         });
     });
 
 
     serv.get("/api/geo", function(req, res) {
-        var id = getDeviceIdentifier();
+        var id = util.getDeviceIdentifier();
         db.get("d:"+ id)
             .then(function(doc) {
-
                 if (doc.gp && doc.gp.length) {
                     res.status(200).send({"id":id, "geo": doc.gp[doc.gp.length-1]});
                 }
@@ -96,39 +78,26 @@ module.exports = function routeAPI(serv) {
     });
 
     serv.post("/api/geo", bodyParser.json(), function(req, res) {
-        var id = getDeviceIdentifier();
-        var name = getDeviceName();
+        var id = util.getDeviceIdentifier();
         if (req.body.geo && typeof(req.body.geo) == "string") {
-
-            db.get("d:"+ id)
-                .then(function(doc) {
-
-                    if (doc.gp[doc.gp.length-1] == req.body.geo) {
-                        return res.status(200).json({"success": true, "id": id, "geo": req.body.geo});
-                    }
-                    else {
-
-                        updateDeviceDoc(id, name, req.body.geo)
-                            .then(function() {
-                                res.status(201).send({"success": true, "id": id, "geo": req.body.geo});
-                            });
-                    }
+            util.saveDeviceLocation(req.body)
+                .then(function() {
+                    res.status(201).send({"success": true, "id": id, "geo": req.body.geo});
                 });
         }        
         else {
             return res.status(409).json({"success": false, "id": id, "message": "Required parameter not found: geo"});
         }
-
     });
 
 
     serv.get("/api/id", function(req, res) {
-        res.status(200).send({"id": getDeviceIdentifier()});
+        res.status(200).send({"id": util.getDeviceIdentifier()});
     });
 
 
     serv.post("/api/ui", function(req, res) {
-        updateWebInterface(function() {
+        require("../bin/refresh")(function() {
             res.status(201).json({"success": true});
         });
     });

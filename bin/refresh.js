@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /**
 * Lantern Web Updater
 *

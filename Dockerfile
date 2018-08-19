@@ -10,7 +10,10 @@ WORKDIR /opt/lantern/
 RUN mkdir ./db
 RUN mkdir ./logs
 RUN mkdir ./public
-COPY . .
+
+COPY package.json .
 RUN npm install
 
-CMD ["node", "index.js"]
+COPY . .
+
+CMD ["npm", "start"]
