@@ -88,7 +88,7 @@ if (fs.existsSync("../../../routes")) {
 }
 
 // final routes are for any static pages and binary files
-var static_path = path.resolve(__dirname + "/public/");
+var static_path = path.resolve(__dirname, "../public/");
 serv.use("/", express.static(static_path));
 
 
