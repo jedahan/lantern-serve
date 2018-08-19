@@ -19,7 +19,7 @@
         "helmet": "*"
     },
     "scripts": {
-        "start": "node ./bin/refresh.js && node ./bin/serve.js",
+        "start": "node ./bin/serve.js",
         "refresh": "node ./bin/refresh.js"
     }
 }
