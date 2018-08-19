@@ -1,4 +1,4 @@
-module.exports = function Cors(req, res, next) {
+module.exports = function CORSMiddleware(req, res, next) {
   
     process.env.ORIGINS = process.env.ORIGINS +",https://lantern.global,http://lantern.global,https://lantern.local,http://lantern.local,https://localhost,http://localhost,http://localhost:3000";
     var allowed_origins = process.env.ORIGINS.split(",");

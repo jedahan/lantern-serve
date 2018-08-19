@@ -1,6 +1,6 @@
 var util = require("../util");
 
-module.exports = function(req, res, next) {
+module.exports = function LogMiddleware(req, res, next) {
 
     // don't log requests from the local machine
     if (!util.isRemoteClient(req)) {   
