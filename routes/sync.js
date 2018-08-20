@@ -59,6 +59,8 @@ function makeDocumentFromMessage(msg) {
 }
 
 function addKeyValuePair(part) {
+    var doc = this;
+    
     var item = part.split("=");
     var k = item[0];
     var v = item[1];
@@ -72,17 +74,17 @@ function addKeyValuePair(part) {
     v = decodeURIComponent(v);
     // is this a comma-separated list? if so, assume array
     if (v[0] == ",") {
-        this[k] = new Array();
+        doc[k] = new Array();
         v.split(",").forEach(function(val) {
-            if (val) this[k].push(val);
+            if (val) doc[k].push(val);
         });
     }
     // is this a number?
     else if (v[0] == "#") {
-        this[k] = Number(v.substr(1, v.length-1));
+        doc[k] = Number(v.substr(1, v.length-1));
     }
     else {
-        this[k] = v;                
+        doc[k] = v;                
     }
 }
 
