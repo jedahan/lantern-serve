@@ -20,6 +20,9 @@ var public_dir = path.resolve(__dirname, "../public");
 var zip_file = path.resolve(__dirname, "../web.zip");
 
 var self = function(done) {
+    fs.ensureDirSync(public_dir);
+    fs.emptyDirSync(public_dir);
+    log.debug("[ui] directory: " + public_dir);
     log.debug("[ui] download: " + uri);
     request(uri)
         .on('error', function() {
@@ -28,8 +31,6 @@ var self = function(done) {
         .pipe(fs.createWriteStream(zip_file))
         .on('close', function () {
             log.debug("[ui] archive downloaded");
-            fs.removeSync(public_dir);
-            fs.mkdirSync(public_dir);
             var zip = new AdmZip(zip_file); 
             zip.extractAllTo(public_dir);
             log.debug("[ui] unzipped archive to public directory");
