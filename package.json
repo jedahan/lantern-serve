@@ -11,7 +11,6 @@
         "pouchdb-adapter-http": "7.x",
         "pouchdb-adapter-node-websql": "7.x",
         "express-pouchdb": "4.0.1",
-        "websql": "https://github.com/lantern-works/node-websql/tarball/master",
         "request": "*",
         "fs-extra": "*",
         "adm-zip": "*",
@@ -20,6 +19,7 @@
     },
     "scripts": {
         "start": "node ./bin/serve.js",
-        "refresh": "node ./bin/refresh.js"
+        "refresh": "node ./bin/refresh.js",
+        "start-fresh": "node ./bin/refresh.js && node ./bin/serve.js"
     }
 }

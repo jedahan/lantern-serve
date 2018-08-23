@@ -16,6 +16,4 @@ RUN npm install
 
 COPY . .
 
-RUN npm run refresh
-
-CMD ["npm", "start"]
+CMD ["npm", "run", "start-fresh"]
