@@ -8,6 +8,7 @@
         "compression": "*",
         "pouchdb-core": "7.x",
         "pouchdb-replication": "7.x",
+        "pouchdb-mapreduce": "7.x",
         "pouchdb-adapter-http": "7.x",
         "pouchdb-adapter-node-websql": "7.x",
         "express-pouchdb": "4.0.1",
