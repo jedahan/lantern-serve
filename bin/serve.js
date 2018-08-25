@@ -15,7 +15,7 @@ var fs = require("fs");
 var express = require("express");
 var request = require("request");
 var compression = require("compression");
-// var helmet = require("helmet");
+var helmet = require("helmet");
 
 var util = require("../util");
 var log = util.Logger;
@@ -63,7 +63,10 @@ function onServerStarted() {
 serv = express();
 serv.disable("x-powered-by");
 serv.use(compression());
-//serv.use(helmet()); // secure ssl 
+serv.use(helmet({
+  noCache: true,
+  hsts: false
+}));
 
 // auto-load middleware
 var middleware_files = fs.readdirSync(path.resolve(__dirname, "../middleware"));
