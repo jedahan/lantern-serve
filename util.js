@@ -19,6 +19,7 @@ self.PouchDB = require('pouchdb-core')
     .plugin(require('pouchdb-adapter-node-websql'))
     .plugin(require('pouchdb-adapter-http'))
     .plugin(require('pouchdb-replication'))
+    .plugin(require('pouchdb-mapreduce'))
 
 /**
 * Primary database for supplies, status, etc.
