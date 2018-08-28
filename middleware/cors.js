@@ -1,11 +1,24 @@
+
+var util = require("../util");
+var log = util.Logger;
+
 module.exports = function CORSMiddleware(req, res, next) {
   
-    process.env.ORIGINS = process.env.ORIGINS +",https://lantern.global,http://lantern.global,https://lantern.local,http://lantern.local,https://localhost,http://localhost,http://localhost:3000";
+    process.env.ORIGINS = process.env.ORIGINS +",lantern.global,lantern.local,localhost,localhost:3000,lantern-nexus-web-intelligent-chipmunk.mybluemix.net";
     var allowed_origins = process.env.ORIGINS.split(",");
-    var origin = req.headers.origin;
-    if(allowed_origins.indexOf(origin) > -1){
-         res.setHeader('Access-Control-Allow-Origin', origin);
+    try {
+        if (req.headers.origin) {  
+            var origin = req.headers.origin.split("://")[1];
+            if(allowed_origins.indexOf(origin) > -1){
+                var protocol = (req.secure ? "https://" : "http://");
+                res.setHeader('Access-Control-Allow-Origin', protocol+origin);
+            }
+        }
     }
+    catch(e) {
+        log.error(e);
+    }
+
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'accept, authorization, x-requested-with, x-http-method-override, content-type, origin, referer, x-csrf-token');
     res.header('Access-Control-Allow-Credentials', true);
