@@ -23,8 +23,13 @@ self.PouchDB = require('pouchdb-core')
 
 /**
 * Primary database for supplies, status, etc.
+* Log facility
 */
 self.CoreDatabase = self.PouchDB("http://localhost/db/lnt");
+self.Logger = require("simple-node-logger").createSimpleLogger({
+    logFilePath: path.resolve(__dirname, 'logs', 'http.log'),
+    dateFormat:'YYYY.MM.DD'
+});
 
 /**
 * Map specific database for tiles
@@ -32,12 +37,7 @@ self.CoreDatabase = self.PouchDB("http://localhost/db/lnt");
 self.MapDatabase = self.PouchDB("http://localhost/db/map");
 
 /**
-* Log facility
 */
-self.Logger = require("simple-node-logger").createSimpleLogger({
-    logFilePath:'/opt/lantern/logs/http.log',
-    dateFormat:'YYYY.MM.DD'
-});
 
 /**
 * Check for internet access
