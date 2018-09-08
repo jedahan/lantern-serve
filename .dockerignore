@@ -8,4 +8,6 @@ public
 node_modules
 db/_replicator
 db/_users
+db/lnt
+db/map
 db/pouch__all_dbs__

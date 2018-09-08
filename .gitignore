@@ -3,6 +3,5 @@ tmp
 node_modules
 public
 sslcert
-db/_*
-db/pouch__all_dbs__
-db/db-*
+db/*
+logs/*

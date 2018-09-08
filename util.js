@@ -193,10 +193,23 @@ self.saveDeviceLocation = function(geo) {
 */
 self.CoreDatabase = self.PouchDB(self.getHttpAddress() + "/db/lnt");
 
+
+/**
+* Reference database to replicate from for network / community aggregated data
+*/
+self.CoreDatabasePeer = self.PouchDB(process.env.CORE_DB_PEER || "https://37bd9e99-2780-4965-8da8-b6b1ebb682bc-bluemix.cloudant.com/lantern-us-demo");
+
+
 /**
 * Map specific database for tiles
 */
 self.MapDatabase = self.PouchDB(self.getHttpAddress() + "/db/map");
+
+
+/**
+* Reference database to replicate from for maps
+*/
+self.MapDatabasePeer = self.PouchDB(process.env.MAP_DB_PEER || "https://37bd9e99-2780-4965-8da8-b6b1ebb682bc-bluemix.cloudant.com/lantern-us-maps");
 
 
 //----------------------------------------------------------------------  
