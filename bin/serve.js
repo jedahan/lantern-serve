@@ -101,8 +101,8 @@ serv.use("/", express.static(static_path));
 // start web server
 http_port = (process.env.TERM_PROGRAM ? 8080 : 80);
 https_port = (process.env.TERM_PROGRAM ? 8443 : 443);
-var private_key  = fs.readFileSync('/opt/lantern/sslcert/privkey1.pem', 'utf8');
-var certificate = fs.readFileSync('/opt/lantern/sslcert/fullchain1.pem', 'utf8');
+var private_key  = fs.readFileSync(path.resolve(__dirname, '../sslcert/privkey1.pem'), 'utf8');
+var certificate = fs.readFileSync(path.resolve(__dirname, '../sslcert/fullchain1.pem'), 'utf8');
 var credentials = {key: private_key, cert: certificate};
 var httpServer = http.createServer(serv);
 var httpsServer = https.createServer(credentials, serv);
