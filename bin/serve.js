@@ -20,7 +20,7 @@ var helmet = require("helmet");
 var util = require("../util");
 var log = util.Logger;
 var db = util.CoreDatabase;
-var maps_db = util.MapDatabase;
+var map_db = util.MapDatabase;
 
 var serv, http_port, https_port;
 
@@ -41,7 +41,7 @@ function onServerStarted() {
         log.debug("[db] lnt update sequence: " + response.update_seq);
     })
     .then(function() {
-        return maps_db.info();
+        return map_db.info();
     })
     .then(function(response) {
         log.debug("[db] map starting doc count: " + response.doc_count);
@@ -99,18 +99,16 @@ serv.use("/", express.static(static_path));
 
 //----------------------------------------------------------------------------
 // start web server
-http_port = (process.env.TERM_PROGRAM ? 8080 : 80);
-https_port = (process.env.TERM_PROGRAM ? 8443 : 443);
 var private_key  = fs.readFileSync(path.resolve(__dirname, '../sslcert/privkey1.pem'), 'utf8');
 var certificate = fs.readFileSync(path.resolve(__dirname, '../sslcert/fullchain1.pem'), 'utf8');
 var credentials = {key: private_key, cert: certificate};
 var httpServer = http.createServer(serv);
 var httpsServer = https.createServer(credentials, serv);
 
-httpsServer.listen(https_port, function() {
-    httpServer.listen(http_port, function() {
+httpsServer.listen(util.getHttpsPort(), function() {
+    httpServer.listen(util.getHttpPort(), function() {
         // verify database server is available and ensure unique identifier
-        request("http://localhost/db/", {"json": true}, function(err, response) {
+        request(util.getHttpAddress() + "/db/", {"json": true}, function(err, response) {
             if (err) {
                 throw new Error(err);
             }

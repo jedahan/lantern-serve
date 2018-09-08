@@ -18,26 +18,45 @@ var self = {};
 self.PouchDB = require('pouchdb-core')
     .plugin(require('pouchdb-adapter-node-websql'))
     .plugin(require('pouchdb-adapter-http'))
-    .plugin(require('pouchdb-replication'))
     .plugin(require('pouchdb-mapreduce'))
+    .plugin(require('pouchdb-replication'))
 
 /**
-* Primary database for supplies, status, etc.
 * Log facility
 */
-self.CoreDatabase = self.PouchDB("http://localhost/db/lnt");
 self.Logger = require("simple-node-logger").createSimpleLogger({
     logFilePath: path.resolve(__dirname, 'logs', 'http.log'),
     dateFormat:'YYYY.MM.DD'
 });
 
-/**
-* Map specific database for tiles
-*/
-self.MapDatabase = self.PouchDB("http://localhost/db/map");
 
 /**
+* Get HTTP Non-Secure Port
 */
+self.getHttpPort = function() {
+    return (process.env.TERM_PROGRAM ? 9090 : 80);
+}
+
+/**
+* Get HTTPS Secure Port
+*/
+self.getHttpsPort = function() {
+    return (process.env.TERM_PROGRAM ? 9443 : 443);
+}
+
+/**
+* Get HTTP Non-Secure Localhost URL
+*/
+self.getHttpAddress = function() {
+    return "http://localhost:"+self.getHttpPort();
+}
+
+/**
+* Get HTTPS Secure Localhost URL
+*/
+self.getHttpsAddress = function() {
+    return "http://localhost:"+self.getHttpsPort();
+}
 
 /**
 * Check for internet access
@@ -166,6 +185,18 @@ self.saveDeviceLocation = function(geo) {
         });
 }
 
+
+
+//----------------------------------------------------------------------  
+/**
+* Primary database for supplies, status, etc.
+*/
+self.CoreDatabase = self.PouchDB(self.getHttpAddress() + "/db/lnt");
+
+/**
+* Map specific database for tiles
+*/
+self.MapDatabase = self.PouchDB(self.getHttpAddress() + "/db/map");
 
 
 //----------------------------------------------------------------------  
