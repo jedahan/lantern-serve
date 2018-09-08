@@ -3,7 +3,9 @@ var log = util.Logger;
 
 module.exports = function RewriteMiddleware(req,res,next) {
 
-    if (req.headers.host && req.headers.host != "localhost" && req.headers.host != "lantern.global") {
+    if (req.headers.host 
+            && req.headers.host.indexOf("localhost") != -1 
+            && req.headers.host.indexOf("lantern.global") != -1) {
         log.debug("[rewrite] ignore: " + req.headers.host + req.url);
         return next();
     }
