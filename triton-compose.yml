@@ -6,5 +6,7 @@ app_server:
         - 443:443
     environment:
         - CLOUD=true
+        - MAP_DB_PEER=https://37bd9e99-2780-4965-8da8-b6b1ebb682bc-bluemix.cloudant.com/lantern-us-maps
+        - LNT_DB_PEER=https://37bd9e99-2780-4965-8da8-b6b1ebb682bc-bluemix.cloudant.com/lantern-us-demo
     labels:
         - triton.cns.services=lantern
