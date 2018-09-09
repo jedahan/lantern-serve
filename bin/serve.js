@@ -48,30 +48,6 @@ function onServerStarted() {
         log.debug("[db] map update sequence: " + response.update_seq);
     })
     .then(util.checkInternet)
-    .then(function(is_connected) {
-        if (is_connected) {
-
-            // try replication with our trusted peer
-            util.CoreDatabasePeer.replicate.to(db)
-            .then(function(result) {
-                console.log(result);
-            })
-            .catch(function(err) {
-                console.log(err);
-            })
-
-                // try replication with our trusted peer
-            util.MapDatabasePeer.replicate.to(map_db)
-            .then(function(result) {
-                console.log(result);
-            })
-            .catch(function(err) {
-                console.log(err);
-            })
-
-        }
-        return is_connected;
-    })
     .then(util.registerDevice)
     .catch(function(err) {
         log.error(err);
