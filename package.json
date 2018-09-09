@@ -20,7 +20,8 @@
     },
     "scripts": {
         "start": "node ./bin/serve.js",
-        "refresh": "node ./bin/refresh.js",
-        "start-fresh": "node ./bin/refresh.js && node ./bin/serve.js"
+        "load-apps": "node ./bin/load-apps.js",
+        "load-db": "node ./bin/load-db.js",
+        "start-fresh": "node ./bin/load-db.js && node ./bin/load-apps.js && node ./bin/serve.js"
     }
 }
