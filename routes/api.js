@@ -97,7 +97,7 @@ module.exports = function routeAPI(serv) {
 
 
     serv.post("/api/ui", function(req, res) {
-        require("../bin/refresh")(function() {
+        require("../bin/load-apps")(function() {
             res.status(201).json({"ok": true});
         });
     });

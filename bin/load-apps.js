@@ -20,7 +20,7 @@ var path = require("path");
 var request = require("request");
 var AdmZip = require("adm-zip");
 
-var uri = "https://github.com/lantern-works/lantern-web/raw/master/build/latest.zip";
+var uri = process.env.WEB_ZIP;
 var public_dir = path.resolve(__dirname, "../public");
 var zip_file = path.resolve(__dirname, "../web.zip");
 
@@ -35,11 +35,17 @@ var self = function(done) {
         })
         .pipe(fs.createWriteStream(zip_file))
         .on('close', function () {
-            log.info("[ui] archive downloaded");
-            var zip = new AdmZip(zip_file); 
-            zip.extractAllTo(public_dir);
-            log.info("[ui] unzipped archive to public directory");
-            fs.removeSync(zip_file);
+
+            try {
+                log.info("[ui] archive downloaded");
+                var zip = new AdmZip(zip_file); 
+                zip.extractAllTo(public_dir);
+                log.info("[ui] unzipped archive to public directory");
+                fs.removeSync(zip_file);                
+            }
+            catch(e) {
+                log.error("[ui] unable to download archive");
+            }
             if (typeof(done) == "function") {
                 done();
             }
