@@ -1,20 +1,22 @@
-var bodyParser = require("body-parser");
-var util = require("../util");
-var log = util.Logger;
-var db = util.CoreDatabase;
+"use strict"
+
+const bodyParser = require("body-parser");
+const util = require("../util");
+const log = util.Logger;
+const db = util.CoreDatabase;
+
 
 
 //----------------------------------------------------------------------
-
 /**
 * Replicate data across two PouchDB/CouchDB Servers
 */
-function runSync(direction) {
+const runSync = (direction) => {
     var target = "https://lantern.global/db/lnt/";
     log.info("attempting sync with: " + target);
 
     util.checkInternet()
-        .then(function(is_connected) {
+        .then((is_connected) => {
             if (!is_connected) {
                 return res.status(403).send({
                     "ok": false, 
@@ -26,7 +28,7 @@ function runSync(direction) {
             db[direction || "sync"](target, {
                     live: false,
                     retry: false
-                }).then(function(result) {
+                }).then((result) => {
                     return res.status(201).send({
                         "ok": true, 
                         "target": target, 
@@ -40,7 +42,7 @@ function runSync(direction) {
 /**
 *. Convert message string into a meaningful JSON document for PouchDB/CouchDB
 */
-function makeDocumentFromMessage(msg) {
+const makeDocumentFromMessage = (msg) => {
     // attempt to split message into meaningful parts
     var input = msg.replace(/\^+/, '\x01').split('\x01');
     var version = input[0]; // @todo use real version management vs. revision count
@@ -58,7 +60,7 @@ function makeDocumentFromMessage(msg) {
     return doc;
 }
 
-function addKeyValuePair(part) {
+const addKeyValuePair = (part) => {
     var doc = this;
     
     var item = part.split("=");
@@ -75,7 +77,7 @@ function addKeyValuePair(part) {
     // is this a comma-separated list? if so, assume array
     if (v[0] == ",") {
         doc[k] = new Array();
-        v.split(",").forEach(function(val) {
+        v.split(",").forEach((val) => {
             if (val) doc[k].push(val);
         });
     }
@@ -88,7 +90,7 @@ function addKeyValuePair(part) {
     }
 }
 
-function updateDocumentFromMessage(new_doc) {
+const updateDocumentFromMessage = (new_doc) => {
 
     // pull specified version message
     // preserved for reference if brand new document is saved to database
@@ -96,7 +98,7 @@ function updateDocumentFromMessage(new_doc) {
 
     // is this document new enough to work with?
     return db.get(new_doc._id)
-        .then(function(old_doc) {
+        .then((old_doc) => {
             log.info("old doc: ", old_doc);
 
             var old_version = Number(old_doc.$rv) || Number(old_doc._rev.split("-")[0]);
@@ -112,7 +114,7 @@ function updateDocumentFromMessage(new_doc) {
 
             // check for any changes
             var did_change = false;
-            for (var idx in new_doc) {
+            for (const idx in new_doc) {
                 if (idx[0] != "$") {
                     if (!old_doc.hasOwnProperty(idx) || 
                         JSON.stringify(old_doc[idx]) != JSON.stringify(new_doc[idx])) {
@@ -140,23 +142,23 @@ function updateDocumentFromMessage(new_doc) {
 /*
 * Simplified sync functionality for common operations 
 */
-module.exports = function routeSync(serv) {
+module.exports = (serv) => {
 
 
     // finds cloud service or connected wifi device according to availability
-    serv.post(["/sync/", "sync/sync"], function(req, res) {
+    serv.post(["/sync/", "sync/sync"], (req, res) => {
         return runSync("sync");
     });
 
-    serv.post("/sync/pull", function(req, res) {
+    serv.post("/sync/pull", (req, res) => {
         return runSync("pull");
     });
 
-    serv.post("/sync/push", function(req, res) {
+    serv.post("/sync/push", (req, res) => {
         return runSync("push");
     });
 
-    serv.post("/sync/message",  bodyParser.json(), function(req, res) {
+    serv.post("/sync/message",  bodyParser.json(), (req, res) => {
         log.info("------------------")
         log.info("message to sync: " + req.body.message);
 
@@ -169,13 +171,13 @@ module.exports = function routeSync(serv) {
 
         var new_doc = makeDocumentFromMessage(req.body.message);
         updateDocumentFromMessage(new_doc)
-            .then(function(response) {
+            .then((response) => {
                 return res.status(201).send(response);
             })
-            .catch(function(err) {
+            .catch((err) => {
                  if (err.error == "not_found") {
                     // if doc is brand new, create here in this database...
-                    db.put(new_doc).then(function(response) {
+                    db.put(new_doc).then((response) => {
                         return res.status(201).send(response);
                     });
                 }

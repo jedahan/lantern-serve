@@ -1,34 +1,40 @@
-var accepted_ips = {};
-var util = require("../util");
-var log = util.Logger;
+"use strict"
 
-module.exports = function CaptivePortalMiddleware(req, res, next) { 
+const accepted_ips = {};
+const util = require("../util");
+const log = util.Logger;
 
-    var ip = util.getClientIP(req);
 
-    function isClientConnected() {
+
+//----------------------------------------------------------------------
+module.exports = (req, res, next) => { 
+
+    let ip = util.getClientIP(req);
+
+    const isClientConnected = () => {
         return accepted_ips.hasOwnProperty(ip) && accepted_ips[ip];
     }
 
-    function markClientConnected() {
+    const markClientConnected = () => {
         log.info("[captive] mark client " + ip + " connected");
         accepted_ips[ip] = new Date();
     }
 
-    function removeClient() {
+    const removeClient = () => {
         accepted_ips[ip] = false;
     }
 
-    function isCaptiveNetworkSupport() {
+    const isCaptiveNetworkSupport = () => {
         return (req.get('User-Agent') && req.get('User-Agent').indexOf('CaptiveNetworkSupport') !== -1);
     }
 
-    function sendOfflineMessage() {
+    const sendOfflineMessage = () => {
         return res.end("NO SUCCESS");
     }
 
-    //------------------------------------------------------------------------
 
+
+    //------------------------------------------------------------------
     // only work with captive portal requests on the local device
     if (process.env.CLOUD == 'true') {
         return next();

@@ -1,11 +1,16 @@
-var path = require("path");
-var fs = require("fs");
-var util = require("../util");
+"use strict"
 
+const path = require("path");
+const fs = require("fs");
+const util = require("../util");
+
+
+
+//----------------------------------------------------------------------
 /*
 * Providing direct visibility and access to the PouchDB database through HTTP
 */
-module.exports = function routeDatabase(serv) {
+module.exports = (serv) => {
     var data_dir = path.resolve(__dirname, "../db/") + "/";
     if (!fs.existsSync(data_dir)) {
         fs.mkdirSync(data_dir);

@@ -1,14 +1,22 @@
+"use strict"
+
 /**
 * Lantern Utilities
 *
 */
 
-var path = require("path");
-var fs = require("fs-extra");
-var self = {};
+const path = require("path");
+const fs = require("fs-extra");
+const self = {};
+
+
+
+//----------------------------------------------------------------------
 fs.ensureDirSync(path.resolve(__dirname, "logs"));
-  
-//----------------------------------------------------------------------  
+
+
+
+//----------------------------------------------------------------------
 /**
 * Custom build of PouchDB Server to meet our SQLite requirements
 * Also removes extras we do not need that are in full "pouchdb" library
@@ -31,37 +39,37 @@ self.Logger = require("simple-node-logger").createSimpleLogger({
 /**
 * Get HTTP Non-Secure Port
 */
-self.getHttpPort = function() {
+self.getHttpPort = () => {
     return (process.env.TERM_PROGRAM ? 9090 : 80);
 }
 
 /**
 * Get HTTPS Secure Port
 */
-self.getHttpsPort = function() {
+self.getHttpsPort = () => {
     return (process.env.TERM_PROGRAM ? 9443 : 443);
 }
 
 /**
 * Get HTTP Non-Secure Localhost URL
 */
-self.getHttpAddress = function() {
+self.getHttpAddress = () => {
     return "http://localhost:"+self.getHttpPort();
 }
 
 /**
 * Get HTTPS Secure Localhost URL
 */
-self.getHttpsAddress = function() {
+self.getHttpsAddress = () => {
     return "http://localhost:"+self.getHttpsPort();
 }
 
 /**
 * Check for internet access
 */
-self.checkInternet = function() {
-    return new Promise(function(resolve, reject) {
-        require('dns').lookup('google.com',function(err) {
+self.checkInternet = () =>{
+    return new Promise((resolve, reject) => {
+        require('dns').lookup('google.com',(err) => {
             if (err && err.code == "ENOTFOUND") {
                 resolve(false);
             } else {
@@ -74,15 +82,15 @@ self.checkInternet = function() {
 /**
 * Extract IP address from request object
 */
-self.getClientIP = function(req) {
+self.getClientIP = (req) => {
     return req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 }
 
 /**
 * Check if this is a remote client requesting a resource
 */
-self.isRemoteClient = function(req) {
-    var ip = self.getClientIP(req);
+self.isRemoteClient = (req) => {
+    let ip = self.getClientIP(req);
     return ip && (ip.indexOf("127.0.0.1") === -1);
 }
 
@@ -91,9 +99,9 @@ self.isRemoteClient = function(req) {
 /**
 * Make sure we are always working with a valid short unique device identifier
 */
-self.getDeviceIdentifier = function() {
-    var db_config_path = path.join(__dirname,  "db", "db-conf.json");
-    var obj = JSON.parse(fs.readFileSync(db_config_path, "utf8"));
+self.getDeviceIdentifier = () => {
+    let db_config_path = path.join(__dirname,  "db", "db-conf.json");
+    let obj = JSON.parse(fs.readFileSync(db_config_path, "utf8"));
     return obj.couchdb.uuid;
 }
 
@@ -101,14 +109,14 @@ self.getDeviceIdentifier = function() {
 /**
 * Ensures device is registered on the file system and in-database
 */
-self.registerDevice = function(status) {
+self.registerDevice = (status) => {
 
     // get or create unique device identifier first
-    var id = self.getDeviceIdentifier();
+    let id = self.getDeviceIdentifier();
 
 
     // identify device type
-    var tag = [];
+    let tag = [];
     if (process.env.CLOUD == "true") {
         tag.push("cloud");
     }
@@ -117,7 +125,7 @@ self.registerDevice = function(status) {
     }
 
     // file system up-to-date, now save database document
-    var doc = {
+    let doc = {
         "_id": "d:"+id,
         "tt": id.substr(0,3).toUpperCase(),
         "st": (status ?  1 : 0),
@@ -125,11 +133,11 @@ self.registerDevice = function(status) {
         "tg": tag
     }
 
-     return self.CoreDatabase.get(doc._id).then(function(existing_doc) {
+     return self.CoreDatabase.get(doc._id).then((existing_doc) => {
         self.Logger.debug("device already registered: " + doc._id);
         self.Logger.debug("device name is: " + existing_doc.tt);
 
-     }).catch(function(err) {
+     }).catch((err) => {
         if (err.error == "not_found") {
             self.Logger.debug("registering device in database: " + doc._id);
             self.Logger.debug("device name is: " + doc.tt);
@@ -144,10 +152,10 @@ self.registerDevice = function(status) {
 /**
 * Save device name to database and network
 */
-self.saveDeviceName = function(name) {
-    var id = self.getDeviceIdentifier();
+self.saveDeviceName = (name) => {
+    let id = self.getDeviceIdentifier();
     return self.CoreDatabase.get("d:"+ id)
-        .then(function(doc) {
+        .then((doc) => {
             if (name == doc.tt) {
                 return true;
             }
@@ -158,10 +166,10 @@ self.saveDeviceName = function(name) {
         });
 }
 
-self.getDeviceName = function() {
-    var id = self.getDeviceIdentifier();
+self.getDeviceName = () => {
+    let id = self.getDeviceIdentifier();
     return self.CoreDatabase.get("d:"+ id)
-        .then(function(doc) {
+        .then((doc) => {
             return doc.tt || doc._id.replace("d:", "");
         });
 }
@@ -169,10 +177,10 @@ self.getDeviceName = function() {
 /**
 * Save device geolocation to database and network
 */
-self.saveDeviceLocation = function(geo) {
-    var id = self.getDeviceIdentifier();
+self.saveDeviceLocation = (geo) => {
+    let id = self.getDeviceIdentifier();
     return self.CoreDatabase.get("d:"+ id)
-        .then(function(doc) {
+        .then((doc) => {
             if (doc.gp[doc.gp.length-1] == geo) {
                 return true;
             }
@@ -210,17 +218,18 @@ self.MapDatabase = self.PouchDB(self.getHttpAddress() + "/db/map");
 self.MapDatabasePeer = self.PouchDB(process.env.MAP_DB_PEER || "https://37bd9e99-2780-4965-8da8-b6b1ebb682bc-bluemix.cloudant.com/lantern-us-maps");
 
 
+
 //----------------------------------------------------------------------  
 /**
 * Display memory usage over time
 */
-self.watchMemory = function() {
-      setInterval(function() {
+self.watchMemory = () => {
+      setInterval(() =>{
         log.debug("---");
-        var arr = [1, 2, 3, 4, 5, 6, 9, 7, 8, 9, 10];
+        let arr = [1, 2, 3, 4, 5, 6, 9, 7, 8, 9, 10];
         arr.reverse();
-        var used = process.memoryUsage();
-        for (var key in used) {
+        let used = process.memoryUsage();
+        for (const key in used) {
           log.debug(key + " "  + Math.round(used[key] / 1024 / 1024 * 100) / 100 + " MB");
         }
         log.debug("---");
