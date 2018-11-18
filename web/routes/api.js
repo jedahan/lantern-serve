@@ -1,24 +1,27 @@
-var fs = require("fs");
-var path = require("path");
-var bodyParser = require("body-parser");
+"use strict"
 
-var util = require("../util");
-var log = util.Logger;
-var db = util.CoreDatabase;
+const fs = require("fs");
+const path = require("path");
+const bodyParser = require("body-parser");
+const util = require("../util");
+const log = util.Logger;
+const db = util.CoreDatabase;
 
+
+
+//----------------------------------------------------------------------
 /*
 * Allows user to easily load latest web assets onto the server
 */
-module.exports = function routeAPI(serv) {
-
+module.exports = (serv) => {
   
-    serv.get("/api/version", function(req, res) {
+    serv.get("/api/version", (req, res) => {
         var package_file_path = path.join(__dirname, "..", "package.json");
         var obj = JSON.parse(fs.readFileSync(package_file_path, 'utf8'));
         res.status(200).json({"name":"Lantern (JavaScript)","version": obj.version});
     });
 
-    serv.post("/api/name", bodyParser.json(), function(req, res) {
+    serv.post("/api/name", bodyParser.json(), (req, res) => {
         var id = util.getDeviceIdentifier();
         if (req.body.name && typeof(req.body.name) == "string") {
             if (req.body.name.length != 3) {
@@ -36,7 +39,7 @@ module.exports = function routeAPI(serv) {
     });
 
 
-    serv.get("/api/info", function(req, res) {
+    serv.get("/api/info", (req, res) => {
         var id = util.getDeviceIdentifier();
         util.getDeviceName().then(function(name) {
             res.status(200).send({
@@ -48,9 +51,9 @@ module.exports = function routeAPI(serv) {
     });
 
 
-    serv.get("/api/name", function(req, res) {
+    serv.get("/api/name", (req, res) => {
         var id = util.getDeviceIdentifier();
-        util.getDeviceName().then(function(name) {
+        util.getDeviceName().then((name) => {
             res.status(200).send({
                 "id": id, 
                 "name": name
@@ -59,10 +62,10 @@ module.exports = function routeAPI(serv) {
     });
 
 
-    serv.get("/api/geo", function(req, res) {
+    serv.get("/api/geo", (req, res) => {
         var id = util.getDeviceIdentifier();
         db.get("d:"+ id)
-            .then(function(doc) {
+            .then((doc) => {
                 if (doc.gp && doc.gp.length) {
                     res.status(200).send({"id":id, "geo": doc.gp[doc.gp.length-1]});
                 }
@@ -71,17 +74,17 @@ module.exports = function routeAPI(serv) {
                     res.status(200).send({"id":id, "geo": null});
                 }
             })
-            .catch(function(err) {
+            .catch((err) => {
                 log.error(err);
                 res.status(500).send();
             });
     });
 
-    serv.post("/api/geo", bodyParser.json(), function(req, res) {
+    serv.post("/api/geo", bodyParser.json(), (req, res) => {
         var id = util.getDeviceIdentifier();
         if (req.body.geo && typeof(req.body.geo) == "string") {
             util.saveDeviceLocation(req.body)
-                .then(function() {
+                .then(() => {
                     res.status(201).send({"ok": true, "id": id, "geo": req.body.geo});
                 });
         }        
@@ -91,13 +94,13 @@ module.exports = function routeAPI(serv) {
     });
 
 
-    serv.get("/api/id", function(req, res) {
+    serv.get("/api/id", (req, res) => {
         res.status(200).send({"id": util.getDeviceIdentifier()});
     });
 
 
-    serv.post("/api/ui", function(req, res) {
-        require("../bin/load-apps")(function() {
+    serv.post("/api/ui", (req, res) => {
+        require("../bin/load-apps")(() => {
             res.status(201).json({"ok": true});
         });
     });
