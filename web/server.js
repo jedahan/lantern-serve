@@ -11,16 +11,17 @@
 var http = require("http");
 var https = require("https");
 var path = require("path");
-var fs = require("fs");
+var fs = require("fs-extra");
 var express = require("express");
 var request = require("request");
 var compression = require("compression");
 var helmet = require("helmet");
 
-var util = require("../util");
+var util = require("./util");
 var log = util.Logger;
 var db = util.CoreDatabase;
 var map_db = util.MapDatabase;
+
 
 var serv, http_port, https_port;
 
@@ -69,17 +70,17 @@ serv.use(helmet({
 }));
 
 // auto-load middleware
-var middleware_files = fs.readdirSync(path.resolve(__dirname, "../middleware"));
+var middleware_files = fs.readdirSync(path.resolve(__dirname, "./middleware"));
 middleware_files.forEach(function(file)  {
     log.debug("[middleware] " + file);
-    serv.use(require("../middleware/" + file));
+    serv.use(require("./middleware/" + file));
 });
 
 // auto-load routes
-var route_files = fs.readdirSync(path.resolve(__dirname, "../routes"));
+var route_files = fs.readdirSync(path.resolve(__dirname, "./routes"));
 route_files.forEach(function(file) {
     log.debug("[route] " + file);
-    require("../routes/" + file)(serv);
+    require("./routes/" + file)(serv);
 });
 
 // check for additional routes (e.g. device-specific controls)
@@ -99,8 +100,8 @@ serv.use("/", express.static(static_path));
 
 //----------------------------------------------------------------------------
 // start web server
-var private_key  = fs.readFileSync(path.resolve(__dirname, '../sslcert/privkey1.pem'), 'utf8');
-var certificate = fs.readFileSync(path.resolve(__dirname, '../sslcert/fullchain1.pem'), 'utf8');
+var private_key  = fs.readFileSync(path.resolve(__dirname, './sslcert/privkey1.pem'), 'utf8');
+var certificate = fs.readFileSync(path.resolve(__dirname, './sslcert/fullchain1.pem'), 'utf8');
 var credentials = {key: private_key, cert: certificate};
 var httpServer = http.createServer(serv);
 var httpsServer = https.createServer(credentials, serv);
