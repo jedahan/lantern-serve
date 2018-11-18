@@ -22,8 +22,7 @@ var log = util.Logger;
 var db = util.CoreDatabase;
 var map_db = util.MapDatabase;
 
-
-var serv, http_port, https_port;
+var serv;
 
 //----------------------------------------------------------------------------
 
@@ -31,6 +30,7 @@ log.setLevel(process.env.LOG_LEVEL || "debug");
 log.info("##############################################");
 log.info("Lantern App Server");
 log.info("##############################################");
+
 
 /**
 * Initialize database buckets immediately once HTTP server is ready
@@ -92,8 +92,18 @@ if (fs.existsSync("../../../routes")) {
     });   
 }
 
+
+// platform route serves core application environment
+var platform_path = path.resolve(__dirname, "./platform/");
+serv.use("/platform/", express.static(platform_path));
+
+// modules
+var modules_path = path.resolve(__dirname, "../node_modules/");
+serv.use("/_/", express.static(modules_path));
+
+
 // final routes are for any static pages and binary files
-var static_path = path.resolve(__dirname, "../public/");
+var static_path = path.resolve(__dirname, "./public/");
 serv.use("/", express.static(static_path));
 
 
