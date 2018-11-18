@@ -1,7 +1,7 @@
 .DS_Store
 tmp
 node_modules
-public
-sslcert
-db/*
-logs/*
+web/public
+web/sslcert
+web/db/*
+web/logs/*
