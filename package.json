@@ -20,7 +20,11 @@
         "pouchdb-browser": "*",
         "leaflet": "*",
         "bulma": "*",
-        "vue": "^2.5.17"
+        "vue": "^2.5.17",
+        "vue-resource": "*",
+        "moment": "*",
+        "geohash-distance": "*",
+        "latlon-geohash": "*"
     },
     "scripts": {
         "start": "node ./web/index.js",

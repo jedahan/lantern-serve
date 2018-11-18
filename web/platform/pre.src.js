@@ -1,5 +1,4 @@
 const PouchDB = require("pouchdb-browser");
-require("vue");
 require("leaflet");
 
 /*
