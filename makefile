@@ -7,7 +7,8 @@ TAG?=latest
 
 pack:
 	npm install
-	browserify platform/vendor.src.js -o platform/vendor.js
+	browserify web/platform/pre.src.js -o web/platform/pre.js
+	browserify web/platform/post.src.js -o web/platform/post.js
 
 build:
 	docker-compose build
