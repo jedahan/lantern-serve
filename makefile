@@ -5,6 +5,10 @@ TAG?=latest
 
 .PHONY: build
 
+pack:
+	npm install
+	browserify platform/vendor.src.js -o platform/vendor.js
+
 build:
 	docker-compose build
 
