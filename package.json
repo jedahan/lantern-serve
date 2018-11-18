@@ -23,9 +23,9 @@
         "vue": "^2.5.17"
     },
     "scripts": {
-        "start": "node ./web/server.js",
+        "start": "node ./web/index.js",
         "load-apps": "node ./bin/load-apps.js",
         "load-db": "node ./bin/load-db.js",
-        "start-fresh": "node ./bin/load-db.js && node ./bin/load-apps.js && node ./web/server.js"
+        "start-fresh": "node ./bin/load-db.js && node ./bin/load-apps.js && node ./web/index.js"
     }
 }

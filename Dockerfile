@@ -7,13 +7,10 @@ EXPOSE 80
 EXPOSE 443
 
 WORKDIR /opt/lantern/
-RUN mkdir ./db
-RUN mkdir ./logs
-RUN mkdir ./public
-
+COPY web ./web
+RUN mkdir -p ./web/db
+RUN mkdir -p ./web/public
 COPY package.json .
 RUN npm install
-
-COPY . .
 
 CMD ["npm", "run", "start]
