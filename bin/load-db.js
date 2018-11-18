@@ -28,7 +28,7 @@ var httpServer = http.createServer(serv);
 function runReplications() {
     // try replication with our trusted peer
     log.info("try core database replication...");
-    return util.CoreDatabasePeer.replicate.to(util.CoreDatabase)
+    return util.CoreDatabaseSeed.replicate.to(util.CoreDatabase)
         .then(function(result) {
             log.info("core database replication complete...");
             log.info(result);
@@ -36,7 +36,7 @@ function runReplications() {
         .then(function() {
             log.info("try map replication...");
             // try replication with our trusted peer
-            return util.MapDatabasePeer.replicate.to(util.MapDatabase)
+            return util.MapDatabaseSeed.replicate.to(util.MapDatabase)
                 .then(function(result) {
                     log.info("map database replication complete...");
                     log.info(result);
