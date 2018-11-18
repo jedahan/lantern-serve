@@ -1,13 +1,17 @@
+"use strict"
 
-var util = require("../util");
-var log = util.Logger;
+const util = require("../util");
+const log = util.Logger;
 
-module.exports = function CORSMiddleware(req, res, next) {
+
+
+//----------------------------------------------------------------------
+module.exports = (req, res, next) => {
   
     try {
         if (req.headers.origin) {  
-            var origin = req.headers.origin.split("://")[1];
-            var protocol = (req.secure ? "https://" : "http://");
+            let origin = req.headers.origin.split("://")[1];
+            let protocol = (req.secure ? "https://" : "http://");
             res.setHeader('Access-Control-Allow-Origin', protocol+origin);
         }
     }
