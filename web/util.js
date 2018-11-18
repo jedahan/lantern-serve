@@ -4,11 +4,9 @@
 */
 
 var path = require("path");
-var fs = require("fs");
-
+var fs = require("fs-extra");
 var self = {};
-
-
+fs.ensureDirSync(path.resolve(__dirname, "logs"));
   
 //----------------------------------------------------------------------  
 /**
