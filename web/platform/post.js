@@ -23437,60 +23437,59 @@ const shortHash = require("short-hash");
 
 LX.Profile = class Profile {
 
+    constructor(check) {
+        this.db = new LX.Vendor.PouchDB("lx-user");
+        if (check) {
+            // check browser for known profile for this user
+            this.db.get("profile").then((profile) => {
+                console.log(profile);
+            })
+        }
+    }
 
-	constructor(check) {
-		this.db = new LX.Vendor.PouchDB("lx-user");
-		if (check) {
-			// check browser for known profile for this user
-			this.db.get("profile").then((profile) => {
-				console.log(profile);
-			})
-		}
-	}
+    register() {
+        var m;
+        const ec = new elliptic.ec('secp256k1');
+        // deterministic public / private keys plus handles based on words
+        if (typeof(secret) == "object") {
+            m = Mnemonic.fromWords(secret);
+        }
+        else if (typeof(secret) == "string") {
+            this.public_key = secret;
+        }
+        else {
+            m = new Mnemonic(64);
+        }
+        
+        if (m) {
+            // keep words for user backup
+            this.mnemonic = m.toWords();
 
-	register() {
-		var m;
-		const ec = new elliptic.ec('secp256k1');
-	    // deterministic public / private keys plus handles based on words
-	    if (typeof(secret) == "object") {
-	        m = Mnemonic.fromWords(secret);
-	    }
-	    else if (typeof(secret) == "string") {
-	        this.public_key = secret;
-	    }
-	    else {
-	        m = new Mnemonic(64);
-	    }
-	    
-	    if (m) {
-	        // keep words for user backup
-	        this.mnemonic = m.toWords();
+            // define private key based on mnemonic
+            this.private_key = m.toHex();
+                
+            // http://procbits.com/2013/08/27/generating-a-bitcoin-address-with-javascript
+            var public_point = ec.keyFromPrivate(this.private_key).getPublic();
 
-	        // define private key based on mnemonic
-	        this.private_key = m.toHex();
-	            
-	        // http://procbits.com/2013/08/27/generating-a-bitcoin-address-with-javascript
-	        var public_point = ec.keyFromPrivate(this.private_key).getPublic();
+            // create public address based on key pair
+            this.public_key = public_point.encodeCompressed("hex");
+        }
 
-	        // create public address based on key pair
-	        this.public_key = public_point.encodeCompressed("hex");
-	    }
+        this.address = shortHash(this.public_key);
+    }
 
-	    this.address = shortHash(this.public_key);
-	}
-
-	save() {
-		let doc = {
-			"_id" : "profile",
-			"mnemonic": this.mnemonic,
-			"address": this.address,
-			"public_key": this.public_key,
-			"private_key": this.private_key 
-		}
-		this.db.put(doc).then(() => {
-			console.log("[Profile] Saved to browser");
-		});
-	}
+    save() {
+        let doc = {
+            "_id" : "profile",
+            "mnemonic": this.mnemonic,
+            "address": this.address,
+            "public_key": this.public_key,
+            "private_key": this.private_key 
+        }
+        this.db.put(doc).then(() => {
+            console.log("[Profile] Saved to browser");
+        });
+    }
 }
 },{"elliptic":3,"geohash-distance":19,"latlon-geohash":35,"mnemonic.js":38,"moment":39,"short-hash":40,"vue":42,"vue-resource":41}],44:[function(require,module,exports){
 var asn1 = exports;

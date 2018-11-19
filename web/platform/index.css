@@ -8,5 +8,5 @@ html, body, #map {
     min-height: 200px;
 }
 #map .leaflet-control-attribution {
-	display: none;
+    display: none;
 }
