@@ -11,10 +11,23 @@
     <link rel="stylesheet" type="text/css" href="/platform/index.css"/>
 </head>
 <body>
-	<div id="map">
-	</div>
-	<script src="/platform/pre.js"></script>
-	<script src="/platform/index.js"></script>
-    <script src="/platform/post.js"></script>
+    <div id="app-container">
+
+        <div class="app-full-screen" v-cloak>
+            <div class="app-frame" v-if="profile.address">
+                <section class="section">{{ profile.address }}</section>
+            </div>
+        </div>
+
+        <transition name="fade">
+            <div v-if="mask" class="app-mask"></div>
+        </transition>
+
+    </div>
+    <div id="map">
+    </div>
+    <script src="/platform/dist/a.js"></script>
+    <script src="/platform/dist/b.js"></script>
+    <script src="/platform/dist/c.js"></script>
 </body>
 </html>

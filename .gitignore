@@ -4,3 +4,4 @@ node_modules
 web/sslcert
 web/db/*
 web/logs/*
+web/platform/dist/*
