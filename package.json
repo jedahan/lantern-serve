@@ -19,6 +19,7 @@
         "sqlite3": "^4.0.4",
         "pouchdb-browser": "*",
         "leaflet": "*",
+        "leaflet.locatecontrol": "*",
         "bulma": "*",
         "vue": "^2.5.17",
         "vue-resource": "*",
@@ -26,6 +27,7 @@
         "geohash-distance": "*",
         "latlon-geohash": "*",
         "mnemonic.js": "0.0.1",
+        "@fortawesome/fontawesome-free": "*",
         "elliptic": "*",
         "short-hash": "*"
     },

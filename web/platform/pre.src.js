@@ -3,6 +3,7 @@ const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 LX.Vendor = LX.Vendor || {};
 const PouchDB = LX.Vendor.PouchDB = require("pouchdb-browser");
 require("leaflet");
+require("leaflet.locatecontrol");
 
 /*
 Copyright (c) 2015 Iván Sánchez Ortega <ivan@mazemap.no>
