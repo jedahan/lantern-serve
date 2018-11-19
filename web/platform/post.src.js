@@ -28,17 +28,48 @@ const shortHash = require("short-hash");
 
 LX.Profile = class Profile {
 
-    constructor(check) {
+    constructor(skip_check) {
         this.db = new LX.Vendor.PouchDB("lx-user");
-        if (check) {
+        if (skip_check) {
+            console.log("[Profile] Making a new profile by explicit request")
+            this.generate();
+        }
+        else {
             // check browser for known profile for this user
-            this.db.get("profile").then((profile) => {
-                console.log(profile);
-            })
+            this.db.get("profile")
+                .then((profile) => {
+                    console.log(profile);
+                    let requirements = ["mnemonic", "address", "public_key", "private_key"];
+                    let is_valid = true;
+                    requirements.forEach((key) =>  {
+                        if (!profile.hasOwnProperty(key)) {
+                            is_valid = false;
+                            console.log("[Profile] Existing saved profile missing required key: " + key);
+                        }
+                    });
+                    if (is_valid) {
+                        console.log("[Profile] Using existing profile from storage with address: " + profile.address);
+                    }
+                    else {
+                        console.log("[Profile] Removing invalid profile from storage");
+                        this.db.remove(profile).then(() => { 
+                            this.generate();
+                        });
+                    }
+                })
+                .catch((e) => {
+                    if (e.name == "not_found") {
+                        this.generate();
+                    }
+                    else {
+                        console.log("[Profile] Error getting profile", e);
+                    }
+                });
         }
     }
 
-    register() {
+    generate() {
+        console.log("[Profile] Generate")
         var m;
         const ec = new elliptic.ec('secp256k1');
         // deterministic public / private keys plus handles based on words
@@ -77,8 +108,12 @@ LX.Profile = class Profile {
             "public_key": this.public_key,
             "private_key": this.private_key 
         }
-        this.db.put(doc).then(() => {
-            console.log("[Profile] Saved to browser");
-        });
+        this.db.put(doc)
+            .then(() => {
+                console.log("[Profile] Saved to browser");
+            })
+            .catch((e) => {
+                console.log("[Profile] Unable to save", e);
+            });
     }
 }
