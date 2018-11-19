@@ -43,13 +43,10 @@ LX.Atlas = (() => {
 
 
 
-
-
     //------------------------------------------------------------------------
     // bind dom element for leaflet
     self.map = L.map("map");
     self.map.zoomControl.setPosition("bottomright");
-    self.map.setView([38.42, -52.79], 3);
 
     // layer in hosted map tiles
     const tile_uri = [
@@ -61,12 +58,57 @@ LX.Atlas = (() => {
     // add locate control
     L.control.locate(LX.Config.locatecontrol).addTo(self.map);
 
+
+
+    //------------------------------------------------------------------------
+    // find current map cache size...
+    const tile_db = new LX.Vendor.PouchDB(LX.Config.leaflet.dbName, {auto_compaction: true});
+    tile_db.info().then((result) => {
+        console.log("[Atlas] Cached map tiles: " + result.doc_count);
+    });
+
+
+    const user_db = new LX.Vendor.PouchDB("lx-user");
+    user_db.get("atlas_view").then((doc) => {
+        console.log("[Atlas] Saved map view:", doc);
+        self.map.setView([doc.lat, doc.lng], doc.zoom);
+    }).catch((e) => {
+        self.map.setView([38.42, -12.79], 2);
+        // fine if we don't have context or can't retrieve...
+    });
+
+
+
+
+    //------------------------------------------------------------------------
+    // map event for when location is found...
     self.map.on("locationfound", (e) => {
         console.log("[Atlas] User location found", e, self.toGeohash(e.latlng));
     });
 
-    //------------------------------------------------------------------------
+    // map event for when location changes...
+    self.map.on("moveend", (e) => {
+        let doc = {
+            "_id": "atlas_view",
+            "lat": self.map.getCenter().lat,
+            "lng": self.map.getCenter().lng,
+            "zoom": self.map.getZoom()
+        }
+        user_db.get("atlas_view").then((old_doc) => {
+            user_db.remove(old_doc).then(() => {
+                user_db.put(doc);
+            });
+        })
+        .catch((e) => {
+            user_db.put(doc);
+        });
+    })
 
+
+
+
+
+    //------------------------------------------------------------------------
     /** 
     * Attempt to reduce any type of location into a geohash for storage and processing
     */
