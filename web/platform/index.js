@@ -40,7 +40,7 @@ LX.Config = (() => {
 LX.Atlas = (() => {
     
     let self = {};
-
+    var last_geo;
 
 
     //------------------------------------------------------------------------
@@ -68,12 +68,12 @@ LX.Atlas = (() => {
     });
 
 
-    const user_db = new LX.Vendor.PouchDB("lx-user");
+    const user_db = new LX.Vendor.PouchDB("lx-user", {auto_compaction: true});
     user_db.get("atlas_view").then((doc) => {
         console.log("[Atlas] Saved map view:", doc);
         self.map.setView([doc.lat, doc.lng], doc.zoom);
     }).catch((e) => {
-        self.map.setView([38.42, -12.79], 2);
+        self.map.setView([38.42, -12.79], 3);
         // fine if we don't have context or can't retrieve...
     });
 
@@ -83,7 +83,11 @@ LX.Atlas = (() => {
     //------------------------------------------------------------------------
     // map event for when location is found...
     self.map.on("locationfound", (e) => {
-        console.log("[Atlas] User location found", e, self.toGeohash(e.latlng));
+        let new_geo = self.toGeohash(e.latlng);
+        if (new_geo != last_geo) {
+            last_geo = new_geo;
+            console.log("[Atlas] New user location found", e, last_geo);            
+        }
     });
 
     // map event for when location changes...
