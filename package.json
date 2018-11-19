@@ -24,7 +24,10 @@
         "vue-resource": "*",
         "moment": "*",
         "geohash-distance": "*",
-        "latlon-geohash": "*"
+        "latlon-geohash": "*",
+        "mnemonic.js": "0.0.1",
+        "elliptic": "*",
+        "short-hash": "*"
     },
     "scripts": {
         "start": "node ./web/index.js",

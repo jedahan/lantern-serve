@@ -25341,7 +25341,10 @@ exports.parse = function (str) {
 };
 
 },{}],13:[function(require,module,exports){
-const PouchDB = require("pouchdb-browser");
+"use strict";
+const LX = window.LX || {}; if (!window.LX) window.LX = LX;
+LX.Vendor = LX.Vendor || {};
+const PouchDB = LX.Vendor.PouchDB = require("pouchdb-browser");
 require("leaflet");
 
 /*

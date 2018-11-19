@@ -1,3 +1,4 @@
+"use strict";
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 
 //----------------------------------------------------------------------------
@@ -6,7 +7,7 @@ LX.Config = (() => {
 
 	self.leaflet = {
 		attribution: false,
-        dbName: "map-cache",
+        dbName: "lx-tiles",
         maxZoom: 16,
         useCache:  true,
         useOnlyCache: false,
@@ -63,6 +64,7 @@ LX.Atlas = (() => {
 	} 
 
 
+
 	//------------------------------------------------------------------------
 	// bind dom element for leaflet
 	self.map = L.map("map");
@@ -117,11 +119,8 @@ LX.Atlas = (() => {
     	}
     }
 
-
-
-	//------------------------------------------------------------------------
-
-	
-
 	return self;
 })();
+
+
+//----------------------------------------------------------------------------
