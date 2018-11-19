@@ -22,7 +22,6 @@
         "leaflet.locatecontrol": "*",
         "bulma": "*",
         "vue": "^2.5.17",
-        "vue-resource": "*",
         "moment": "*",
         "geohash-distance": "*",
         "latlon-geohash": "*",
@@ -30,6 +29,9 @@
         "@fortawesome/fontawesome-free": "*",
         "elliptic": "*",
         "short-hash": "*"
+    },
+    "browser": {
+        "vue": "vue/dist/vue.common.js"
     },
     "scripts": {
         "start": "node ./web/index.js",
