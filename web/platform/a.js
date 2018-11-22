@@ -69,7 +69,7 @@ LX.App = class App extends EventEmitter {
 
 
 
-    createComponent(page_id, body, config) {
+    createComponent(page_id, body, conf, methods) {
         let cmp = {
             template: body
         };
@@ -78,18 +78,18 @@ LX.App = class App extends EventEmitter {
 
         let self = this;
 
-        if (config) {
-
-             if (config.data) {
+        if (conf) {
+             if (conf.data) {
                 // keep multiple components in same app together with same data
-                self.data = config.data;
+                self.data = conf.data;
                 cmp.data = function() {
                     return self.data;
                 }
             }
-            if (config.methods) {
-                cmp.methods = config.methods;
-            }
+        }
+
+        if (methods) {
+            cmp.methods = methods;
         }
 
         let component = Vue.component(component_id, cmp);
@@ -99,18 +99,18 @@ LX.App = class App extends EventEmitter {
         self.emit("load", component_id);
 
 
-        if (config.hasOwnProperty("page") && config.page.hasOwnProperty(page_id)) {
-            if (config.page[page_id].autostart) {
+        if (conf.hasOwnProperty("page") && conf.page.hasOwnProperty(page_id)) {
+            if (conf.page[page_id].autostart) {
                 self.emit("start", component_id);
             }
         }
-        else if (config.autostart) {
+        else if (conf.autostart) {
             self.emit("start", component_id);
         }
 
     }
 
-    loadPages(config) {
+    loadPages(conf, methods) {
         let files = {};
         this.children.forEach((child) => {
             // only load html pages
@@ -122,38 +122,50 @@ LX.App = class App extends EventEmitter {
                     return result.text();
                 })
                 .then((body) => {
-                    return this.createComponent(page_id, body, config);
+                    return this.createComponent(page_id, body, conf, methods);
                 });
         });    
     }
 
+    loadFile(name,json) {
+        let exists = false;
+        this.children.forEach((child) => {
+            if (child.name !=  name) return;
+            exists = true;
+        });   
+        
+        if (!exists) return;
 
+        let filename = ["/app", this.name,  name].join("/");  
+        return fetch(filename)
+            .then((result) => {
+                if (result.status == 200) {
+                    if (json) {
+                        return result.json();
+                    }
+                    else {
+                        return result.text();
+                    }
+                }
+            });
+    }
 
     loadAll() {
-
-        // do we have a config?
-        let config_file_name = "app.json";
-        let has_component_config = false;
-
-        this.children.forEach((child) => {
-            if (child.name != config_file_name) return;
-            has_component_config = true;
-        });
-
-        // load all our pages with config if available
-        if (!has_component_config) {
-            return this.loadPages();
-        }
-        else {
-            let filename = ["/app", this.name, config_file_name].join("/");  
-            fetch(filename)
-                .then((result) => {
-                    return result.json()
-                })
-                .then((json) => {
-                    this.loadPages(json);
-                });
-        }
+        let conf = "";
+        this.loadFile("conf.json", true)
+            .then((data) => {
+                conf = data
+            })
+            .then(() => {
+                return this.loadFile("app.js");
+            })
+            .then((methods) => {
+                if (methods) {
+                    // convert from stand-alone file into javascript that can be executed by vue
+                    methods = eval(methods);
+                }
+                this.loadPages(conf, methods)
+            });
     }
 
 }
@@ -184,6 +196,7 @@ LX.Director = (() => {
         });
 
         obj.on("start", (component_id) => {
+            console.log("[Director] App starts component:", component_id);
             self.vue.app_components.push(component_id);
         });
     }
