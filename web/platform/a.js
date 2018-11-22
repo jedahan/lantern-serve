@@ -5,8 +5,9 @@ LX.Vendor = LX.Vendor || {};
 
 
 //----------------------------------------------------------------------------
-const EventEmitter = require("event-emitter-es6");
+const EventEmitter = LX.Vendor.EventEmitter = require("event-emitter-es6");
 const Vue = LX.Vendor.Vue = require("vue");
+
 
 
 //----------------------------------------------------------------------------
@@ -52,9 +53,7 @@ LX.Config = (() => {
 
 
 
-
 //----------------------------------------------------------------------------
-
 LX.App = class App extends EventEmitter {
     
 
@@ -89,8 +88,7 @@ LX.App = class App extends EventEmitter {
                 cmp.methods = config.methods;
             } 
         }
-        this.component = Vue.component("app-"+this.name, cmp);
-        console.log("[App] Initialized: " + this.name);
+        this.component = Vue.component("lx-app-"+this.name, cmp);
         this.emit("load");
     }
 
@@ -141,15 +139,20 @@ LX.App = class App extends EventEmitter {
 
 }
 
+
+
+//----------------------------------------------------------------------------
 LX.Director = (() => {
+
     let self = {
         apps: [],
+        profile: null,
         vue: new Vue({
             el: '#app-container',
             data: {
                 app_components: [],
                 mask: true,
-                profile: {}
+                profile_address: null
             }
         })
     };
@@ -162,15 +165,11 @@ LX.Director = (() => {
 
             // automatically render apps with autostart activated
             if (obj.config.autostart) {
-                self.vue.app_components.push("app-"+obj.name);
+                self.vue.app_components.push("lx-app-"+obj.name);
             }
         });
     }
 
-    self.setProfile = function(profile) {
-        console.log("[Director] Set profile:" + profile.address);
-        self.vue.profile = profile;
-    }
 
     self.start = function() {
         console.log("[Director] Start")
@@ -184,6 +183,12 @@ LX.Director = (() => {
             .then((json) => {
                 json.forEach(parseApp);
             });
+
+        // get or create a unique profile for this user / device
+        self.profile = new LX.Profile();
+        self.profile.on("load", () => {
+            self.vue.profile_address = self.profile.address;
+        });
 
     }
     

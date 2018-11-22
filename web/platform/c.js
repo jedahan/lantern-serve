@@ -14,10 +14,15 @@ const elliptic = require("elliptic");
 const Mnemonic = require("mnemonic.js");
 const shortHash = require("short-hash");
 
-LX.Profile = class Profile {
+LX.Profile = class Profile extends LX.Vendor.EventEmitter {
 
     constructor(skip_check) {
+
+        super();
+
         this.db = new LX.Vendor.PouchDB("lx-user");
+
+
         if (skip_check) {
             console.log("[Profile] Making a new profile by explicit request")
             this.generate();
@@ -37,7 +42,10 @@ LX.Profile = class Profile {
                     });
                     if (is_valid) {
                         console.log("[Profile] Using existing profile from storage with address: " + profile.address);
-                        LX.Director.setProfile(profile);
+                        requirements.forEach((key) =>  {
+                            this[key] = profile[key];
+                        });
+                        this.emit("load");
                     }
                     else {
                         console.log("[Profile] Removing invalid profile from storage");
@@ -100,7 +108,7 @@ LX.Profile = class Profile {
         this.db.put(doc)
             .then(() => {
                 console.log("[Profile] Saved to browser");
-                LX.Director.setProfile(doc);
+                this.emit("load");
             })
             .catch((e) => {
                 console.log("[Profile] Unable to save", e);
