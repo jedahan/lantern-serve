@@ -31,7 +31,6 @@ LX.Profile = class Profile extends LX.Vendor.EventEmitter {
             // check browser for known profile for this user
             this.db.get("profile")
                 .then((profile) => {
-                    console.log(profile);
                     let requirements = ["mnemonic", "address", "public_key", "private_key"];
                     let is_valid = true;
                     requirements.forEach((key) =>  {
