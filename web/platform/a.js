@@ -63,7 +63,6 @@ LX.App = class App extends EventEmitter {
         this.children = obj.children;
         this.components = [];
         this.pages = [];
-        this.config = {};
         this.data = {};
         this.loadAll(); 
     }
@@ -75,28 +74,40 @@ LX.App = class App extends EventEmitter {
             template: body
         };
 
+        let component_id = ["lx", "app", this.name, page_id].join("-");
+
         let self = this;
+
         if (config) {
-            if(config.autostart) {
-                self.config.autostart = config.autostart;
-            }
+
              if (config.data) {
                 // keep multiple components in same app together with same data
                 self.data = config.data;
-                console.log(self.data);
                 cmp.data = function() {
                     return self.data;
                 }
             }
             if (config.methods) {
                 cmp.methods = config.methods;
-            } 
+            }
         }
-        let component_id = ["lx", "app", self.name, page_id].join("-");
-        let component = Vue.component(component_id, cmp)
+
+        let component = Vue.component(component_id, cmp);
+
         self.pages.push(page_id);
         self.components.push(component);
         self.emit("load", component_id);
+
+
+        if (config.hasOwnProperty("page") && config.page.hasOwnProperty(page_id)) {
+            if (config.page[page_id].autostart) {
+                self.emit("start", component_id);
+            }
+        }
+        else if (config.autostart) {
+            self.emit("start", component_id);
+        }
+
     }
 
     loadPages(config) {
@@ -170,11 +181,10 @@ LX.Director = (() => {
         self.apps.push(obj);
         obj.on("load", (component_id) => {
             console.log("[Director] App loads component: ", component_id );
+        });
 
-            // automatically render apps with autostart activated
-            if (obj.config.autostart) {
-                self.vue.app_components.push(component_id);
-            }
+        obj.on("start", (component_id) => {
+            self.vue.app_components.push(component_id);
         });
     }
 
