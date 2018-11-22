@@ -37,7 +37,7 @@ LX.Profile = class Profile {
                     });
                     if (is_valid) {
                         console.log("[Profile] Using existing profile from storage with address: " + profile.address);
-                        LX.Director.app.profile = profile;
+                        LX.Director.setProfile(profile);
                     }
                     else {
                         console.log("[Profile] Removing invalid profile from storage");
@@ -100,7 +100,7 @@ LX.Profile = class Profile {
         this.db.put(doc)
             .then(() => {
                 console.log("[Profile] Saved to browser");
-                LX.Director.app.profile = profile;
+                LX.Director.setProfile(doc);
             })
             .catch((e) => {
                 console.log("[Profile] Unable to save", e);

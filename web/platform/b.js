@@ -355,37 +355,39 @@ LX.Atlas = (() => {
         //------------------------------------------------------------------------
 
         self.map.on("load", (e) => {
-            if (LX.Director.app) {
-                LX.Director.app.mask = false;
+            if (LX.Director) {
+                LX.Director.start();
             }
-        });
+                
+            // map event for when location is found...
+            self.map.on("locationfound", (e) => {
+                let new_geo = self.toGeohash(e.latlng);
+                if (new_geo != last_geo) {
+                    last_geo = new_geo;
+                    console.log("[Atlas] New user location found", e, last_geo);            
+                }
+            });
 
-        // map event for when location is found...
-        self.map.on("locationfound", (e) => {
-            let new_geo = self.toGeohash(e.latlng);
-            if (new_geo != last_geo) {
-                last_geo = new_geo;
-                console.log("[Atlas] New user location found", e, last_geo);            
-            }
-        });
-
-        // map event for when location changes...
-        self.map.on("moveend", (e) => {
-            let doc = {
-                "_id": "atlas_view",
-                "lat": self.map.getCenter().lat,
-                "lng": self.map.getCenter().lng,
-                "zoom": self.map.getZoom()
-            }
-            user_db.get("atlas_view").then((old_doc) => {
-                user_db.remove(old_doc).then(() => {
+            // map event for when location changes...
+            self.map.on("moveend", (e) => {
+                console.log("[Atlas] Map moved")
+                let doc = {
+                    "_id": "atlas_view",
+                    "lat": self.map.getCenter().lat,
+                    "lng": self.map.getCenter().lng,
+                    "zoom": self.map.getZoom()
+                }
+                user_db.get("atlas_view").then((old_doc) => {
+                    user_db.remove(old_doc).then(() => {
+                        user_db.put(doc);
+                    });
+                })
+                .catch((e) => {
                     user_db.put(doc);
                 });
             })
-            .catch((e) => {
-                user_db.put(doc);
-            });
-        })
+        });
+
     }
 
 

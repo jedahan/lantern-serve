@@ -14,8 +14,8 @@
     <div id="app-container">
 
         <div class="app-full-screen" v-cloak>
-            <div class="app-frame" v-if="profile.address">
-                <section class="section">{{ profile.address }}</section>
+            <div v-for="app in app_components" class="app-frame">
+                <component v-bind:is="app"></component>
             </div>
         </div>
 

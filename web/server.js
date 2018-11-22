@@ -21,14 +21,14 @@ const util = require("./util");
 const db = util.CoreDatabase;
 const map_db = util.MapDatabase;
 const log = util.Logger;
-const app = express();
+const server = express();
 
 
 
 //----------------------------------------------------------------------------
-app.disable("x-powered-by");
-app.use(compression());
-app.use(helmet({
+server.disable("x-powered-by");
+server.use(compression());
+server.use(helmet({
   noCache: true,
   hsts: false
 }));
@@ -37,14 +37,14 @@ app.use(helmet({
 const middleware_files = fs.readdirSync(path.resolve(__dirname, "./middleware"));
 middleware_files.forEach((file) => {
     log.debug("[middleware] " + file);
-    app.use(require("./middleware/" + file));
+    server.use(require("./middleware/" + file));
 });
 
 // auto-load routes
 const route_files = fs.readdirSync(path.resolve(__dirname, "./routes"));
 route_files.forEach((file) => {
     log.debug("[route] " + file);
-    require("./routes/" + file)(app);
+    require("./routes/" + file)(server);
 });
 
 
@@ -54,20 +54,25 @@ if (fs.existsSync("../../../routes")) {
     const extra_route_files = fs.readdirSync(path.resolve(__dirname, "../../../routes"));
     extra_route_files.forEach((file) => {        
         log.debug("[route] " + file);
-        require("../../../routes/" + file)(app);
+        require("../../../routes/" + file)(server);
     });   
 }
 
 // platform route serves core application environment
 const platform_path = path.resolve(__dirname, "./platform/");
-app.use("/platform/", express.static(platform_path));
+server.use("/platform/", express.static(platform_path));
+
+
+// layers for custom app functionality
+const apps_path = path.resolve(__dirname, "..", "apps")
+server.use("/app/", express.static(apps_path))
 
 // modules
 const modules_path = path.resolve(__dirname, "../node_modules/");
-app.use("/_/", express.static(modules_path));
+server.use("/_/", express.static(modules_path));
 
 // final routes are for any static pages and binary files
 const static_path = path.resolve(__dirname, "./public/");
-app.use("/", express.static(static_path));
+server.use("/", express.static(static_path));
 
-module.exports = app;
+module.exports = server;
