@@ -61,35 +61,42 @@ LX.App = class App extends EventEmitter {
         super();
         this.name = obj.name;
         this.children = obj.children;
-        this.component = null;
+        this.components = [];
+        this.pages = [];
         this.config = {};
+        this.data = {};
         this.loadAll(); 
     }
 
 
 
-    createComponent(body, config) {
+    createComponent(page_id, body, config) {
         let cmp = {
             template: body
         };
 
+        let self = this;
         if (config) {
-
             if(config.autostart) {
-                this.config.autostart = config.autostart;
+                self.config.autostart = config.autostart;
             }
-
              if (config.data) {
+                // keep multiple components in same app together with same data
+                self.data = config.data;
+                console.log(self.data);
                 cmp.data = function() {
-                    return config.data;
+                    return self.data;
                 }
             }
             if (config.methods) {
                 cmp.methods = config.methods;
             } 
         }
-        this.component = Vue.component("lx-app-"+this.name, cmp);
-        this.emit("load");
+        let component_id = ["lx", "app", self.name, page_id].join("-");
+        let component = Vue.component(component_id, cmp)
+        self.pages.push(page_id);
+        self.components.push(component);
+        self.emit("load", component_id);
     }
 
     loadPages(config) {
@@ -98,12 +105,13 @@ LX.App = class App extends EventEmitter {
             // only load html pages
             if (child.extension != ".html") return;
             let filename = ["/app", this.name, child.name].join("/");
+            let page_id = child.name.split(".")[0];
             fetch(filename)
                 .then((result) => {
                     return result.text();
                 })
                 .then((body) => {
-                    return this.createComponent(body, config);
+                    return this.createComponent(page_id, body, config);
                 });
         });    
     }
@@ -157,15 +165,15 @@ LX.Director = (() => {
         })
     };
 
-    const parseApp = (app) => {
+    const loadApp = (app) => {
         let obj = new LX.App(app);
         self.apps.push(obj);
-        obj.on("load", () => {
-            console.log("[Director] App load: ", obj.name);
+        obj.on("load", (component_id) => {
+            console.log("[Director] App loads component: ", component_id );
 
             // automatically render apps with autostart activated
             if (obj.config.autostart) {
-                self.vue.app_components.push("lx-app-"+obj.name);
+                self.vue.app_components.push(component_id);
             }
         });
     }
@@ -181,7 +189,7 @@ LX.Director = (() => {
                 return result.json()
             })
             .then((json) => {
-                json.forEach(parseApp);
+                json.forEach(loadApp);
             });
 
         // get or create a unique profile for this user / device

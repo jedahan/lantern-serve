@@ -342,7 +342,6 @@ LX.Atlas = (() => {
 
         const user_db = new LX.Vendor.PouchDB("lx-user", {auto_compaction: true});
         user_db.get("atlas_view").then((doc) => {
-            console.log("[Atlas] Saved map view:", doc);
             self.map.setView([doc.lat, doc.lng], doc.zoom);
         }).catch((e) => {
             self.map.setView([38.42, -12.79], 3);
@@ -370,7 +369,6 @@ LX.Atlas = (() => {
 
             // map event for when location changes...
             self.map.on("moveend", (e) => {
-                console.log("[Atlas] Map moved")
                 let doc = {
                     "_id": "atlas_view",
                     "lat": self.map.getCenter().lat,
@@ -379,11 +377,15 @@ LX.Atlas = (() => {
                 }
                 user_db.get("atlas_view").then((old_doc) => {
                     user_db.remove(old_doc).then(() => {
-                        user_db.put(doc);
+                        user_db.put(doc).then(() => {
+                            console.log("[Atlas] Re-saved map view:", [doc.lat, doc.lng], doc.zoom);
+                        });
                     });
                 })
                 .catch((e) => {
-                    user_db.put(doc);
+                    user_db.put(doc).then(() => {
+                        console.log("[Atlas] Saved map view:", [doc.lat, doc.lng], doc.zoom);
+                    });
                 });
             })
         });
