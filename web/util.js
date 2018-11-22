@@ -18,6 +18,20 @@ fs.ensureDirSync(path.resolve(__dirname, "logs"));
 
 
 //----------------------------------------------------------------------
+self.removeMeta = function(obj) {
+    for(var prop in obj) {
+        if (prop === 'path') {
+          delete obj[prop];
+        }
+        else if (typeof obj[prop] === 'object') {
+          this.removeMeta(obj[prop]);
+        }
+    }
+}
+
+
+
+//----------------------------------------------------------------------
 /**
 * Custom build of PouchDB Server to meet our SQLite requirements
 * Also removes extras we do not need that are in full "pouchdb" library

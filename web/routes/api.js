@@ -1,6 +1,7 @@
 "use strict"
 
-const fs = require("fs");
+const fs = require("fs-extra");
+const directoryTree = require("directory-tree");
 const path = require("path");
 const bodyParser = require("body-parser");
 const util = require("../util");
@@ -56,7 +57,7 @@ module.exports = (serv) => {
     });  
 
     serv.get("/api/version", (req, res) => {
-        var package_file_path = path.join(__dirname, "..", "package.json");
+        var package_file_path = path.join(__dirname, "..", "..", "package.json");
         var obj = JSON.parse(fs.readFileSync(package_file_path, 'utf8'));
         res.status(200).json({"name":"Lantern (JavaScript)","version": obj.version});
     });
@@ -113,8 +114,17 @@ module.exports = (serv) => {
 
 
     //------------------------------------------------------------------
-    serv.post("/api/ui", (req, res) => {
-        require("../bin/load-apps")(() => {
+    serv.get("/api/apps", (req,res) => {
+        var layers_path = path.join(__dirname, "..", "..", "apps");
+        let filteredTree = directoryTree(layers_path, [".html", ".json"]);
+        util.removeMeta(filteredTree, "path");
+        res.status(200).json(filteredTree.children);
+           
+    })
+
+
+    serv.post("/api/apps", (req, res) => {
+        require("../../bin/load-apps")(() => {
             res.status(201).json({"ok": true});
         });
     });
