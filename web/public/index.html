@@ -15,7 +15,7 @@
     <div id="app-container">
 
         <div class="app-full-screen" v-cloak>
-            <div v-for="app in app_components" class="app-frame">
+            <div v-for="app in app_components">
                 <component v-bind:is="app" v-bind:id="app" class="app"></component>
             </div>
         </div>
