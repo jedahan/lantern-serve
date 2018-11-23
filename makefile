@@ -10,6 +10,7 @@ pack:
 	browserify web/platform/a.js -o web/platform/dist/a.js
 	browserify web/platform/b.js -o web/platform/dist/b.js
 	browserify web/platform/c.js -o web/platform/dist/c.js
+	browserify web/platform/d.js -o web/platform/dist/d.js
 
 install: 
 	npm install
@@ -19,6 +20,7 @@ start:
 	browserify web/platform/a.js -o web/platform/dist/a.js
 	browserify web/platform/b.js -o web/platform/dist/b.js
 	browserify web/platform/c.js -o web/platform/dist/c.js
+	browserify web/platform/d.js -o web/platform/dist/d.js
 	npm start	
 
 docker-build:

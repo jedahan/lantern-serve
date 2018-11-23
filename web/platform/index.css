@@ -129,6 +129,8 @@ html, body, #map {
 	background: #3273dc;
 }
 
+
+
 /*----------------------------------------------------------------------------*/
 #app-container, .app-mask {
 	position: absolute;
@@ -163,3 +165,38 @@ html, body, #map {
 	margin: auto;
 	position: relative;
 }
+
+
+
+/*----------------------------------------------------------------------------*/
+ul.menu li
+    color: #3273dc;
+    background: #FFF;
+    padding: 1.5em;
+    padding-right: 1em;
+    border-top: 1px solid $light-border;
+    width: 100%;
+    display: block;
+}
+
+ul.menu li:last-child  {
+    border-bottom: 1px solid $light-border;
+}
+
+ul.menu li:hover {
+    cursor: pointer;
+    background: #FAFAFA;
+}
+
+ul.menu .icon {
+    float: right;
+    margin-top: -0.75em;   
+    margin-right: 0px;
+}
+
+ul.menu i {
+	margin-right: 0px;
+	padding-right: 0px;
+}
+
+
