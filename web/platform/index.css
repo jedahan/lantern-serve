@@ -14,7 +14,7 @@ html, body, #map {
 [v-cloak] { display:none }
 
 .fade-enter-active, .fade-leave-active {
-  transition: all 0.7s  cubic-bezier(0.2, 0.1, 0.1, 0.2);
+  transition: all 0.2s  cubic-bezier(0.5, 0.05, 0.05, 0.2);
 }
 .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
   opacity: 0;
@@ -161,12 +161,13 @@ html, body, #map {
 }
 
 .app-frame {
+	border: 1px solid #EEE;
 	background: rgba(255,255,255,0.9);
 	margin: 1em;
+	margin: auto;
 }
 
 .app {
-	border: 1px solid #EEE;
 	margin: auto;
 	position: relative;
 }

@@ -49,17 +49,25 @@ LX.App = class App extends LV.EventEmitter {
 
 
         let component = LV.Vue.component(component_id, cmp);
-
-        self.pages.push(
-            {"id": page_id,
+        let page = {
+            "id": page_id,
+            "data": this.data,
             "component_id": component_id,
-            "component": component }
-        );
+            "component": component ,
+            "app": this.name
+        }
+        self.pages.push(page)
 
-        self.emit("load", component_id);
 
-        if (logic.open) {
-            self.open(component_id);
+        self.emit("load", page);
+
+        if (logic) {
+            if (logic.callback) {
+                logic.callback(page);
+            }
+            if (logic.open) {
+                self.open(component_id);
+            }            
         }
 
     }
@@ -169,7 +177,7 @@ LX.App = class App extends LV.EventEmitter {
 
     load() {
         let logic = {};
-        let accepted = ["data", "computed", "methods", "open"];
+        let accepted = ["data", "computed", "methods", "open", "callback"];
         this.loadOneFile("app.js")
             .then((result) => {
                 result = eval(result);
@@ -241,8 +249,8 @@ LX.Director = (() => {
         }
         let obj = new LX.App(app_files);
         self.apps[obj.name] = obj;
-        obj.on("load", (component_id) => {
-            console.log("[Direct] App loads component: ", component_id );
+        obj.on("load", (page) => {
+            console.log("[Direct] App loads page: ", page );
         });
 
         obj.on("open", (component_id) => {
