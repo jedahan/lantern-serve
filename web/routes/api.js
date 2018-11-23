@@ -116,9 +116,9 @@ module.exports = (serv) => {
     //------------------------------------------------------------------
     serv.get("/api/apps", (req,res) => {
         var layers_path = path.join(__dirname, "..", "..", "apps");
-        let filteredTree = directoryTree(layers_path, [".html", ".json"]);
-        util.removeMeta(filteredTree, "path");
-        res.status(200).json(filteredTree.children);
+        let filtered_tree = directoryTree(layers_path, {extensions: /\.(html|js|json|css|png|gif|jpg|jpeg)$/});
+        util.removeMeta(filtered_tree, "path");
+        res.status(200).json(filtered_tree.children);
            
     })
 

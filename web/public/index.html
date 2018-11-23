@@ -7,6 +7,7 @@
     <link rel="stylesheet" type="text/css" href="/_/leaflet/dist/leaflet.css"/>
     <link rel="stylesheet" type="text/css" href="/_/@fortawesome/fontawesome-free/css/all.min.css"/>
     <link rel="stylesheet" type="text/css" href="/_/leaflet.locatecontrol/dist/L.Control.Locate.min.css"/>
+    <link rel="stylesheet" type="text/css" href="/_/leaflet-contextmenu/dist/leaflet.contextmenu.min.css"/>
     <link rel="stylesheet" type="text/css" href="/_/bulma/css/bulma.min.css"/>
     <link rel="stylesheet" type="text/css" href="/platform/index.css"/>
 </head>
@@ -15,12 +16,12 @@
 
         <div class="app-full-screen" v-cloak>
             <div v-for="app in app_components" class="app-frame">
-                <component v-bind:is="app"></component>
+                <component v-bind:is="app" v-bind:id="app" class="app"></component>
             </div>
         </div>
 
         <transition name="fade">
-            <div v-if="mask" class="app-mask"></div>
+            <div v-if="map.mask" class="app-mask"></div>
         </transition>
 
     </div>

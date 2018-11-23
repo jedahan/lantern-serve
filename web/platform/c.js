@@ -40,7 +40,7 @@ LX.Profile = class Profile extends LX.Vendor.EventEmitter {
                         }
                     });
                     if (is_valid) {
-                        console.log("[Profile] Using existing profile from storage with address: " + profile.address);
+                        console.log("[Profile] Known profile from storage: " + profile.address);
                         requirements.forEach((key) =>  {
                             this[key] = profile[key];
                         });
@@ -114,3 +114,9 @@ LX.Profile = class Profile extends LX.Vendor.EventEmitter {
             });
     }
 }
+
+
+
+//----------------------------------------------------------------------------
+// all required items are loaded in by now. time to start everything up...
+LX.Director.start();

@@ -9,23 +9,48 @@ const EventEmitter = LX.Vendor.EventEmitter = require("event-emitter-es6");
 const Vue = LX.Vendor.Vue = require("vue");
 
 
+Array.prototype.getIndexForObjectWithKey = function(key, value) {
+    for (var idx in this) {
+        var item = this[idx];
+        if (item.hasOwnProperty(key) && item[key] == value) {
+           return idx;
+        }
+    }
+}
+
+Array.prototype.removeByValue = function(value) {
+    for (var idx in this) {
+        var item = this[idx];
+        if (item == value) {
+            return this.splice(idx,1);
+        }
+    }
+}
+
 
 //----------------------------------------------------------------------------
 LX.Config = (() => {
     let self = {};
 
-    self.leaflet = {
+    self.leaflet_map = {
+        zoomDelta: 1.5,
+        wheelPxPerZoomLevel: 100,
+        contextmenu: true,
+        contextmenuWidth: 140,
+    };
+    
+    self.leaflet_tiles = {
         attribution: false,
         dbName: "lx-tiles",
-        minZoom: 3,
-        maxZoom: 16,
+        minZoom: 4,
+        maxZoom: 20,
         useCache:  true,
         useOnlyCache: false,
         cacheMaxAge: 365*24*3600*1000,
         crossOrigin: true
     };
 
-    self.locatecontrol = {
+    self.leaflet_locatecontrol = {
         returnToPreviousBounds: true,
         cacheLocation: true,
         showCompass: true,
@@ -60,16 +85,17 @@ LX.App = class App extends EventEmitter {
     constructor(obj) {
         super();
         this.name = obj.name;
+        this.tag = `[lx-app-${this.name}]`;
+        this.css_id = `lx-app-${this.name}-css`;
         this.children = obj.children;
-        this.components = [];
         this.pages = [];
         this.data = {};
-        this.loadAll(); 
+        this.load(); 
     }
 
 
 
-    createComponent(page_id, body, conf, methods) {
+    createPageComponent(page_id, body, logic) {
         let cmp = {
             template: body
         };
@@ -78,95 +104,181 @@ LX.App = class App extends EventEmitter {
 
         let self = this;
 
-        if (conf) {
-             if (conf.data) {
+        if (logic) {
+             if (logic.data) {
                 // keep multiple components in same app together with same data
-                self.data = conf.data;
+                self.data = logic.data;
                 cmp.data = function() {
                     return self.data;
                 }
             }
+
+            if (logic.computed) {
+                cmp.computed = logic.computed;
+            }
+            if (logic.methods) {
+                cmp.methods = logic.methods;
+            }
         }
 
-        if (methods) {
-            cmp.methods = methods;
-        }
 
         let component = Vue.component(component_id, cmp);
 
-        self.pages.push(page_id);
-        self.components.push(component);
+        self.pages.push(
+            {"id": page_id,
+            "component_id": component_id,
+            "component": component }
+        );
+
         self.emit("load", component_id);
 
-
-        if (conf.hasOwnProperty("page") && conf.page.hasOwnProperty(page_id)) {
-            if (conf.page[page_id].autostart) {
-                self.emit("start", component_id);
-            }
-        }
-        else if (conf.autostart) {
-            self.emit("start", component_id);
+        if (logic.open) {
+            self.open(component_id);
         }
 
     }
 
-    loadPages(conf, methods) {
+    /**
+    * Displays Vue component on the screen
+    */
+    open(component_id) {
+        this.emit("open", component_id);
+    }
+
+    /**
+    * Hides Vue component but keeps style injection for other open components
+    */
+    close(component_id) {
+        this.emit("close", component_id);
+    }
+
+
+    /**
+    * Inject CSS into DOM, allowing apps to redefine global styles if needed
+    */
+    addCSS(css) {
+        let head = document.getElementsByTagName('head')[0];
+        let s = document.createElement('style');
+        s.setAttribute('type', 'text/css');
+        s.id = this.css_id
+        if (s.styleSheet) {   // IE
+            s.styleSheet.cssText = css;
+        } else {                // the world
+            s.appendChild(document.createTextNode(css));
+        }
+        head.appendChild(s);
+    }
+    
+    removeCSS() {
+        let s = document.getElementById(this.css_id);
+        s.parentNode.removeChild(s);
+    }
+
+    /**
+    * Load a single HTML page into DOM using Vue
+    */
+    loadOnePage(filename, page_id, logic) {
+        fetch(filename)
+            .then((result) => {
+                return result.text();
+            })
+            .then((html) => {
+                // rewrite src attribute to point to proper web directory
+                let image_re = /(<img[\S\s]*?src=")([\S\s]*?)("[\S\s]*?>)/ig;
+                return html.replace(image_re, "$1"+ `/apps/${this.name}/` + "$2$3");
+            })
+            .then((body) => {
+                return this.createPageComponent(page_id, body, logic);
+            });
+    }
+
+    /**
+    * Load all HTML pages for app into DOM using Vue
+    */
+    loadAllPages(logic) {
         let files = {};
         this.children.forEach((child) => {
             // only load html pages
             if (child.extension != ".html") return;
-            let filename = ["/app", this.name, child.name].join("/");
+            let filename = ["/apps", this.name, child.name].join("/");
             let page_id = child.name.split(".")[0];
-            fetch(filename)
-                .then((result) => {
-                    return result.text();
-                })
-                .then((body) => {
-                    return this.createComponent(page_id, body, conf, methods);
-                });
+            this.loadOnePage(filename, page_id, logic);
         });    
     }
+    
+    /**
+    * Use fetch to retrieve any sort of file from app package
+    */
+    loadOneFile(name,json) {
+        return new Promise((resolve, reject) => {
+            let exists = false;
 
-    loadFile(name,json) {
-        let exists = false;
-        this.children.forEach((child) => {
-            if (child.name !=  name) return;
-            exists = true;
-        });   
-        
-        if (!exists) return;
+            this.children.forEach((child) => {
+                if (child.name !=  name) return;
+                exists = true;
+            });   
+            
+            if (!exists) return resolve();
 
-        let filename = ["/app", this.name,  name].join("/");  
-        return fetch(filename)
-            .then((result) => {
-                if (result.status == 200) {
-                    if (json) {
-                        return result.json();
+            let filename = ["/apps", this.name,  name].join("/");  
+            return fetch(filename)
+                .then((result) => {
+                    if (result.status == 200) {
+                        if (json) {
+                            return result.json();
+                        }
+                        else {
+                            return result.text();
+                        }
                     }
-                    else {
-                        return result.text();
-                    }
-                }
-            });
+                })
+                .then((contents) => {
+                    resolve(contents);
+                })
+                .catch((e) => {
+                    console.warn(this.tag + " Could not load file for " + this.name + ": " + name, e);
+                })
+        });
     }
 
-    loadAll() {
-        let conf = "";
-        this.loadFile("conf.json", true)
-            .then((data) => {
-                conf = data
+    load() {
+        let logic = {};
+        let accepted = ["data", "computed", "methods", "open"];
+        this.loadOneFile("app.js")
+            .then((result) => {
+                result = eval(result);
+                accepted.forEach((key) => {
+                    if (result.hasOwnProperty(key)) {
+                        logic[key] = result[key];
+                    }
+                });
             })
             .then(() => {
-                return this.loadFile("app.js");
+                return this.loadOneFile("app.css")
+                    .then((css)  => {
+                        if (css) {
+                            this.addCSS(css);
+                        }
+                    });
             })
-            .then((methods) => {
-                if (methods) {
-                    // convert from stand-alone file into javascript that can be executed by vue
-                    methods = eval(methods);
-                }
-                this.loadPages(conf, methods)
+            .then(() => {
+                this.loadAllPages(logic)
             });
     }
+
+    /**
+    * Removes all Vue components and related code and style injection
+    */
+    unload() {
+        this.pages.forEach((page) => {
+            this.close(page.component_id);
+        });
+        setTimeout(() => {
+            // allows vue to clear DOM to avoid flashes of content
+            this.removeCSS();
+        }, 300);
+    }
+
 
 }
 
@@ -176,35 +288,56 @@ LX.App = class App extends EventEmitter {
 LX.Director = (() => {
 
     let self = {
-        apps: [],
+        apps: {},
         profile: null,
         vue: new Vue({
             el: '#app-container',
             data: {
                 app_components: [],
-                mask: true,
-                profile_address: null
+                profile: {
+                    address: null
+                },
+                map: {
+                    mask: true,
+                    marker_count: 0
+                } 
             }
         })
     };
 
-    const loadApp = (app) => {
-        let obj = new LX.App(app);
-        self.apps.push(obj);
+
+
+    //------------------------------------------------------------------------
+    const createApp = (app_files) => {
+        if (!app_files.children) {
+            console.log("[Direct] Ignoring app directory with no children:", app_files.name);
+            return;
+        }
+        let obj = new LX.App(app_files);
+        self.apps[obj.name] = obj;
         obj.on("load", (component_id) => {
-            console.log("[Director] App loads component: ", component_id );
+            console.log("[Direct] App loads component: ", component_id );
         });
 
-        obj.on("start", (component_id) => {
-            console.log("[Director] App starts component:", component_id);
+        obj.on("open", (component_id) => {
+            console.log("[Direct] App opens component:", component_id);
             self.vue.app_components.push(component_id);
+        });
+
+        obj.on("close", (component_id) => {
+            console.log("[Direct] App closes component:", component_id);
+            self.vue.app_components.removeByValue(component_id);
         });
     }
 
 
+
+    //------------------------------------------------------------------------
     self.start = function() {
-        console.log("[Director] Start")
-        self.vue.mask = false;
+        console.log("[Direct] Start");
+
+        // define atlas to manage map interface
+        self.atlas = new LX.Atlas();
 
         // load in dynamic apps
         fetch("/api/apps")
@@ -212,16 +345,37 @@ LX.Director = (() => {
                 return result.json()
             })
             .then((json) => {
-                json.forEach(loadApp);
+                json.forEach(createApp);
             });
 
         // get or create a unique profile for this user / device
         self.profile = new LX.Profile();
         self.profile.on("load", () => {
-            self.vue.profile_address = self.profile.address;
+            self.vue.profile.address = self.profile.address;
         });
 
+
+        self.atlas.on("marker-add", () => {
+            this.vue.map.marker_count = self.atlas.getMarkerCount();
+        })
+
+    }
+
+
+    //------------------------------------------------------------------------
+    self.closeOneApp = function(app_id) {
+        if (this.apps.hasOwnProperty(app_id)) {
+            this.apps[app_id].unload();
+        }
     }
     
+    self.openOneApp = function(app_id) {
+        if (this.apps.hasOwnProperty(app_id)) {
+            this.apps[app_id].pages.forEach((page) => {
+                self.apps[app_id].open(`lx-app-${app_id}-${page.id}`);
+            });
+        }
+    }
+
     return self;
 })();
