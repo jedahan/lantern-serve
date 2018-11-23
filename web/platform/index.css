@@ -9,7 +9,7 @@ html, body, #map {
 [v-cloak] { display:none }
 
 .fade-enter-active, .fade-leave-active {
-  transition: opacity 0.4s;
+  transition: all 0.7s  cubic-bezier(0.2, 0.1, 0.1, 0.2);
 }
 .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
   opacity: 0;
@@ -19,17 +19,117 @@ html, body, #map {
 
 /*----------------------------------------------------------------------------*/
 #map {
-	z-index: 1;
     min-height: 200px;
 }
 #map .leaflet-control-attribution {
     display: none;
 }
+#map a.leaflet-contextmenu-item {
+	font-size: 14px;
+	padding: 1em;
+	white-space: nowrap;
+}
+#map .leaflet-touch .leaflet-control-layers, .leaflet-touch .leaflet-bar {
+    box-shadow: 0 1px 7px rgba(0,0,0,0.2);
+    border: 1px solid #CCC;
+    border-radius: 3px;
+}
 
+#map .leaflet-bar a {
+	width: 35px;
+	height: 35px;
+	line-height: 35px;
+	background: rgba(255,255,255,0.8);
+}
 
+#map .leaflet-control-zoom-in span, #map .leaflet-control-zoom-out span {
+	font-size: 0.7em;
+	color: #444;
+}
+
+#map .leaflet-bar a:hover  {
+	background: rgba(255,255,255,0.95);
+}
+
+#map .leaflet-bar a.leaflet-disabled:hover {
+	background: rgba(255,255,255,0.6);
+}
+
+#map .leaflet-control-zoom-in a:hover, #map .leaflet-control-zoom-out a:hover{
+	color: #111;
+}
+
+#map .leaflet-bar .leaflet-disabled span {
+	opacity: 0.5;
+}
+
+#map .leaflet-control-locate.active a {
+	color: #3273dc;
+}
+
+#map .lx-marker {
+	margin-left: -10px !important;
+	margin-top: -10px !important;
+	font-size: 20px;
+	text-align: center;
+	line-height: 20px;
+	background: #FFF;
+	width: 20px !important;
+	border: 2px rgba(255,255,255,0);
+	height: 20px !important;
+}
+
+#map .lx-marker, #map .lx-marker i {
+	border-radius: 100em;
+}
+
+.lx-map-zoom-normal #map .lx-marker {
+	font-size: 16px;
+	line-height: 16px;
+	width: 16px !important;
+	height: 16px !important;
+	margin-left: -8px !important;
+	margin-top: -8px !important;
+}
+
+.lx-map-zoom-far #map .lx-marker {
+	font-size: 6px;
+	line-height: 6px;
+	width: 6px !important;
+	height: 6px !important;
+	margin-left: -3px !important;
+	margin-top: -3px !important;
+}
+
+.lx-map-zoom-very-far #map .lx-marker {
+	font-size: 4px;
+	line-height:4px;
+	width: 4px !important;
+	height: 4px !important;
+	font-family: inherit;
+	margin-left: -2px !important;
+	margin-top: -2px !important;
+}
+
+.lx-map-zoom-very-close #map .lx-marker {
+	font-size: 24px;
+	line-height:24px;
+	width: 24px !important;
+	height: 24px !important;
+	font-family: inherit;
+	margin-left: -12px !important;
+	margin-top: -12px !important;
+}
+
+.lx-marker-blue {
+	color: #3273dc;
+}
+
+.lx-map-zoom-far .lx-marker-blue, .lx-map-zoom-very-far .lx-marker-blue {
+	background: #3273dc;
+}
 
 /*----------------------------------------------------------------------------*/
-
 #app-container, .app-mask {
 	position: absolute;
 	top: 0;
@@ -39,13 +139,14 @@ html, body, #map {
 }
 
 #app-container {
-	z-index: 2;
+	z-index: 2000;
 	pointer-events: none;
 }
 
 .app-mask {	
 	z-index: -1;
-	background: #FFF;
+	background: rgba(255,255,255,1);
+    pointer-events: auto;
 }
 
 .app-full-screen, .app-left-screen, .app-right-screen {
@@ -55,4 +156,10 @@ html, body, #map {
 .app-frame {
 	background: rgba(255,255,255,0.9);
 	margin: 1em;
+}
+
+.app {
+	border: 1px solid #EEE;
+	margin: auto;
+	position: relative;
 }

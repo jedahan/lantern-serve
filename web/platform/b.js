@@ -10,6 +10,88 @@ LX.Vendor.Geohash = require("latlon-geohash");
 require('geohash-distance');
 require("leaflet");
 require("leaflet.locatecontrol");
+require("leaflet-contextmenu");
+
+
+
+//----------------------------------------------------------------------------
+LX.Marker = class Marker extends LX.Vendor.EventEmitter {
+    constructor(latlng, opts) {
+        super();   
+        opts = opts || {};
+        let icon = opts.icon || "info-circle";
+        let color = opts.color || "blue";
+        
+        this.layer = L.marker(latlng, {
+            icon: L.divIcon({
+                html: `<i class="fa fa-${icon} lx-marker-${color}"></i>`,
+                className: "lx-marker"
+            })
+        });
+
+        this.data = {};
+        this.geohash = LX.Director.atlas.toGeohash(latlng); 
+        console.log(`[Marker] Added at ${this.geohash}`);
+
+        this.layer.on("click", () => {
+            console.log("[Marker] Clicked:", this.data)
+        });
+    }
+}
+
+LX.MarkerCollection = class MarkerCollection extends LX.Vendor.EventEmitter {
+
+    constructor(map, sets) {
+        super();
+        sets = sets || ["default"];
+
+        this.map = map;
+        this.sets = {};
+
+        // create a seperate layer group for each set for full display control
+        sets.forEach((set_id) => {
+            this.sets[set_id] = L.layerGroup();
+        });
+    }
+
+
+
+    //------------------------------------------------------------------------
+    getTotalSize() {
+        let tally = 0;
+        for (var set in this.sets) {
+            let count = this.getSetSize(set);
+            tally += count;                
+        }
+        return tally;
+    }
+
+    getSetSize(set_id) {
+        set_id = set_id || "default";
+        return this.sets[set_id].getLayers().length;
+    }
+
+    showSet(set_id) {
+        set_id = set_id || "default";
+        return this.map.addLayer(this.sets[set_id]);
+    } 
+
+    hideSet(set_id) {
+        set_id = set_id || "default";
+        return this.map.removeLayer(this.sets[set_id]);
+    }   
+
+
+
+    //------------------------------------------------------------------------
+
+    add(latlng, set, data, opts) {
+        let marker = new LX.Marker(latlng);
+        let layer_group = this.sets[set || "default"];
+        layer_group.addLayer(marker.layer).addTo(this.map);
+        return marker;
+    };
+}
 
 
 
@@ -303,93 +385,227 @@ L.TileLayer.include({
             }
         }.bind(this));
     }
-
 });
 
 
 //----------------------------------------------------------------------------
-LX.Atlas = (() => {
+LX.Atlas = class Atlas extends LX.Vendor.EventEmitter {
     
-    let self = {};
-    var last_geo;
-
-    self.render = () => {
-
-        //------------------------------------------------------------------------
-        // bind dom element for leaflet
-        self.map = L.map("map");
-        self.map.zoomControl.setPosition("bottomright");
-
-        // layer in hosted map tiles
-        const tile_uri = [
-                "https://maps.tilehosting.com/c/" , LX.Config.maptiler.id, "/styles/", 
+    constructor() {
+        super();
+        this.map = null;
+        this.center = null;
+        this.user = null;
+        this.collections = {
+        }
+        this.precision = {
+            user_max: 4,
+            center_max: 8
+        };
+        this.tile_uri = ["https://maps.tilehosting.com/c/" , LX.Config.maptiler.id, "/styles/", 
                 LX.Config.maptiler.map, "/{z}/{x}/{y}.png?key=", LX.Config.maptiler.key
             ].join("");
-        L.tileLayer(tile_uri, LX.Config.leaflet).addTo(self.map);
-            
-        // add locate control
-        L.control.locate(LX.Config.locatecontrol).addTo(self.map);
+        this.tile_db = new LX.Vendor.PouchDB(LX.Config.leaflet_tiles.dbName, {auto_compaction: true});
+        this.user_db = new LX.Vendor.PouchDB("lx-user", {auto_compaction: true});
+        this.render();
+    }
 
-
-
-        //------------------------------------------------------------------------
+    render() {
+        this.setupMap();
+        this.setupControls();
         // find current map cache size...
-        const tile_db = new LX.Vendor.PouchDB(LX.Config.leaflet.dbName, {auto_compaction: true});
-        tile_db.info().then((result) => {
+        this.tile_db.info().then((result) => {
             console.log("[Atlas] Cached map tiles: " + result.doc_count);
         });
-
-
-        const user_db = new LX.Vendor.PouchDB("lx-user", {auto_compaction: true});
-        user_db.get("atlas_view").then((doc) => {
-            self.map.setView([doc.lat, doc.lng], doc.zoom);
-        }).catch((e) => {
-            self.map.setView([38.42, -12.79], 3);
-            // fine if we don't have context or can't retrieve...
+        this.setViewFromCenterLocationCache();
+        // map event for when location is found...
+        this.map.on("locationfound", this.cacheUserLocation.bind(this));
+        // map event for when location changes...
+        this.map.on("moveend", (e) => {
+            this.calculateZoomClass();
+            this.cacheCenterLocation(e);
         });
+    }
 
 
 
+    //------------------------------------------------------------------------
+    setupMap() {
+        // bind dom element for leaflet
 
-        //------------------------------------------------------------------------
 
-        self.map.on("load", (e) => {
-            if (LX.Director) {
-                LX.Director.start();
-            }
-                
-            // map event for when location is found...
-            self.map.on("locationfound", (e) => {
-                let new_geo = self.toGeohash(e.latlng);
-                if (new_geo != last_geo) {
-                    last_geo = new_geo;
-                    console.log("[Atlas] New user location found", e, last_geo);            
-                }
-            });
+        let opts = {
+            contextmenuItems: [
+            {
+                text: 'Create marker',
+                callback: this.createMarker.bind(this)
+            }, 
+            {
+                text: 'Center map here',
+                callback: this.centerMap.bind(this)
+            }, {
+                text: 'Inspect area',
+                callback: this.inspectArea.bind(this)
+            }, '-', {
+                text: 'Zoom in',
+                iconCls: 'fa fa-search-plus',
+                callback: this.zoomIn.bind(this)
+            }, {
+                text: 'Zoom out',
+                iconCls: 'fa fa-search-minus',
+                callback: this.zoomOut.bind(this)
+            }]
+        }
 
-            // map event for when location changes...
-            self.map.on("moveend", (e) => {
-                let doc = {
-                    "_id": "atlas_view",
-                    "lat": self.map.getCenter().lat,
-                    "lng": self.map.getCenter().lng,
-                    "zoom": self.map.getZoom()
-                }
-                user_db.get("atlas_view").then((old_doc) => {
-                    user_db.remove(old_doc).then(() => {
-                        user_db.put(doc).then(() => {
+        this.map = L.map("map", Object.assign(opts, LX.Config.leaflet_map));
+
+
+        this.collections.usergen = new LX.MarkerCollection(this.map);
+
+        // layer in hosted map tiles
+        L.tileLayer(this.tile_uri, LX.Config.leaflet_tiles).addTo(this.map);
+    }
+
+    setupControls() {
+        // add locate control
+        L.control.locate(LX.Config.leaflet_locatecontrol).addTo(this.map);
+
+        // create custom zoom icons
+        let zoom_in = document.getElementsByClassName("leaflet-control-zoom-in")[0];
+        let elem = document.createElement('span');
+        elem.className = "fa fa-plus";
+        zoom_in.innerHTML = "";
+        zoom_in.appendChild(elem);
+
+
+        let zoom_out = document.getElementsByClassName("leaflet-control-zoom-out")[0];
+        let elem2 = document.createElement('span');
+        elem2.className = "fa fa-minus";
+        zoom_out.innerHTML = "";
+        zoom_out.appendChild(elem2);
+
+        this.map.zoomControl.setPosition("bottomright");
+    }
+
+    calculateZoomClass() {
+        let distance = "close";
+        let zoom = this.map.getZoom();
+
+        // map scale breakpoints
+        if (zoom < 9) {
+            distance = "very-far";
+        }
+        else if (zoom < 12) {
+            distance = "far";
+        }
+        else if (zoom < 15) {
+            distance = "normal";
+        }
+        else if (zoom > 17) {
+            distance = "very-close";
+        }
+        document.body.className=`lx-map-zoom-${distance}`;
+        return distance;
+    }
+
+
+
+    //------------------------------------------------------------------------
+    cacheUserLocation(e) {
+        let new_geo = this.toGeohash(e.latlng, this.precision.user_max);
+        if (new_geo != this.user) {
+            this.user = new_geo;
+            console.log("[Atlas] New user location found:", this.user);    
+        }
+    }
+
+
+    cacheCenterLocation(e) {
+        let doc = {
+            "_id": "atlas_view",
+            "lat": this.map.getCenter().lat,
+            "lng": this.map.getCenter().lng,
+            "zoom": this.map.getZoom()
+        }
+
+        // http://www.bigfastblog.com/geohash-intro
+        let precision = Math.round(this.precision.center_max * (doc.zoom/22))
+        let gh = this.toGeohash(doc, precision);
+        console.log("[Atlas] Center point geohash: " + gh );
+        this.center = gh;
+
+        // only save to database if user has paused on this map for a few seconds
+        setTimeout(() => {
+            if (this.map.getZoom() == doc.zoom 
+                && this.map.getCenter().lat == doc.lat
+                && this.map.getCenter().lng == doc.lng
+                ) {   
+                this.user_db.get("atlas_view").then((old_doc) => {
+                    this.user_db.remove(old_doc).then(() => {
+                        this.user_db.put(doc).then(() => {
                             console.log("[Atlas] Re-saved map view:", [doc.lat, doc.lng], doc.zoom);
                         });
                     });
                 })
                 .catch((e) => {
-                    user_db.put(doc).then(() => {
+                    this.user_db.put(doc).then(() => {
                         console.log("[Atlas] Saved map view:", [doc.lat, doc.lng], doc.zoom);
                     });
                 });
-            })
-        });
+            }
+        }, 8000);
+    }
 
+    setViewFromCenterLocationCache() {
+        this.user_db.get("atlas_view").then((doc) => {
+            this.map.setView([doc.lat, doc.lng], doc.zoom);
+        }).catch((e) => {
+            this.map.setView([38.42, -12.79], 3);
+            // fine if we don't have context or can't retrieve...
+        });
+    }
+
+
+
+    //------------------------------------------------------------------------
+
+    inspectArea(e) {
+        alert(e.latlng);
+    }
+
+    createMarker(e) {
+        let marker = this.collections.usergen.add(e.latlng);
+        this.emit("marker-add", marker);
+    }
+
+    centerMap(e) {
+        this.map.flyTo(e.latlng, this.map.getZoom()+1, {
+            pan: {
+                animate: true,
+                duration: 1.5
+            },
+            zoom: {
+                animate: true
+            }
+        });
+    }
+
+    zoomIn(e) {
+        this.map.zoomIn();
+    }
+
+    zoomOut(e){
+        this.map.zoomOut();
+    }
+
+    //------------------------------------------------------------------------
+    getMarkerCount() {
+        let tally = 0;
+        for (var idx in this.collections) {
+            var collection = this.collections[idx];
+            tally += collection.getTotalSize();
+        }
+        return tally;
     }
 
 
@@ -397,7 +613,8 @@ LX.Atlas = (() => {
     /** 
     * Attempt to reduce any type of location into a geohash for storage and processing
     */
-    self.toGeohash = (input) => {
+    toGeohash(input, precision) {
+        precision = precision || 8;
         if (typeof(input) == "string") {
             try {
                 LX.Vendor.Geohash.decode(input);
@@ -414,10 +631,10 @@ LX.Atlas = (() => {
                     return LX.Vendor.Geohash.encode(input.coords.latitude, input.coords.longitude);
                 }
                 else if (input.hasOwnProperty("lat") && input.hasOwnProperty("lng")) {
-                    return LX.Vendor.Geohash.encode(input.lat, input.lng);
+                    return LX.Vendor.Geohash.encode(input.lat, input.lng, precision);
                 }
                 else {
-                    return LX.Vendor.Geohash.encode(input);
+                    return LX.Vendor.Geohash.encode(input, precision);
                 }
             }
             catch(e) {
@@ -430,9 +647,9 @@ LX.Atlas = (() => {
     /**
     * Calculation distance between two geolocations in kilometers
     */
-    self.distanceInKm = (a, b) => {
-        let geo_a = self.toGeohash(a);
-        let geo_b = self.toGeohash(b); 
+    distanceInKm(a, b) {
+        let geo_a = this.toGeohash(a);
+        let geo_b = this.toGeohash(b); 
         if (geo_a && geo_b) {
             return LX.Vendor.GeohashDistance.inKm(geo_a,geo_b);
         }
@@ -441,15 +658,11 @@ LX.Atlas = (() => {
     /**
     * Calculation distance between two geolocations in miles
     */
-    self.distanceInMiles = (a, b) => {
-        let geo_a = self.toGeohash(a);
-        let geo_b = self.toGeohash(b);
+    distanceInMiles(a, b) {
+        let geo_a = this.toGeohash(a);
+        let geo_b = this.toGeohash(b);
         if (geo_a && geo_b) {
             return LX.Vendor.GeohashDistance.inMiles(geo_a,geo_b);
         }
     }
-
-    self.render();
-    return self;
-})();
-
+}

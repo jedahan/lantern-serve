@@ -22,6 +22,7 @@
         "pouchdb-browser": "*",
         "leaflet": "*",
         "leaflet.locatecontrol": "*",
+        "leaflet-contextmenu": "*",
         "bulma": "*",
         "vue": "^2.5.17",
         "moment": "*",
