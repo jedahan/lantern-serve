@@ -114,4 +114,4 @@ LX.Profile = class Profile extends LV.EventEmitter {
 
 //----------------------------------------------------------------------------
 // all required items are loaded in by now. time to start everything up...
-LX.Director.start();
+window.LT = new LX.Director();
