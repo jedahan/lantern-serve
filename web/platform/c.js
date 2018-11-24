@@ -315,7 +315,7 @@ LX.Marker = class Marker extends LV.EventEmitter {
         this.data = {
             _id: this.id
         };
-        this.geohash = LX.Director.atlas.toGeohash(latlng); 
+        this.geohash = LV.Geohash.encode(latlng.lat, latlng.lng); 
         console.log(`[Marker] Added at ${this.geohash}`);
 
         this.layer.on("click", () => {
