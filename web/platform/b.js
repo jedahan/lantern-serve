@@ -252,6 +252,8 @@ LX.Director = class Director extends LV.EventEmitter {
             this.vue.map.marker_count = this.atlas.getMarkerCount();
         });
 
+        this.emit("start");
+        
         // load in dynamic apps
         fetch("/api/apps")
             .then((result) => {
@@ -261,8 +263,6 @@ LX.Director = class Director extends LV.EventEmitter {
                 json.forEach(this.createApp.bind(this));
             })
             .then(() => {
-                this.ready = true;
-                this.emit("start");
             });
 
     }
