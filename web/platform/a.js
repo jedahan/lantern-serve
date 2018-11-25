@@ -47,7 +47,7 @@ LX.Config = (() => {
     self.leaflet_tiles = {
         attribution: false,
         dbName: "lx-tiles",
-        minZoom: 4,
+        minZoom: 3,
         maxZoom: 20,
         useCache:  true,
         useOnlyCache: false,
