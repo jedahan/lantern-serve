@@ -5,6 +5,100 @@ const LV = window.LV || {}; if (!window.LV) window.LV = LV;
 
 
 //----------------------------------------------------------------------------
+LX.Director = class Director extends LV.EventEmitter {
+
+    constructor() {
+        super();
+        this.ready = false;
+        this.apps = {};
+        this.profile = null;
+
+        this.vue = new LV.Vue({
+            el: '#app-container',
+            data: {
+                app_components: [],
+                profile: {
+                    address: null
+                },
+                map: {
+                    mask: true,
+                    marker_count: 0
+                } 
+            }
+        });
+
+        // get or create a unique profile for this user / device
+        this.profile = new LX.Profile();
+        this.profile.on("load", () => {
+            this.vue.profile.address = this.profile.address;
+        });
+
+        // define atlas to manage map interface
+        this.atlas = new LX.Atlas();
+        this.atlas.on("marker-add", () => {
+            this.vue.map.marker_count = this.atlas.getMarkerCount();
+        });
+
+        this.emit("start");
+        
+        // load in dynamic apps
+        fetch("/api/apps")
+            .then((result) => {
+                return result.json()
+            })
+            .then((json) => {
+                json.forEach(this.createApp.bind(this));
+            })
+            .then(() => {
+            });
+    }
+
+
+
+    //------------------------------------------------------------------------
+    createApp(app_files) {
+        if (!app_files.children) {
+            console.log("[Direct] Ignoring app directory with no children:", app_files.name);
+            return;
+        }
+        let obj = new LX.App(app_files);
+
+        this.apps[obj.name] = obj;
+        obj.on("load", (page) => {
+            console.log("[Direct] App loads page: ", page.component_id );
+        });
+
+        obj.on("open", (component_id) => {
+            console.log("[Direct] App opens component:", component_id);
+            this.vue.app_components.push(component_id);
+        });
+
+        obj.on("close", (component_id) => {
+            console.log("[Direct] App closes component:", component_id);
+            this.vue.app_components.removeByValue(component_id);
+        });
+    }
+
+
+
+    //------------------------------------------------------------------------
+    closeOneApp(app_id) {
+        if (this.apps.hasOwnProperty(app_id)) {
+            this.apps[app_id].unload();
+        }
+    }
+    
+    openOneApp(app_id) {
+        if (this.apps.hasOwnProperty(app_id)) {
+            this.apps[app_id].pages.forEach((page) => {
+                this.apps[app_id].open(`lx-app-${app_id}-${page.id}`);
+            });
+        }
+    }
+}
+
+
+//----------------------------------------------------------------------------
 LX.App = class App extends LV.EventEmitter {
     
 
@@ -214,99 +308,4 @@ LX.App = class App extends LV.EventEmitter {
     }
 
 
-}
-
-
-
-//----------------------------------------------------------------------------
-LX.Director = class Director extends LV.EventEmitter {
-
-    constructor() {
-        super();
-        this.ready = false;
-        this.apps = {};
-        this.profile = null;
-        this.vue = new LV.Vue({
-            el: '#app-container',
-            data: {
-                app_components: [],
-                profile: {
-                    address: null
-                },
-                map: {
-                    mask: true,
-                    marker_count: 0
-                } 
-            }
-        });
-
-        // get or create a unique profile for this user / device
-        this.profile = new LX.Profile();
-        this.profile.on("load", () => {
-            this.vue.profile.address = this.profile.address;
-        });
-
-        // define atlas to manage map interface
-        this.atlas = new LX.Atlas();
-        this.atlas.on("marker-add", () => {
-            this.vue.map.marker_count = this.atlas.getMarkerCount();
-        });
-
-        this.emit("start");
-        
-        // load in dynamic apps
-        fetch("/api/apps")
-            .then((result) => {
-                return result.json()
-            })
-            .then((json) => {
-                json.forEach(this.createApp.bind(this));
-            })
-            .then(() => {
-            });
-
-    }
-
-
-
-    //------------------------------------------------------------------------
-    createApp(app_files) {
-        if (!app_files.children) {
-            console.log("[Direct] Ignoring app directory with no children:", app_files.name);
-            return;
-        }
-        let obj = new LX.App(app_files);
-
-        this.apps[obj.name] = obj;
-        obj.on("load", (page) => {
-            console.log("[Direct] App loads page: ", page.component_id );
-        });
-
-        obj.on("open", (component_id) => {
-            console.log("[Direct] App opens component:", component_id);
-            this.vue.app_components.push(component_id);
-        });
-
-        obj.on("close", (component_id) => {
-            console.log("[Direct] App closes component:", component_id);
-            this.vue.app_components.removeByValue(component_id);
-        });
-    }
-
-
-
-    //------------------------------------------------------------------------
-    closeOneApp(app_id) {
-        if (this.apps.hasOwnProperty(app_id)) {
-            this.apps[app_id].unload();
-        }
-    }
-    
-    openOneApp(app_id) {
-        if (this.apps.hasOwnProperty(app_id)) {
-            this.apps[app_id].pages.forEach((page) => {
-                this.apps[app_id].open(`lx-app-${app_id}-${page.id}`);
-            });
-        }
-    }
 }
