@@ -35,10 +35,10 @@ html, body, #map {
 	white-space: nowrap;
 }
 #map .leaflet-touch .leaflet-control-layers, .leaflet-touch .leaflet-bar {
-    box-shadow: 0 1px 7px rgba(0,0,0,0.4);
     border: 1px solid #CCC;
     border-radius: 3px;
 }
+
 
 #map .leaflet-bar a {
 	width: 35px;
@@ -68,6 +68,7 @@ html, body, #map {
 #map .leaflet-bar .leaflet-disabled span {
 	opacity: 0.5;
 }
+
 
 #map .leaflet-control-locate.active a {
 	color: #3273dc;
@@ -164,7 +165,6 @@ html, body, #map {
 .app-frame {
 	border: 1px solid #EEE;
 	border-radius: 3px;
-    box-shadow: 0 1px 7px rgba(0,0,0,0.4);
 	background: rgba(255,255,255,0.9);
 	margin: 1em;
 	margin: auto;
@@ -175,7 +175,12 @@ html, body, #map {
 	position: relative;
 }
 
+/*----------------------------------------------------------------------------*/
 
+.leaflet-touch .leaflet-control-layers, .leaflet-contextmenu,  .leaflet-touch .leaflet-bar, .app-frame {
+
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
 
 /*----------------------------------------------------------------------------*/
 

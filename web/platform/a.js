@@ -7,9 +7,11 @@ const LV = window.LV || {}; if (!window.LV) window.LV = LV;
 //----------------------------------------------------------------------------
 LV.EventEmitter = require("event-emitter-es6");
 LV.Vue = require("vue");
-LV.VueRouter = require("vue-router");
 LV.Moment = require("moment");
 LV.ShortID = require("shortid");
+LV.GraphDB = require("gun");
+LV.SEA = require("sea");
+LV.VueGraphDB = require("vue-gun");
 
 
 
@@ -36,6 +38,10 @@ Array.prototype.removeByValue = function(value) {
 //----------------------------------------------------------------------------
 LX.Config = (() => {
     let self = {};
+
+    self.db = {
+        namespace: "lx"
+    }
 
     self.leaflet_map = {
         zoomDelta: 1.5,

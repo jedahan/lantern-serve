@@ -5,108 +5,94 @@ const LV = window.LV || {}; if (!window.LV) window.LV = LV;
 
 
 //----------------------------------------------------------------------------
-const elliptic = require("elliptic");
-const Mnemonic = require("mnemonic.js");
-const shortHash = require("short-hash");
+LX.User = class User extends LV.EventEmitter {
 
-LX.Profile = class Profile extends LV.EventEmitter {
-
-    constructor(skip_check) {
+    constructor(db, skip_check) {
 
         super();
 
-        this.db = new LV.PouchDB("lx-user");
-
+        this.db = db;
+        this.local_db = new LV.PouchDB("lx-user");
+        this.user = this.db.stor.user();
 
         if (skip_check) {
-            console.log("[Profile] Making a new profile by explicit request")
-            this.generate();
+            console.log("[User] Make new credentials by explicit request")
+            this.register();
         }
         else {
-            // check browser for known profile for this user
-            this.db.get("profile")
-                .then((profile) => {
-                    let requirements = ["mnemonic", "address", "public_key", "private_key"];
+            // check browser for known credentials for this user
+            this.local_db.get("creds")
+                .then((creds) => {
+                    let requirements = ["username", "password"];
                     let is_valid = true;
                     requirements.forEach((key) =>  {
-                        if (!profile.hasOwnProperty(key)) {
+                        if (!creds.hasOwnProperty(key)) {
                             is_valid = false;
-                            console.log("[Profile] Existing saved profile missing required key: " + key);
+                            console.log("[User] Existing saved credentials missing required key: " + key);
                         }
                     });
                     if (is_valid) {
-                        console.log("[Profile] Known profile from storage: " + profile.address);
-                        requirements.forEach((key) =>  {
-                            this[key] = profile[key];
-                        });
-                        this.emit("load");
+                        console.log("[User] Known creds from storage: " + creds.username);
+                        this.authenticate(creds.username, creds.password);
                     }
                     else {
-                        console.log("[Profile] Removing invalid profile from storage");
-                        this.db.remove(profile).then(() => { 
-                            this.generate();
+                        console.log("[User] Removing invalid creds from storage");
+                        this.local_db.remove(creds).then(() => { 
+                            this.register();
                         });
                     }
                 })
                 .catch((e) => {
                     if (e.name == "not_found") {
-                        this.generate();
+                        console.log("[User] No user discovered. Created anonymous guest user...")
+                        this.register()
                     }
                     else {
-                        console.log("[Profile] Error getting profile", e);
+                        console.log("[User] Error getting creds", e);
                     }
                 });
         }
     }
 
-    generate() {
-        console.log("[Profile] Generate")
-        var m;
-        const ec = new elliptic.ec('secp256k1');
-        // deterministic public / private keys plus handles based on words
-        if (typeof(secret) == "object") {
-            m = Mnemonic.fromWords(secret);
-        }
-        else if (typeof(secret) == "string") {
-            this.public_key = secret;
-        }
-        else {
-            m = new Mnemonic(64);
-        }
-        
-        if (m) {
-            // keep words for user backup
-            this.mnemonic = m.toWords();
-
-            // define private key based on mnemonic
-            this.private_key = m.toHex();
-                
-            // http://procbits.com/2013/08/27/generating-a-bitcoin-address-with-javascript
-            var public_point = ec.keyFromPrivate(this.private_key).getPublic();
-
-            // create public address based on key pair
-            this.public_key = public_point.encodeCompressed("hex");
-        }
-
-        this.address = shortHash(this.public_key);
+    authenticate(username, password) {
+        this.user.auth(username, password, (ack) => {
+            if (ack.err) {
+                console.log("[User] Authorize failed:", ack.err);
+                this.register();
+            }
+            else {
+                this.username = username;
+                console.log("[User] Authorized:", this.username);
+                this.emit("authenticated");
+            }
+        });
     }
 
-    save() {
-        let doc = {
-            "_id" : "profile",
-            "mnemonic": this.mnemonic,
-            "address": this.address,
-            "public_key": this.public_key,
-            "private_key": this.private_key 
-        }
-        this.db.put(doc)
-            .then(() => {
-                console.log("[Profile] Saved to browser");
-                this.emit("load");
-            })
-            .catch((e) => {
-                console.log("[Profile] Unable to save", e);
-            });
+    register() {
+        let username = LV.ShortID.generate();
+        let password = LV.ShortID.generate();
+        console.log("[User] Create user with username:", username);
+        this.user.create(username, password, (ack) => {
+            if (ack.err) {
+                console.log("[User] Unable to save", ack.err);
+                return;
+            }
+            console.log("[User] Saved to browser");
+            this.emit("registered");
+
+            let doc = {
+                "_id" : "creds",
+                "username": username,
+                "password": password
+            }
+            this.local_db.put(doc)
+                .then(() => {
+                    this.authenticate(username, password);
+                })
+                .catch((e) => {
+                    console.log("[User] Unable to save", e);
+                });
+        });
     }
 }
 
