@@ -3,7 +3,6 @@
 const bodyParser = require("body-parser");
 const util = require("../util");
 const log = util.Logger;
-const db = util.CoreDatabase;
 
 
 

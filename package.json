@@ -8,10 +8,9 @@
         "bulma": "*",
         "compression": "*",
         "directory-tree": "*",
-        "elliptic": "*",
         "event-emitter-es6": "*",
         "express": "*",
-        "express-pouchdb": "4.0.1",
+        "gun": "*",
         "fs-extra": "7.x",
         "geohash-distance": "*",
         "helmet": "*",
@@ -19,26 +18,19 @@
         "leaflet": "*",
         "leaflet-contextmenu": "*",
         "leaflet.locatecontrol": "*",
-        "mnemonic.js": "0.0.1",
         "moment": "*",
-        "pouchdb-adapter-http": "7.x",
-        "pouchdb-adapter-node-websql": "7.x",
-        "pouchdb-browser": "*",
-        "pouchdb-core": "7.x",
-        "pouchdb-mapreduce": "7.x",
-        "pouchdb-replication": "7.x",
-        "typeface-montserrat": "0.0.5",
+        "typeface-montserrat": "0.0.54",
         "request": "*",
-        "short-hash": "*",
         "shortid": "*",
         "simple-node-logger": "*",
         "sqlite3": "^4.0.4",
-        "typeface-montserrat": "0.0.54",
         "vue": "^2.5.17",
-        "vue-router": "*"
+        "vue-gun": "*",
+        "pouchdb-browser": "*"
     },
     "browser": {
-        "vue": "vue/dist/vue.common.js"
+        "vue": "vue/dist/vue.common.js",
+        "sea": "gun/sea.js"
     },
     "scripts": {
         "start": "node ./web/index.js",

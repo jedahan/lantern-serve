@@ -5,20 +5,54 @@ const LV = window.LV || {}; if (!window.LV) window.LV = LV;
 
 
 //----------------------------------------------------------------------------
+LX.Database = class Database extends LV.EventEmitter {
+
+    constructor() {
+        super();
+        this.stor = LV.GraphDB(document.baseURI + "gun");
+        this.node = this.stor.get(LX.Config.db.namespace);
+
+        this.node.once((v,k) => {
+            if (v == undefined) {
+                let obj = {
+                    "packages": null
+                }
+                this.stor.get("lx").put(obj).once((v,k) => {
+                    console.log("[DB] Created node:", k, v)
+                });
+            }
+            else {
+                console.log("[DB] Existing node:", k, v)
+            }
+        });
+
+    }
+
+}
+
+
+
+//----------------------------------------------------------------------------
 LX.Director = class Director extends LV.EventEmitter {
 
     constructor() {
         super();
         this.ready = false;
         this.apps = {};
-        this.profile = null;
+        this.db = new LX.Database();
+
+
+        // setup vue object
+        LV.Vue.use(LV.VueGraphDB, {
+            gun: this.db.stor
+        });
 
         this.vue = new LV.Vue({
             el: '#app-container',
             data: {
                 app_components: [],
-                profile: {
-                    address: null
+                user: {
+                    username: null
                 },
                 map: {
                     mask: true,
@@ -28,10 +62,11 @@ LX.Director = class Director extends LV.EventEmitter {
         });
 
         // get or create a unique profile for this user / device
-        this.profile = new LX.Profile();
-        this.profile.on("load", () => {
-            this.vue.profile.address = this.profile.address;
+        this.user = new LX.User(this.db);
+        this.user.on("authenticated", () => {
+            this.vue.user.username = this.user.username;
         });
+
 
         // define atlas to manage map interface
         this.atlas = new LX.Atlas();

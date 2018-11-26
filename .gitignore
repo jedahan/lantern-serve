@@ -6,3 +6,4 @@ web/db/*
 web/logs/*
 web/platform/dist/*
 apps
+data.json/*
