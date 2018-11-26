@@ -7,3 +7,4 @@ web/logs/*
 web/platform/dist/*
 apps
 data.json/*
+tmp/*

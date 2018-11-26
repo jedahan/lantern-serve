@@ -117,7 +117,8 @@ module.exports = (serv) => {
         var layers_path = path.join(__dirname, "..", "..", "apps");
         let filtered_tree = directoryTree(layers_path, {extensions: /\.(html|js|json|css|png|gif|jpg|jpeg)$/});
         util.removeMeta(filtered_tree, "path");
-        res.status(200).json(filtered_tree.children);
+        let result = ( filtered_tree.hasOwnProperty("children") ? filtered_tree.children : []);
+        res.status(200).json(result);
            
     })
 
