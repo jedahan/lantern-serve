@@ -174,16 +174,18 @@ LX.App = class App extends LV.EventEmitter {
             if (logic.methods) {
                 cmp.methods = logic.methods;
             }
+            if (logic.mounted) {
+                cmp.mounted = logic.mounted;
+            }
         }
 
 
         let component = LV.Vue.component(component_id, cmp);
         let page = {
             "id": page_id,
-            "data": this.data,
             "component_id": component_id,
             "component": component ,
-            "app": this.name
+            "app": this
         }
         self.pages.push(page)
 
@@ -306,7 +308,7 @@ LX.App = class App extends LV.EventEmitter {
 
     load() {
         let logic = {};
-        let accepted = ["data", "computed", "methods", "open", "callback"];
+        let accepted = ["data", "computed", "methods", "open", "callback", "mounted"];
         this.loadOneFile("app.js")
             .then((result) => {
                 result = eval(result);

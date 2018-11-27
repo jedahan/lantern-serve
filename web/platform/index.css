@@ -75,15 +75,9 @@ html, body, #map {
 }
 
 #map .lx-marker {
-	margin-left: -10px !important;
-	margin-top: -10px !important;
-	font-size: 20px;
 	text-align: center;
-	line-height: 20px;
 	background: #FFF;
-	width: 20px !important;
 	border: 2px rgba(255,255,255,0);
-	height: 20px !important;
 }
 
 #map .lx-marker, #map .lx-marker i {
@@ -91,51 +85,57 @@ html, body, #map {
 }
 
 .lx-map-zoom-normal #map .lx-marker {
-	font-size: 16px;
-	line-height: 16px;
-	width: 16px !important;
-	height: 16px !important;
-	margin-left: -8px !important;
-	margin-top: -8px !important;
-}
-
-.lx-map-zoom-far #map .lx-marker {
-	font-size: 6px;
-	line-height: 6px;
-	width: 6px !important;
-	height: 6px !important;
-	margin-left: -3px !important;
-	margin-top: -3px !important;
-}
-
-.lx-map-zoom-very-far #map .lx-marker {
-	font-size: 4px;
-	line-height:4px;
-	width: 4px !important;
-	height: 4px !important;
-	font-family: inherit;
-	margin-left: -2px !important;
-	margin-top: -2px !important;
-}
-
-.lx-map-zoom-very-close #map .lx-marker {
-	font-size: 24px;
-	line-height:24px;
+	font-size: 12px;
+	line-height: 24px;
 	width: 24px !important;
 	height: 24px !important;
-	font-family: inherit;
 	margin-left: -12px !important;
 	margin-top: -12px !important;
 }
 
-.lx-marker-blue {
-	color: #3273dc;
+
+.lx-map-zoom-close #map .lx-marker {
+	font-size: 16px;
+	line-height: 32px;
+	width: 32px !important;
+	height: 32px !important;
+	margin-left: -16px !important;
+	margin-top: -16px !important;
 }
+
+.lx-map-zoom-very-close #map .lx-marker {
+	font-size: 20px;
+	line-height: 40px;
+	width: 40px !important;
+	height: 40px !important;
+	margin-left: -20px !important;
+	margin-top: -20px !important;
+}
+
+.lx-map-zoom-far #map .lx-marker {
+	font-size: 6px;
+	line-height: 12px;
+	width: 12px !important;
+	height: 12px !important;
+	margin-left: -6px !important;
+	margin-top: -6px !important;
+	font-family: inherit;
+}
+ 
+.lx-map-zoom-very-far #map .lx-marker {
+	font-size: 4px;
+	line-height:8px;
+	width: 8px !important;
+	height: 8px !important;
+	margin-left: -4px !important;
+	margin-top: -4px !important;
+	font-family: inherit;
+}
+
 
 .lx-map-zoom-far .lx-marker-blue, .lx-map-zoom-very-far .lx-marker-blue {
 	background: #3273dc;
 }
-
 
 
 /*----------------------------------------------------------------------------*/
