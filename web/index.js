@@ -39,6 +39,6 @@ const httpsServer = https.createServer(credentials, app);
 
 httpsServer.listen(util.getHttpsPort(), () => {
     let server = httpServer.listen(util.getHttpPort(), () => {
-		GraphDB({file: 'data.json', web: server});
+		GraphDB({file: 'test.json', web: server});
     });
 });

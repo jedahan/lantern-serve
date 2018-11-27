@@ -70,7 +70,7 @@ LX.Director = class Director extends LV.EventEmitter {
 
         // define atlas to manage map interface
         this.atlas = new LX.Atlas();
-        this.atlas.on("marker-add", () => {
+        this.atlas.on("marker-create", () => {
             this.vue.map.marker_count = this.atlas.getMarkerCount();
         });
 
