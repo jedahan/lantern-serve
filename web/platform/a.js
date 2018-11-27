@@ -10,6 +10,7 @@ LV.Vue = require("vue");
 LV.Moment = require("moment");
 LV.ShortID = require("shortid");
 LV.GraphDB = require("gun");
+LV.GraphDBTag = require("gun-tag");
 LV.SEA = require("sea");
 LV.VueGraphDB = require("vue-gun");
 

@@ -11,6 +11,7 @@
         "event-emitter-es6": "*",
         "express": "*",
         "gun": "*",
+        "gun-tag": "*",
         "fs-extra": "7.x",
         "geohash-distance": "*",
         "helmet": "*",

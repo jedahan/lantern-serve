@@ -86,7 +86,7 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
         this.map = L.map("map", Object.assign(opts, LX.Config.leaflet_map));
 
 
-        this.markers.usergen = new LX.MarkerCollection(this.map);
+        this.markers.pending = new LX.MarkerCollection(this.map);
 
         // layer in hosted map tiles
         L.tileLayer(this.tile_uri, LX.Config.leaflet_tiles).addTo(this.map);
@@ -200,8 +200,12 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
     }
 
     createMarker(e) {
-        let marker = this.markers.usergen.add(e.latlng);
-        this.emit("marker-add", marker);
+        // keep all user-created markers in a collection of temporary items
+        // not saved to database yet
+        let marker = this.markers.pending.add(e.latlng);
+        marker.on("create", () => {
+            this.emit("marker-create", marker);
+        });
     }
 
     centerMap(e) {
@@ -300,8 +304,10 @@ LX.Marker = class Marker extends LV.EventEmitter {
         super();   
         opts = opts || {};
 
-        this.icon = opts.icon || "info-circle";
-        this.category = opts.category || "default";
+        this.id = LV.ShortID.generate();
+        this.icon = opts.icon || null;
+        this.tags = [];
+        this.state = 0; // 0 = pending, -1 = failed, 1 = saved
         
         this.layer = L.marker(latlng, {
             icon: this.getDivIcon(),
@@ -309,40 +315,62 @@ LX.Marker = class Marker extends LV.EventEmitter {
             autoPan: true
         });
 
-
-        this.data = {
-        };
         this.geohash = LV.Geohash.encode(latlng.lat, latlng.lng); 
-        console.log(`[Marker] Added at ${this.geohash}`);
+        console.log(`[Marker] Added ${this.id} at ${this.geohash}`);
 
         this.layer.on("click", () => {
-            console.log("[Marker] Clicked:", this)
+            console.log(`[Marker] Clicked: ${this.id}`, this)
         });
 
         this.layer.on("dragend", (e) => {
             let latlng = e.target._latlng;
             this.geohash = LV.Geohash.encode(latlng.lat, latlng.lng); 
-            console.log("[Marker] Dragged to: ",  this.geohash);
+            console.log(`[Marker] Dragged ${this.id} to: `,  this.geohash);
         })
+
+        this.emit("create");
+    }
+
+    remove() {
+        this.layer.remove();
+
+        this.emit("remove");
     }
 
     getDivIcon() {
+        let cls = "fa";
+        if (this.icon) {
+            cls += " fa-"+this.icon;
+        }
         return L.divIcon({
-            html: `<i class="fa fa-${this.icon}"></i>`,
-            className: "lx-marker lx-" + this.category
-        })
+            html: `<i class="${cls}"></i>`,
+            className: "lx-marker " + this.tags.join(" ")
+        });
     }
     
     setIcon(value) {
+        console.log(`[Marker] Icon ${this.id}:`, value);
         this.icon = value;
         this.layer.setIcon(this.getDivIcon());
     }
 
 
-    setCategory(category) {
-        this.category = category;
+    tag(tag) {
+        console.log(`[Marker] Tag ${this.id}:`, tag);
+        this.tags.push(tag);
+        this.emit("tag", [tag]);
     }
 
+    untag(tag) {
+        console.log(`[Marker] Untag ${this.id}:`, tag);
+        this.tags = this.tags.removeByValue(tag);
+        this.emit("untag", [tag]);
+    }
+
+    untagAll() {
+        this.emit("untag", this.tags)
+        this.tags = [];
+    }
 }
 
 LX.MarkerCollection = class MarkerCollection extends LV.EventEmitter {
