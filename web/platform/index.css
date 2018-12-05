@@ -90,13 +90,17 @@ html, body, #map {
 	border-radius: 100em;
 }
 
-.lx-map-zoom-normal #map .lx-marker {
-	font-size: 12px;
-	line-height: 24px;
-	width: 26px !important;
-	height: 26px !important;
-	margin-left: -12px !important;
-	margin-top: -12px !important;
+
+
+
+
+.lx-map-zoom-very-close #map .lx-marker {
+	font-size: 20px;
+	line-height: 40px;
+	width: 42px !important;
+	height: 42px !important;
+	margin-left: -20px !important;
+	margin-top: -20px !important;
 }
 
 
@@ -109,40 +113,57 @@ html, body, #map {
 	margin-top: -16px !important;
 }
 
-.lx-map-zoom-very-close #map .lx-marker {
-	font-size: 20px;
-	line-height: 40px;
-	width: 42px !important;
-	height: 42px !important;
-	margin-left: -20px !important;
-	margin-top: -20px !important;
+
+.lx-map-zoom-somewhat-close #map .lx-marker {
+	font-size: 12px;
+	line-height: 24px;
+	width: 26px !important;
+	height: 26px !important;
+	margin-left: -12px !important;
+	margin-top: -12px !important;
 }
 
-.lx-map-zoom-far #map .lx-marker {
-	font-size: 6px;
-	line-height: 12px;
-	width: 14px !important;
-	height: 14px !important;
-	margin-left: -6px !important;
-	margin-top: -6px !important;
-	font-family: inherit;
+
+
+.lx-map-zoom-normal #map .lx-marker {
+	font-size: 8px;
+	line-height: 16px;
+	width: 18px !important;
+	height: 18px !important;
+	margin-left: -8px !important;
+	margin-top: -8px !important;
 }
- 
-.lx-map-zoom-very-far #map .lx-marker {
-	font-size: 4px;
-	line-height:8px;
+
+
+
+.lx-map-zoom-somewhat-far #map .lx-marker {
 	width: 10px !important;
 	height: 10px !important;
-	margin-left: -4px !important;
-	margin-top: -4px !important;
-	font-family: inherit;
+	margin-left: -5px !important;
+	margin-top: -6px !important;
 }
 
 
-.lx-map-zoom-far .lx-marker-blue, .lx-map-zoom-very-far .lx-marker-blue {
-	background: #3273dc;
+.lx-map-zoom-far #map .lx-marker {
+	width: 6px !important;
+	height: 6px !important;
+	margin-left: -3px !important;
+	margin-top: -3px !important;
 }
 
+
+ 
+.lx-map-zoom-very-far #map .lx-marker {
+	width: 2px !important;
+	height: 2px !important;
+	margin-left: -1px !important;
+	margin-top: -1px !important;
+}
+
+
+.lx-map-zoom-far #map .lx-marker i, .lx-map-zoom-very-far #map .lx-marker  i, .lx-map-zoom-somewhat-far #map .lx-marker  i {
+	visibility: hidden;
+}
 
 /*----------------------------------------------------------------------------*/
 #app-container, .app-mask {
