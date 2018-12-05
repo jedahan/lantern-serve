@@ -10,22 +10,33 @@ LX.Database = class Database extends LV.EventEmitter {
     constructor() {
         super();
         this.stor = LV.GraphDB(document.baseURI + "gun");
-        this.node = this.stor.get(LX.Config.db.namespace);
+        this.root = this.stor.get(LX.Config.db.namespace);
 
-        this.node.once((v,k) => {
+        this.root.once((v,k) => {
             if (v == undefined) {
                 let obj = {
-                    "packages": null
+                    "marker": {}
                 }
-                this.stor.get("lx").put(obj).once((v,k) => {
-                    console.log("[DB] Created node:", k, v)
+                this.stor.get(LX.Config.db.namespace).put(obj).once((v,k) => {
+                    //console.log("[DB] Created root node:", k, v)
                 });
             }
             else {
-                console.log("[DB] Existing node:", k, v)
+                //console.log("[DB] Existing root node:", k, v)
             }
         });
 
+    }
+
+    /**
+    * Get node from within root namespace
+    */
+    get() {
+        return this.root.get.apply(this.root, arguments);;
+    }
+
+    put() {
+        return this.root.put.apply(this.root, arguments);
     }
 
 }
@@ -46,6 +57,8 @@ LX.Director = class Director extends LV.EventEmitter {
         LV.Vue.use(LV.VueGraphDB, {
             gun: this.db.stor
         });
+        
+        LV.Vue.filter('pluralize', (word, amount) => amount != 1 ? `${word}s` : word)
 
         this.vue = new LV.Vue({
             el: '#app-container',
@@ -55,9 +68,8 @@ LX.Director = class Director extends LV.EventEmitter {
                     username: null
                 },
                 map: {
-                    mask: true,
-                    marker_count: 0
-                } 
+                    mask: true
+                }
             }
         });
 
@@ -70,9 +82,6 @@ LX.Director = class Director extends LV.EventEmitter {
 
         // define atlas to manage map interface
         this.atlas = new LX.Atlas();
-        this.atlas.on("marker-create", () => {
-            this.vue.map.marker_count = this.atlas.getMarkerCount();
-        });
 
         this.emit("start");
         
@@ -83,8 +92,6 @@ LX.Director = class Director extends LV.EventEmitter {
             })
             .then((json) => {
                 json.forEach(this.createApp.bind(this));
-            })
-            .then(() => {
             });
     }
 
@@ -93,23 +100,23 @@ LX.Director = class Director extends LV.EventEmitter {
     //------------------------------------------------------------------------
     createApp(app_files) {
         if (!app_files.children) {
-            console.log("[Direct] Ignoring app directory with no children:", app_files.name);
+            console.warn("[Direct] Ignoring app directory with no children:", app_files.name);
             return;
         }
         let obj = new LX.App(app_files);
 
         this.apps[obj.name] = obj;
         obj.on("load", (page) => {
-            console.log("[Direct] App loads page: ", page.component_id );
+            //console.log("[Direct] App loads page: ", page.component_id );
         });
 
         obj.on("open", (component_id) => {
-            console.log("[Direct] App opens component:", component_id);
+            //console.log("[Direct] App opens component:", component_id);
             this.vue.app_components.push(component_id);
         });
 
         obj.on("close", (component_id) => {
-            console.log("[Direct] App closes component:", component_id);
+            //console.log("[Direct] App closes component:", component_id);
             this.vue.app_components.removeByValue(component_id);
         });
     }

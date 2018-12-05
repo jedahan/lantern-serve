@@ -77,8 +77,14 @@ html, body, #map {
 #map .lx-marker {
 	text-align: center;
 	background: #FFF;
-	border: 2px rgba(255,255,255,0);
+	border: 2px solid rgba(255,255,255,0);
 }
+
+#map .lx-marker-draft {
+	border-color: rgba(255,255,255,0.5);
+}
+
+
 
 #map .lx-marker, #map .lx-marker i {
 	border-radius: 100em;
@@ -87,8 +93,8 @@ html, body, #map {
 .lx-map-zoom-normal #map .lx-marker {
 	font-size: 12px;
 	line-height: 24px;
-	width: 24px !important;
-	height: 24px !important;
+	width: 26px !important;
+	height: 26px !important;
 	margin-left: -12px !important;
 	margin-top: -12px !important;
 }
@@ -97,8 +103,8 @@ html, body, #map {
 .lx-map-zoom-close #map .lx-marker {
 	font-size: 16px;
 	line-height: 32px;
-	width: 32px !important;
-	height: 32px !important;
+	width: 34px !important;
+	height: 34px !important;
 	margin-left: -16px !important;
 	margin-top: -16px !important;
 }
@@ -106,8 +112,8 @@ html, body, #map {
 .lx-map-zoom-very-close #map .lx-marker {
 	font-size: 20px;
 	line-height: 40px;
-	width: 40px !important;
-	height: 40px !important;
+	width: 42px !important;
+	height: 42px !important;
 	margin-left: -20px !important;
 	margin-top: -20px !important;
 }
@@ -115,8 +121,8 @@ html, body, #map {
 .lx-map-zoom-far #map .lx-marker {
 	font-size: 6px;
 	line-height: 12px;
-	width: 12px !important;
-	height: 12px !important;
+	width: 14px !important;
+	height: 14px !important;
 	margin-left: -6px !important;
 	margin-top: -6px !important;
 	font-family: inherit;
@@ -125,8 +131,8 @@ html, body, #map {
 .lx-map-zoom-very-far #map .lx-marker {
 	font-size: 4px;
 	line-height:8px;
-	width: 8px !important;
-	height: 8px !important;
+	width: 10px !important;
+	height: 10px !important;
 	margin-left: -4px !important;
 	margin-top: -4px !important;
 	font-family: inherit;

@@ -63,8 +63,8 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
         let opts = {
             contextmenuItems: [
             {
-                text: 'Create marker',
-                callback: this.createMarker.bind(this)
+                text: 'Add marker',
+                callback: this.addMarkerToMap.bind(this)
             }, 
             {
                 text: 'Center map here',
@@ -86,7 +86,8 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
         this.map = L.map("map", Object.assign(opts, LX.Config.leaflet_map));
 
 
-        this.markers.pending = new LX.MarkerCollection(this.map);
+        this.markers.private = new LX.MarkerCollection("private", this.map);
+        this.markers.shared = new LX.MarkerCollection("shared", this.map);
 
         // layer in hosted map tiles
         L.tileLayer(this.tile_uri, LX.Config.leaflet_tiles).addTo(this.map);
@@ -157,7 +158,7 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
         // http://www.bigfastblog.com/geohash-intro
         let precision = Math.round(this.precision.center_max * (doc.zoom/22))
         let gh = this.toGeohash(doc, precision);
-        console.log("[Atlas] Center point geohash: " + gh );
+        //console.log("[Atlas] Center point geohash: " + gh );
         this.center = gh;
 
         // only save to database if user has paused on this map for a few seconds
@@ -169,13 +170,13 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
                 this.user_db.get("atlas_view").then((old_doc) => {
                     this.user_db.remove(old_doc).then(() => {
                         this.user_db.put(doc).then(() => {
-                            console.log("[Atlas] Re-saved map view:", [doc.lat, doc.lng], doc.zoom);
+                            //console.log("[Atlas] Re-saved map view:", [doc.lat, doc.lng], doc.zoom);
                         });
                     });
                 })
                 .catch((e) => {
                     this.user_db.put(doc).then(() => {
-                        console.log("[Atlas] Saved map view:", [doc.lat, doc.lng], doc.zoom);
+                        //console.log("[Atlas] Saved map view:", [doc.lat, doc.lng], doc.zoom);
                     });
                 });
             }
@@ -194,18 +195,26 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
 
 
     //------------------------------------------------------------------------
-
     inspectArea(e) {
         alert(e.latlng);
     }
 
-    createMarker(e) {
+    addMarkerToMap(e) {
+        let marker = new LX.Marker();
+        marker.geohash = LV.Geohash.encode(e.latlng.lat, e.latlng.lng);
         // keep all user-created markers in a collection of temporary items
         // not saved to database yet
-        let marker = this.markers.pending.add(e.latlng);
-        marker.on("create", () => {
-            this.emit("marker-create", marker);
+        this.markers.private.once("add", () => { 
+            this.markers.private.once("add", (new_marker) => {
+                if (marker.mode == "draft") {
+                    // we never did anything with first marker, so get rid of it...
+                    marker.hide();
+                }
+            });
         });
+
+        this.markers.private.add(marker);
+
     }
 
     centerMap(e) {
@@ -228,6 +237,8 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
         this.map.zoomOut();
     }
 
+
+
     //------------------------------------------------------------------------
     getMarkerCount() {
         let tally = 0;
@@ -237,6 +248,7 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
         }
         return tally;
     }
+
 
 
     //------------------------------------------------------------------------
@@ -298,45 +310,274 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
 }
 
 
+
 //----------------------------------------------------------------------------
-LX.Marker = class Marker extends LV.EventEmitter {
-    constructor(latlng, opts) {
-        super();   
-        opts = opts || {};
+LX.SharedObject = class SharedObject extends LV.EventEmitter {
+    constructor(id, defaults) {
+        super();
+        this.id = id || LV.ShortID.generate();
+        this._mode = "draft";
 
-        this.id = LV.ShortID.generate();
-        this.icon = opts.icon || null;
-        this.tags = [];
-        this.state = 0; // 0 = pending, -1 = failed, 1 = saved
-        
-        this.layer = L.marker(latlng, {
-            icon: this.getDivIcon(),
-            draggable: true,
-            autoPan: true
-        });
+        // create data space for data we allow to be exported to shared database
+        this._data = {};
+        for (var idx in defaults) {
+            this._data[idx] = defaults[idx][1] || null;
+        }  
 
-        this.geohash = LV.Geohash.encode(latlng.lat, latlng.lng); 
-        console.log(`[Marker] Added ${this.id} at ${this.geohash}`);
-
-        this.layer.on("click", () => {
-            console.log(`[Marker] Clicked: ${this.id}`, this)
-        });
-
-        this.layer.on("dragend", (e) => {
-            let latlng = e.target._latlng;
-            this.geohash = LV.Geohash.encode(latlng.lat, latlng.lng); 
-            console.log(`[Marker] Dragged ${this.id} to: `,  this.geohash);
-        })
-
-        this.emit("create");
+        this._key_table = {};
+        this._key_table_reverse = {};
+        for (var idx in defaults) {
+            this._key_table[idx] = defaults[idx][0];
+            this._key_table_reverse[defaults[idx][0]] = idx;
+        }
+        return this;
     }
 
-    remove() {
+
+
+    //-------------------------------------------------------------------------
+    get log_prefix() {
+        return `[so:${this.id}]`
+    }
+
+    /**
+    * Defines tags for data filtering and user interface display
+    */
+    set tags(val) {
+        if (!val || val.length == 0 ) return;
+
+        if (typeof(val) == "object") {
+            val.forEach(this.tag.bind(this));
+        }
+    }
+
+    get tags() {
+        return this._data.tags;
+    }
+
+
+    set mode(val) {
+        this._mode = val;
+        this.emit("mode", val);
+    }
+
+    get mode() {
+        return this._mode;
+    }
+
+
+
+    //-------------------------------------------------------------------------
+    _sanitizeTag(tag) {
+        return tag.toLowerCase().replace(/[^a-z0-9\-]+/g, '');
+    }
+
+    tag(tag) {
+        tag = this._sanitizeTag(tag);
+        console.log(`${this.log_prefix} tag = `, tag);
+
+
+        // don't allow duplicate tags
+        if(this._data.tags.indexOf(tag) > -1) {
+            return;
+        }
+
+        this._data.tags.push(tag);
+        this.emit("tag", tag);
+        return this.tags;
+    }
+
+    untag(tag) {
+        tag = this._sanitizeTag(tag);
+        this._data.tags.remove(tag);
+        this.emit("untag", tag);
+        return this.tags;
+    }
+
+    untagAll() {
+        this._data.tags.forEach((tag) => {
+            this.emit("untag", tag);
+        });
+        this._data.tags = [];
+        return this.tags;
+    }
+
+
+
+    //-------------------------------------------------------------------------
+    /**
+    * Compresses and formats data for storage in shared database
+    *
+    * Requires that all data variables are pre-defined in our map for safety
+    */
+    pack(obj) {
+        let new_obj = {};
+        for (var idx in obj) {
+            let v = obj[idx];
+            if (this._key_table.hasOwnProperty(idx)) {
+                let k = this._key_table[idx];
+                if (v.constructor === Array) {
+                    new_obj[k] = "Å"+v.join(",");
+                }
+                else {
+                    new_obj[k] = v;
+                }
+
+            }
+        }
+        console.log(`${this.log_prefix} Packed:`, obj, new_obj);
+        return new_obj;
+    }
+
+
+    /**
+    * Extracts data from shared database and places back in javascript object
+    *
+    * Requires that all data variables are pre-defined in our map for safety
+    */
+    unpack(obj) {
+        let new_obj = {};
+        for (var idx in obj) {
+            let v = obj[idx];
+
+            if (this._key_table_reverse.hasOwnProperty(idx)) {
+                let k = this._key_table_reverse[idx];
+                if (v[0] == "Å") {
+                    // this is an array. expand it...
+                    v = v.replace("Å", "").split(",");
+                }
+
+                new_obj[k] = v;
+            }
+        }
+        console.log(`${this.log_prefix} Unpacked:`, obj, new_obj);
+        return new_obj;
+    }
+
+
+
+    //-------------------------------------------------------------------------
+    /**
+    * Export to shared database
+    */
+    export(db) {
+        this.mode = "locked"; // lock mode
+        db.get("marker")
+            .get(this.id)
+            .put(this.pack(this._data))
+            .once((v,k) => {
+                this.mode = "shared"; // shared mode
+                this.emit("export");
+            });
+    }
+
+    /**
+    * Import from shared database
+    */
+    import(db) {
+        db.get("marker")
+            .get(this.id)
+            .once((v,k) => {
+                this.mode = "shared";
+                let data = this.unpack(v);
+
+                // only access approved data keys from our map
+                for (var idx in data) {
+                    this[idx] = data[idx];
+                }
+                this.emit("import");
+            });
+    }
+}
+
+
+
+
+//----------------------------------------------------------------------------
+LX.Marker = class Marker extends LX.SharedObject {
+    
+    constructor(id) {
+
+        // now set defaults for key compression
+        super(id, {
+           "geohash": ["g"],
+            "tags": ["t", []]
+        });
+
+        this.icon = null;
+        this._collection = null;
+        this._set = null;
+        this.on("mode", (mode) => {
+
+            // keep dom updated to reflect mode
+            this.layer.setIcon(this.getDivIcon());
+
+
+            // prevent dragging once item is saved
+            console.log(`${this.log_prefix} mode = `, mode);
+            if (mode != "draft" && this.layer) {
+                this.layer.dragging.disable();
+            }
+        });
+    }
+
+
+
+    //-------------------------------------------------------------------------
+    /**
+    * Defines geographic position on map
+    *
+    * Automatically create a new map layer if not already defined
+    */
+    set geohash(val) {
+        this._data.geohash = val;
+        if (val) {
+            console.log(`${this.log_prefix} location = ${this.geohash}`);
+            this.show();
+        }
+    }
+
+    get geohash() {
+        return this._data.geohash;
+    }
+
+ 
+
+    //-------------------------------------------------------------------------
+    /**
+    * Show on map
+    */
+    show() {
+        if (!this.layer) {
+            this.layer = L.marker(LV.Geohash.decode(this.geohash), {
+                icon: this.getDivIcon(),
+                draggable: true,
+                autoPan: true
+            });
+
+            this.layer.on("click", () => {
+                console.log(`${this.log_prefix} Clicked:`, this);
+            });
+
+            this.layer.on("dragend", (e) => {
+                let latlng = e.target._latlng;
+                this.geohash = LV.Geohash.encode(latlng.lat, latlng.lng); 
+                console.log(`${this.log_prefix} Dragged to: `,  this.geohash);
+            });
+        }
+    }
+
+    /**
+    * Hide from the map without altering stored data
+    */
+    hide() {
         this.layer.remove();
-
-        this.emit("remove");
+        this.emit("hide", this);
     }
 
+
+
+    //-------------------------------------------------------------------------
     getDivIcon() {
         let cls = "fa";
         if (this.icon) {
@@ -344,41 +585,27 @@ LX.Marker = class Marker extends LV.EventEmitter {
         }
         return L.divIcon({
             html: `<i class="${cls}"></i>`,
-            className: "lx-marker " + this.tags.join(" ")
+            className: `lx-marker lx-marker-${this.mode} ${this.tags.join(" ")}`
         });
     }
     
     setIcon(value) {
-        console.log(`[Marker] Icon ${this.id}:`, value);
+        if (!value) return;
+        console.log(`${this.log_prefix} icon = ${value}`);
         this.icon = value;
         this.layer.setIcon(this.getDivIcon());
     }
-
-
-    tag(tag) {
-        console.log(`[Marker] Tag ${this.id}:`, tag);
-        this.tags.push(tag);
-        this.emit("tag", [tag]);
-    }
-
-    untag(tag) {
-        console.log(`[Marker] Untag ${this.id}:`, tag);
-        this.tags = this.tags.removeByValue(tag);
-        this.emit("untag", [tag]);
-    }
-
-    untagAll() {
-        this.emit("untag", this.tags)
-        this.tags = [];
-    }
 }
 
+
+
+//----------------------------------------------------------------------------
 LX.MarkerCollection = class MarkerCollection extends LV.EventEmitter {
 
-    constructor(map, sets) {
+    constructor(id, map, sets) {
         super();
         sets = sets || ["default"];
-
+        this.id = id;
         this.map = map;
         this.sets = {};
 
@@ -419,10 +646,13 @@ LX.MarkerCollection = class MarkerCollection extends LV.EventEmitter {
 
     //------------------------------------------------------------------------
 
-    add(latlng, set, data, opts) {
-        let marker = new LX.Marker(latlng);
+    add(marker, set, data, opts) {
         let layer_group = this.sets[set || "default"];
         layer_group.addLayer(marker.layer).addTo(this.map);
+
+        marker.collection = this;
+        marker.set = layer_group;
+        this.emit("add", marker, this);
         return marker;
     };
 }
