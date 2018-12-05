@@ -297,22 +297,31 @@ LX.SharedObject = class SharedObject extends LV.EventEmitter {
             });
     }
 
+
     /**
     * Import from shared database
     */
     import(db) {
         db.get("marker")
             .get(this.id)
-            .once((v,k) => {
-                this.mode = "shared";
-                let data = this.unpack(v);
+            .once(this.importWithData);
+    }
 
-                // only access approved data keys from our map
-                for (var idx in data) {
-                    this[idx] = data[idx];
-                }
-                this.emit("import");
-            });
+    /**
+    * Complete an import given database content
+    *
+    * May be used separately from import(),
+    * for example during a database map()
+    */
+    importWithData(data) {
+        this.mode = "shared";
+        data = this.unpack(data);
+
+        // only access approved data keys from our map
+        for (var idx in data) {
+            this[idx] = data[idx];
+        }
+        this.emit("import");
     }
 }
 

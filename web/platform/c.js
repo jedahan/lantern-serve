@@ -126,16 +126,25 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
         let zoom = this.map.getZoom();
 
         // map scale breakpoints
-        if (zoom < 9) {
+        if (zoom < 6) {
             distance = "very-far";
         }
-        else if (zoom < 12) {
+        else if (zoom < 7) {
             distance = "far";
         }
-        else if (zoom < 15) {
+        else if (zoom < 12) {
+            distance = "somewhat-far";
+        }
+        else if (zoom < 14) {
             distance = "normal";
         }
-        else if (zoom > 17) {
+        else if (zoom < 16) {
+            distance = "somewhat-close";
+        }
+        else if (zoom < 18) {
+            distance = "close";
+        }
+        else if (zoom >= 18) {
             distance = "very-close";
         }
         document.body.className=`lx-map-zoom-${distance}`;
@@ -177,13 +186,13 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
                 this.user_db.get("atlas_view").then((old_doc) => {
                     this.user_db.remove(old_doc).then(() => {
                         this.user_db.put(doc).then(() => {
-                            //console.log("[Atlas] Re-saved map view:", [doc.lat, doc.lng], doc.zoom);
+                            console.log("[Atlas] Re-saved map view:", [doc.lat, doc.lng], doc.zoom);
                         });
                     });
                 })
                 .catch((e) => {
                     this.user_db.put(doc).then(() => {
-                        //console.log("[Atlas] Saved map view:", [doc.lat, doc.lng], doc.zoom);
+                        console.log("[Atlas] Saved map view:", [doc.lat, doc.lng], doc.zoom);
                     });
                 });
             }
@@ -243,8 +252,20 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
     zoomOut(e){
         this.map.zoomOut();
     }
+    
+    //------------------------------------------------------------------------
+   loadSharedMarkers(db) {
+        db.get("marker").map().on((data,id) => {
+            let marker = new LX.Marker(id);
+            marker.importWithData(data)
 
+            if (marker.geohash && marker.tags.length) {
+                // this is a valid marker we can potentially display
+                this.markers.shared.add(marker);
+            }
 
+        });
+    }
 
     //------------------------------------------------------------------------
     getMarkerCount() {
@@ -403,15 +424,15 @@ LX.Marker = class Marker extends LX.SharedObject {
         this.icon = null;
         this._collection = null;
         this._set = null;
+        this._latlng = null;
+
         this.on("mode", (mode) => {
+            if (this.layer) {
+                // keep dom updated to reflect mode
+                this.layer.setIcon(this.getDivIcon());
 
-            // keep dom updated to reflect mode
-            this.layer.setIcon(this.getDivIcon());
-
-            // prevent dragging once item is saved
-            console.log(`${this.log_prefix} mode = `, mode);
-            if (mode != "draft" && this.layer) {
-                this.layer.dragging.disable();
+                // prevent dragging once item is saved
+                console.log(`${this.log_prefix} mode = `, mode);
             }
         });
     }
@@ -425,10 +446,16 @@ LX.Marker = class Marker extends LX.SharedObject {
     * Automatically create a new map layer if not already defined
     */
     set geohash(val) {
-        this._data.geohash = val;
         if (val) {
-            console.log(`${this.log_prefix} location = ${this.geohash}`);
-            this.show();
+            try {
+                this._latlng = LV.Geohash.decode(val);
+                this._data.geohash = val;
+                console.log(`${this.log_prefix} location = ${this.geohash}`);
+                this.show();
+            }
+            catch(e) {
+                console.log(`${this.log_prefix} error with geohash`, e);
+            }
         }
     }
 
@@ -444,9 +471,9 @@ LX.Marker = class Marker extends LX.SharedObject {
     */
     show() {
         if (!this.layer) {
-            this.layer = L.marker(LV.Geohash.decode(this.geohash), {
+            this.layer = L.marker(this._latlng, {
                 icon: this.getDivIcon(),
-                draggable: true,
+                draggable: false,
                 autoPan: true
             });
 
