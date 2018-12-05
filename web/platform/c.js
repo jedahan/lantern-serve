@@ -13,7 +13,6 @@ const LV = window.LV || {}; if (!window.LV) window.LV = LV;
 
 
 //----------------------------------------------------------------------------
-LV.PouchDB = require("pouchdb-browser");
 LV.Geohash = require("latlon-geohash");
 require('geohash-distance');
 require("leaflet");
@@ -373,6 +372,17 @@ LX.MarkerCollection = class MarkerCollection extends LV.EventEmitter {
         marker.collection = this;
         marker.set = layer_group;
         this.emit("add", marker, this);
+
+        marker.on("show", () => {
+            this.emit("show", marker);
+        });
+
+        marker.on("hide", () => {
+            this.emit("hide", marker);
+        });
+
+        marker.show();
+
         return marker;
     };
 }
@@ -397,7 +407,6 @@ LX.Marker = class Marker extends LX.SharedObject {
 
             // keep dom updated to reflect mode
             this.layer.setIcon(this.getDivIcon());
-
 
             // prevent dragging once item is saved
             console.log(`${this.log_prefix} mode = `, mode);
@@ -450,6 +459,7 @@ LX.Marker = class Marker extends LX.SharedObject {
                 this.geohash = LV.Geohash.encode(latlng.lat, latlng.lng); 
                 console.log(`${this.log_prefix} Dragged to: `,  this.geohash);
             });
+            this.emit("show", this);
         }
     }
 
@@ -457,8 +467,10 @@ LX.Marker = class Marker extends LX.SharedObject {
     * Hide from the map without altering stored data
     */
     hide() {
-        this.layer.remove();
-        this.emit("hide", this);
+        if (this.layer && this.layer._map) {
+            this.layer.remove();
+            this.emit("hide", this);            
+        }
     }
 
 
