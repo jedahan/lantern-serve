@@ -1,11 +1,19 @@
 "use strict";
+
+/***
+* MAPS & MARKERS
+*
+* Enables map-based interactions and display
+* for use with all dev-defined apps. 
+*/
+
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 const LV = window.LV || {}; if (!window.LV) window.LV = LV;
 
 
 
 //----------------------------------------------------------------------------
-const PouchDB = LV.PouchDB = require("pouchdb-browser");
+LV.PouchDB = require("pouchdb-browser");
 LV.Geohash = require("latlon-geohash");
 require('geohash-distance');
 require("leaflet");
@@ -312,184 +320,62 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
 
 
 //----------------------------------------------------------------------------
-LX.SharedObject = class SharedObject extends LV.EventEmitter {
-    constructor(id, defaults) {
+LX.MarkerCollection = class MarkerCollection extends LV.EventEmitter {
+
+    constructor(id, map, sets) {
         super();
-        this.id = id || LV.ShortID.generate();
-        this._mode = "draft";
+        sets = sets || ["default"];
+        this.id = id;
+        this.map = map;
+        this.sets = {};
 
-        // create data space for data we allow to be exported to shared database
-        this._data = {};
-        for (var idx in defaults) {
-            this._data[idx] = defaults[idx][1] || null;
-        }  
-
-        this._key_table = {};
-        this._key_table_reverse = {};
-        for (var idx in defaults) {
-            this._key_table[idx] = defaults[idx][0];
-            this._key_table_reverse[defaults[idx][0]] = idx;
-        }
-        return this;
-    }
-
-
-
-    //-------------------------------------------------------------------------
-    get log_prefix() {
-        return `[so:${this.id}]`
-    }
-
-    /**
-    * Defines tags for data filtering and user interface display
-    */
-    set tags(val) {
-        if (!val || val.length == 0 ) return;
-
-        if (typeof(val) == "object") {
-            val.forEach(this.tag.bind(this));
-        }
-    }
-
-    get tags() {
-        return this._data.tags;
-    }
-
-
-    set mode(val) {
-        this._mode = val;
-        this.emit("mode", val);
-    }
-
-    get mode() {
-        return this._mode;
-    }
-
-
-
-    //-------------------------------------------------------------------------
-    _sanitizeTag(tag) {
-        return tag.toLowerCase().replace(/[^a-z0-9\-]+/g, '');
-    }
-
-    tag(tag) {
-        tag = this._sanitizeTag(tag);
-        console.log(`${this.log_prefix} tag = `, tag);
-
-
-        // don't allow duplicate tags
-        if(this._data.tags.indexOf(tag) > -1) {
-            return;
-        }
-
-        this._data.tags.push(tag);
-        this.emit("tag", tag);
-        return this.tags;
-    }
-
-    untag(tag) {
-        tag = this._sanitizeTag(tag);
-        this._data.tags.remove(tag);
-        this.emit("untag", tag);
-        return this.tags;
-    }
-
-    untagAll() {
-        this._data.tags.forEach((tag) => {
-            this.emit("untag", tag);
+        // create a seperate layer group for each set for full display control
+        sets.forEach((set_id) => {
+            this.sets[set_id] = L.layerGroup();
         });
-        this._data.tags = [];
-        return this.tags;
     }
 
 
 
-    //-------------------------------------------------------------------------
-    /**
-    * Compresses and formats data for storage in shared database
-    *
-    * Requires that all data variables are pre-defined in our map for safety
-    */
-    pack(obj) {
-        let new_obj = {};
-        for (var idx in obj) {
-            let v = obj[idx];
-            if (this._key_table.hasOwnProperty(idx)) {
-                let k = this._key_table[idx];
-                if (v.constructor === Array) {
-                    new_obj[k] = "Å"+v.join(",");
-                }
-                else {
-                    new_obj[k] = v;
-                }
-
-            }
+    //------------------------------------------------------------------------
+    getTotalSize() {
+        let tally = 0;
+        for (var set in this.sets) {
+            let count = this.getSetSize(set);
+            tally += count;                
         }
-        console.log(`${this.log_prefix} Packed:`, obj, new_obj);
-        return new_obj;
+        return tally;
     }
 
-
-    /**
-    * Extracts data from shared database and places back in javascript object
-    *
-    * Requires that all data variables are pre-defined in our map for safety
-    */
-    unpack(obj) {
-        let new_obj = {};
-        for (var idx in obj) {
-            let v = obj[idx];
-
-            if (this._key_table_reverse.hasOwnProperty(idx)) {
-                let k = this._key_table_reverse[idx];
-                if (v[0] == "Å") {
-                    // this is an array. expand it...
-                    v = v.replace("Å", "").split(",");
-                }
-
-                new_obj[k] = v;
-            }
-        }
-        console.log(`${this.log_prefix} Unpacked:`, obj, new_obj);
-        return new_obj;
+    getSetSize(set_id) {
+        set_id = set_id || "default";
+        return this.sets[set_id].getLayers().length;
     }
 
+    showSet(set_id) {
+        set_id = set_id || "default";
+        return this.map.addLayer(this.sets[set_id]);
+    } 
+
+    hideSet(set_id) {
+        set_id = set_id || "default";
+        return this.map.removeLayer(this.sets[set_id]);
+    }   
 
 
-    //-------------------------------------------------------------------------
-    /**
-    * Export to shared database
-    */
-    export(db) {
-        this.mode = "locked"; // lock mode
-        db.get("marker")
-            .get(this.id)
-            .put(this.pack(this._data))
-            .once((v,k) => {
-                this.mode = "shared"; // shared mode
-                this.emit("export");
-            });
-    }
 
-    /**
-    * Import from shared database
-    */
-    import(db) {
-        db.get("marker")
-            .get(this.id)
-            .once((v,k) => {
-                this.mode = "shared";
-                let data = this.unpack(v);
+    //------------------------------------------------------------------------
 
-                // only access approved data keys from our map
-                for (var idx in data) {
-                    this[idx] = data[idx];
-                }
-                this.emit("import");
-            });
-    }
+    add(marker, set, data, opts) {
+        let layer_group = this.sets[set || "default"];
+        layer_group.addLayer(marker.layer).addTo(this.map);
+
+        marker.collection = this;
+        marker.set = layer_group;
+        this.emit("add", marker, this);
+        return marker;
+    };
 }
-
 
 
 
@@ -596,357 +482,3 @@ LX.Marker = class Marker extends LX.SharedObject {
         this.layer.setIcon(this.getDivIcon());
     }
 }
-
-
-
-//----------------------------------------------------------------------------
-LX.MarkerCollection = class MarkerCollection extends LV.EventEmitter {
-
-    constructor(id, map, sets) {
-        super();
-        sets = sets || ["default"];
-        this.id = id;
-        this.map = map;
-        this.sets = {};
-
-        // create a seperate layer group for each set for full display control
-        sets.forEach((set_id) => {
-            this.sets[set_id] = L.layerGroup();
-        });
-    }
-
-
-
-    //------------------------------------------------------------------------
-    getTotalSize() {
-        let tally = 0;
-        for (var set in this.sets) {
-            let count = this.getSetSize(set);
-            tally += count;                
-        }
-        return tally;
-    }
-
-    getSetSize(set_id) {
-        set_id = set_id || "default";
-        return this.sets[set_id].getLayers().length;
-    }
-
-    showSet(set_id) {
-        set_id = set_id || "default";
-        return this.map.addLayer(this.sets[set_id]);
-    } 
-
-    hideSet(set_id) {
-        set_id = set_id || "default";
-        return this.map.removeLayer(this.sets[set_id]);
-    }   
-
-
-
-    //------------------------------------------------------------------------
-
-    add(marker, set, data, opts) {
-        let layer_group = this.sets[set || "default"];
-        layer_group.addLayer(marker.layer).addTo(this.map);
-
-        marker.collection = this;
-        marker.set = layer_group;
-        this.emit("add", marker, this);
-        return marker;
-    };
-}
-
-
-
-//----------------------------------------------------------------------------
-/*
-Copyright (c) 2015 Iván Sánchez Ortega <ivan@mazemap.no>
-
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
-
-// https://github.com/nikolauskrismer/Leaflet.TileLayer.PouchDBCached/blob/master/L.TileLayer.PouchDBCached.js
-
-L.TileLayer.addInitHook(function() {
-
-    if (!this.options.useCache) {
-        this._db     = null;
-        this._canvas = null;
-        return;
-    }
-
-    var dbName = this.options.dbName || 'offline-tiles';
-    if (this.options.dbOptions) {
-        this._db = new PouchDB(dbName, this.options.dbOptions);
-    } else {
-        this._db = new PouchDB(dbName);
-    }
-    this._canvas = document.createElement('canvas');
-
-    if (!(this._canvas.getContext && this._canvas.getContext('2d'))) {
-        // HTML5 canvas is needed to pack the tiles as base64 data. If
-        //   the browser doesn't support canvas, the code will forcefully
-        //   skip caching the tiles.
-        this._canvas = null;
-    }
-});
-
-// 🍂namespace TileLayer
-// 🍂section PouchDB tile caching options
-// 🍂option useCache: Boolean = false
-// Whether to use a PouchDB cache on this tile layer, or not
-L.TileLayer.prototype.options.useCache     = false;
-
-// 🍂option saveToCache: Boolean = true
-// When caching is enabled, whether to save new tiles to the cache or not
-L.TileLayer.prototype.options.saveToCache  = true;
-
-// 🍂option useOnlyCache: Boolean = false
-// When caching is enabled, whether to request new tiles from the network or not
-L.TileLayer.prototype.options.useOnlyCache = false;
-
-// 🍂option useCache: String = 'image/png'
-// The image format to be used when saving the tile images in the cache
-L.TileLayer.prototype.options.cacheFormat = 'image/png';
-
-// 🍂option cacheMaxAge: Number = 24*3600*1000
-// Maximum age of the cache, in milliseconds
-L.TileLayer.prototype.options.cacheMaxAge  = 24*3600*1000;
-
-
-L.TileLayer.include({
-
-    // Overwrites L.TileLayer.prototype.createTile
-    createTile: function(coords, done) {
-        var tile = document.createElement('img');
-
-        tile.onerror = L.bind(this._tileOnError, this, done, tile);
-
-        if (this.options.crossOrigin) {
-            tile.crossOrigin = '';
-        }
-
-        /*
-         Alt tag is *set to empty string to keep screen readers from reading URL and for compliance reasons
-         http://www.w3.org/TR/WCAG20-TECHS/H67
-         */
-        tile.alt = '';
-
-        var tileUrl = this.getTileUrl(coords);
-
-        if (this.options.useCache && this._canvas) {
-            this._db.get(tileUrl, {revs_info: true}, this._onCacheLookup(tile, tileUrl, done));
-        } else {
-            // Fall back to standard behaviour
-            tile.onload = L.bind(this._tileOnLoad, this, done, tile);
-        }
-
-        tile.src = tileUrl;
-        return tile;
-    },
-
-    // Returns a callback (closure over tile/key/originalSrc) to be run when the DB
-    //   backend is finished with a fetch operation.
-    _onCacheLookup: function(tile, tileUrl, done) {
-        return function(err, data) {
-            if (data) {
-                this.fire('tilecachehit', {
-                    tile: tile,
-                    url: tileUrl
-                });
-                if (Date.now() > data.timestamp + this.options.cacheMaxAge && !this.options.useOnlyCache) {
-                    // Tile is too old, try to refresh it
-                    //console.log('Tile is too old: ', tileUrl);
-
-                    if (this.options.saveToCache) {
-                        tile.onload = L.bind(this._saveTile, this, tile, tileUrl, data._revs_info[0].rev, done);
-                    }
-                    tile.crossOrigin = 'Anonymous';
-                    tile.src = tileUrl;
-                    tile.onerror = function(ev) {
-                        // If the tile is too old but couldn't be fetched from the network,
-                        //   serve the one still in cache.
-                        this.src = data.dataUrl;
-                    }
-                } else {
-                    // Serve tile from cached data
-                    //console.log('Tile is cached: ', tileUrl);
-                    tile.onload = L.bind(this._tileOnLoad, this, done, tile);
-                    tile.src = data.dataUrl;    // data.dataUrl is already a base64-encoded PNG image.
-                }
-            } else {
-                this.fire('tilecachemiss', {
-                    tile: tile,
-                    url: tileUrl
-                });
-                if (this.options.useOnlyCache) {
-                    // Offline, not cached
-//                  console.log('Tile not in cache', tileUrl);
-                    tile.onload = L.Util.falseFn;
-                    tile.src = L.Util.emptyImageUrl;
-                } else {
-                    //Online, not cached, request the tile normally
-//                  console.log('Requesting tile normally', tileUrl);
-                    if (this.options.saveToCache) {
-                        tile.onload = L.bind(this._saveTile, this, tile, tileUrl, null, done);
-                    } else {
-                        tile.onload = L.bind(this._tileOnLoad, this, done, tile);
-                    }
-                    tile.crossOrigin = 'Anonymous';
-                    tile.src = tileUrl;
-                }
-            }
-        }.bind(this);
-    },
-
-    // Returns an event handler (closure over DB key), which runs
-    //   when the tile (which is an <img>) is ready.
-    // The handler will delete the document from pouchDB if an existing revision is passed.
-    //   This will keep just the latest valid copy of the image in the cache.
-    _saveTile: function(tile, tileUrl, existingRevision, done) {
-        if (this._canvas === null) return;
-        this._canvas.width  = tile.naturalWidth  || tile.width;
-        this._canvas.height = tile.naturalHeight || tile.height;
-
-        var context = this._canvas.getContext('2d');
-        context.drawImage(tile, 0, 0);
-
-        var dataUrl;
-        try {
-            dataUrl = this._canvas.toDataURL(this.options.cacheFormat);
-        } catch(err) {
-            this.fire('tilecacheerror', { tile: tile, error: err });
-            return done();
-        }
-
-        var doc = {_id: tileUrl, dataUrl: dataUrl, timestamp: Date.now()};
-        if (existingRevision) {
-          this._db.get(tileUrl).then(function(doc) {
-              return this._db.put({
-                  _id: doc._id,
-                  _rev: doc._rev,
-                  dataUrl: dataUrl,
-                  timestamp: Date.now()
-              });
-          }.bind(this)).then(function(response) {
-            //console.log('_saveTile update: ', response);
-          });
-        } else {
-          this._db.put(doc).then( function(doc) {
-            //console.log('_saveTile insert: ', doc);
-          });
-        }
-
-        if (done) {
-          done();
-        }
-    },
-
-    // 🍂section PouchDB tile caching options
-    // 🍂method seed(bbox: LatLngBounds, minZoom: Number, maxZoom: Number): this
-    // Starts seeding the cache given a bounding box and the minimum/maximum zoom levels
-    // Use with care! This can spawn thousands of requests and flood tileservers!
-    seed: function(bbox, minZoom, maxZoom) {
-        if (!this.options.useCache) return;
-        if (minZoom > maxZoom) return;
-        if (!this._map) return;
-
-        var queue = [];
-
-        for (var z = minZoom; z<=maxZoom; z++) {
-
-            var northEastPoint = this._map.project(bbox.getNorthEast(),z);
-            var southWestPoint = this._map.project(bbox.getSouthWest(),z);
-
-            // Calculate tile indexes as per L.TileLayer._update and
-            //   L.TileLayer._addTilesFromCenterOut
-            var tileSize = this.getTileSize();
-            var tileBounds = L.bounds(
-                L.point(Math.floor(northEastPoint.x / tileSize.x), Math.floor(northEastPoint.y / tileSize.y)),
-                L.point(Math.floor(southWestPoint.x / tileSize.x), Math.floor(southWestPoint.y / tileSize.y)));
-
-            for (var j = tileBounds.min.y; j <= tileBounds.max.y; j++) {
-                for (var i = tileBounds.min.x; i <= tileBounds.max.x; i++) {
-                    point = new L.Point(i, j);
-                    point.z = z;
-                    queue.push(this._getTileUrl(point));
-                }
-            }
-        }
-
-        var seedData = {
-            bbox: bbox,
-            minZoom: minZoom,
-            maxZoom: maxZoom,
-            queueLength: queue.length
-        }
-        this.fire('seedstart', seedData);
-        var tile = this._createTile();
-        tile._layer = this;
-        this._seedOneTile(tile, queue, seedData);
-        return this;
-    },
-
-    _createTile: function () {
-        return new Image();
-    },
-
-    // Modified L.TileLayer.getTileUrl, this will use the zoom given by the parameter coords
-    //  instead of the maps current zoomlevel.
-    _getTileUrl: function (coords) {
-        var zoom = coords.z;
-        if (this.options.zoomReverse) {
-            zoom = this.options.maxZoom - zoom;
-        }
-        zoom += this.options.zoomOffset;
-        return L.Util.template(this._url, L.extend({
-            r: this.options.detectRetina && L.Browser.retina && this.options.maxZoom > 0 ? '@2x' : '',
-            s: this._getSubdomain(coords),
-            x: coords.x,
-            y: this.options.tms ? this._globalTileRange.max.y - coords.y : coords.y,
-            z: this.options.maxNativeZoom ? Math.min(zoom, this.options.maxNativeZoom) : zoom
-        }, this.options));
-    },
-
-    // Uses a defined tile to eat through one item in the queue and
-    //   asynchronously recursively call itself when the tile has
-    //   finished loading.
-    _seedOneTile: function(tile, remaining, seedData) {
-        if (!remaining.length) {
-            this.fire('seedend', seedData);
-            return;
-        }
-        this.fire('seedprogress', {
-            bbox:    seedData.bbox,
-            minZoom: seedData.minZoom,
-            maxZoom: seedData.maxZoom,
-            queueLength: seedData.queueLength,
-            remainingLength: remaining.length
-        });
-
-        var url = remaining.pop();
-
-        this._db.get(url, function(err, data) {
-            if (!data) {
-                tile.onload = function(e) {
-                    this._saveTile(tile, url, null);
-                    this._seedOneTile(tile, remaining, seedData);
-                }.bind(this);
-                tile.onerror = function(e) {
-                    // Could not load tile, let's continue anyways.
-                    this._seedOneTile(tile, remaining, seedData);
-                }.bind(this);
-                tile.crossOrigin = 'Anonymous';
-                tile.src = url;
-            } else {
-                this._seedOneTile(tile, remaining, seedData);
-            }
-        }.bind(this));
-    }
-});
