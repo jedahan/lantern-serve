@@ -10,13 +10,23 @@ LV.Vue = require("vue");
 LV.Moment = require("moment");
 LV.ShortID = require("shortid");
 LV.GraphDB = require("gun");
-LV.GraphDBTag = require("gun-tag");
 LV.SEA = require("sea");
 LV.VueGraphDB = require("vue-gun");
 
 
 
 //----------------------------------------------------------------------------
+Array.prototype.remove = function() {
+    var what, a = arguments, L = a.length, ax;
+    while (L && this.length) {
+        what = a[--L];
+        while ((ax = this.indexOf(what)) !== -1) {
+            this.splice(ax, 1);
+        }
+    }
+    return this;
+};
+
 Array.prototype.getIndexForObjectWithKey = function(key, value) {
     for (var idx in this) {
         var item = this[idx];
@@ -25,17 +35,6 @@ Array.prototype.getIndexForObjectWithKey = function(key, value) {
         }
     }
 }
-
-Array.prototype.removeByValue = function(value) {
-    for (var idx in this) {
-        var item = this[idx];
-        if (item == value) {
-            return this.splice(idx,1);
-        }
-    }
-}
-
-
 //----------------------------------------------------------------------------
 LX.Config = (() => {
     let self = {};
