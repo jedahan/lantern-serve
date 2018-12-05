@@ -1,45 +1,14 @@
 "use strict";
+
+/***
+* APP LOGIC 
+*
+* Manages any number of dev-defined applications as web components,
+* loaded dynamically from the filesystem. Creates a reactive interface.
+*/
+
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 const LV = window.LV || {}; if (!window.LV) window.LV = LV;
-
-
-
-//----------------------------------------------------------------------------
-LX.Database = class Database extends LV.EventEmitter {
-
-    constructor() {
-        super();
-        this.stor = LV.GraphDB(document.baseURI + "gun");
-        this.root = this.stor.get(LX.Config.db.namespace);
-
-        this.root.once((v,k) => {
-            if (v == undefined) {
-                let obj = {
-                    "marker": {}
-                }
-                this.stor.get(LX.Config.db.namespace).put(obj).once((v,k) => {
-                    //console.log("[DB] Created root node:", k, v)
-                });
-            }
-            else {
-                //console.log("[DB] Existing root node:", k, v)
-            }
-        });
-
-    }
-
-    /**
-    * Get node from within root namespace
-    */
-    get() {
-        return this.root.get.apply(this.root, arguments);;
-    }
-
-    put() {
-        return this.root.put.apply(this.root, arguments);
-    }
-
-}
 
 
 
@@ -138,6 +107,7 @@ LX.Director = class Director extends LV.EventEmitter {
         }
     }
 }
+
 
 
 //----------------------------------------------------------------------------

@@ -1,4 +1,12 @@
 "use strict";
+
+/***
+* PLATFORM CORE
+*
+* User and database classes provide a base. Includes configuration,
+* base classes, and access to requisite third-party libraries.
+*/
+
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 const LV = window.LV || {}; if (!window.LV) window.LV = LV;
 
@@ -35,6 +43,9 @@ Array.prototype.getIndexForObjectWithKey = function(key, value) {
         }
     }
 }
+
+
+
 //----------------------------------------------------------------------------
 LX.Config = (() => {
     let self = {};
@@ -86,3 +97,317 @@ LX.Config = (() => {
 
     return self;
 })();
+
+
+
+//----------------------------------------------------------------------------
+LX.Database = class Database extends LV.EventEmitter {
+
+    constructor() {
+        super();
+        this.stor = LV.GraphDB(document.baseURI + "gun");
+        this.root = this.stor.get(LX.Config.db.namespace);
+
+        this.root.once((v,k) => {
+            if (v == undefined) {
+                let obj = {
+                    "marker": {}
+                }
+                this.stor.get(LX.Config.db.namespace).put(obj).once((v,k) => {
+                    //console.log("[DB] Created root node:", k, v)
+                });
+            }
+            else {
+                //console.log("[DB] Existing root node:", k, v)
+            }
+        });
+
+    }
+
+    /**
+    * Get node from within root namespace
+    */
+    get() {
+        return this.root.get.apply(this.root, arguments);;
+    }
+
+    put() {
+        return this.root.put.apply(this.root, arguments);
+    }
+
+}
+
+
+
+//----------------------------------------------------------------------------
+LX.SharedObject = class SharedObject extends LV.EventEmitter {
+    constructor(id, defaults) {
+        super();
+        this.id = id || LV.ShortID.generate();
+        this._mode = "draft";
+
+        // create data space for data we allow to be exported to shared database
+        this._data = {};
+        for (var idx in defaults) {
+            this._data[idx] = defaults[idx][1] || null;
+        }  
+
+        this._key_table = {};
+        this._key_table_reverse = {};
+        for (var idx in defaults) {
+            this._key_table[idx] = defaults[idx][0];
+            this._key_table_reverse[defaults[idx][0]] = idx;
+        }
+        return this;
+    }
+
+
+
+    //-------------------------------------------------------------------------
+    get log_prefix() {
+        return `[so:${this.id}]`
+    }
+
+    /**
+    * Defines tags for data filtering and user interface display
+    */
+    set tags(val) {
+        if (!val || val.length == 0 ) return;
+
+        if (typeof(val) == "object") {
+            val.forEach(this.tag.bind(this));
+        }
+    }
+
+    get tags() {
+        return this._data.tags;
+    }
+
+
+    set mode(val) {
+        this._mode = val;
+        this.emit("mode", val);
+    }
+
+    get mode() {
+        return this._mode;
+    }
+
+
+
+    //-------------------------------------------------------------------------
+    _sanitizeTag(tag) {
+        return tag.toLowerCase().replace(/[^a-z0-9\-]+/g, '');
+    }
+
+    tag(tag) {
+        tag = this._sanitizeTag(tag);
+        console.log(`${this.log_prefix} tag = `, tag);
+
+
+        // don't allow duplicate tags
+        if(this._data.tags.indexOf(tag) > -1) {
+            return;
+        }
+
+        this._data.tags.push(tag);
+        this.emit("tag", tag);
+        return this.tags;
+    }
+
+    untag(tag) {
+        tag = this._sanitizeTag(tag);
+        this._data.tags.remove(tag);
+        this.emit("untag", tag);
+        return this.tags;
+    }
+
+    untagAll() {
+        this._data.tags.forEach((tag) => {
+            this.emit("untag", tag);
+        });
+        this._data.tags = [];
+        return this.tags;
+    }
+
+
+
+    //-------------------------------------------------------------------------
+    /**
+    * Compresses and formats data for storage in shared database
+    *
+    * Requires that all data variables are pre-defined in our map for safety
+    */
+    pack(obj) {
+        let new_obj = {};
+        for (var idx in obj) {
+            let v = obj[idx];
+            if (this._key_table.hasOwnProperty(idx)) {
+                let k = this._key_table[idx];
+                if (v.constructor === Array) {
+                    new_obj[k] = "Å"+v.join(",");
+                }
+                else {
+                    new_obj[k] = v;
+                }
+
+            }
+        }
+        console.log(`${this.log_prefix} Packed:`, obj, new_obj);
+        return new_obj;
+    }
+
+
+    /**
+    * Extracts data from shared database and places back in javascript object
+    *
+    * Requires that all data variables are pre-defined in our map for safety
+    */
+    unpack(obj) {
+        let new_obj = {};
+        for (var idx in obj) {
+            let v = obj[idx];
+
+            if (this._key_table_reverse.hasOwnProperty(idx)) {
+                let k = this._key_table_reverse[idx];
+                if (v[0] == "Å") {
+                    // this is an array. expand it...
+                    v = v.replace("Å", "").split(",");
+                }
+
+                new_obj[k] = v;
+            }
+        }
+        console.log(`${this.log_prefix} Unpacked:`, obj, new_obj);
+        return new_obj;
+    }
+
+
+
+    //-------------------------------------------------------------------------
+    /**
+    * Export to shared database
+    */
+    export(db) {
+        this.mode = "locked"; // lock mode
+        db.get("marker")
+            .get(this.id)
+            .put(this.pack(this._data))
+            .once((v,k) => {
+                this.mode = "shared"; // shared mode
+                this.emit("export");
+            });
+    }
+
+    /**
+    * Import from shared database
+    */
+    import(db) {
+        db.get("marker")
+            .get(this.id)
+            .once((v,k) => {
+                this.mode = "shared";
+                let data = this.unpack(v);
+
+                // only access approved data keys from our map
+                for (var idx in data) {
+                    this[idx] = data[idx];
+                }
+                this.emit("import");
+            });
+    }
+}
+
+
+
+//----------------------------------------------------------------------------
+LX.User = class User extends LV.EventEmitter {
+
+    constructor(db, skip_check) {
+
+        super();
+
+        this.db = db;
+        this.local_db = new LV.PouchDB("lx-user");
+        this.user = this.db.stor.user();
+
+        if (skip_check) {
+            console.log("[User] Make new credentials by explicit request")
+            this.register();
+        }
+        else {
+            // check browser for known credentials for this user
+            this.local_db.get("creds")
+                .then((creds) => {
+                    let requirements = ["username", "password"];
+                    let is_valid = true;
+                    requirements.forEach((key) =>  {
+                        if (!creds.hasOwnProperty(key)) {
+                            is_valid = false;
+                            console.log("[User] Existing saved credentials missing required key: " + key);
+                        }
+                    });
+                    if (is_valid) {
+                        console.log("[User] Known creds from storage: " + creds.username);
+                        this.authenticate(creds.username, creds.password);
+                    }
+                    else {
+                        console.log("[User] Removing invalid creds from storage");
+                        this.local_db.remove(creds).then(() => { 
+                            this.register();
+                        });
+                    }
+                })
+                .catch((e) => {
+                    if (e.name == "not_found") {
+                        console.log("[User] No user discovered. Created anonymous guest user...")
+                        this.register()
+                    }
+                    else {
+                        console.log("[User] Error getting creds", e);
+                    }
+                });
+        }
+    }
+
+    authenticate(username, password) {
+        this.user.auth(username, password, (ack) => {
+            if (ack.err) {
+                console.log("[User] Authorize failed:", ack.err);
+                this.register();
+            }
+            else {
+                this.username = username;
+                console.log("[User] Authorized:", this.username);
+                this.emit("authenticated");
+            }
+        });
+    }
+
+    register() {
+        let username = LV.ShortID.generate();
+        let password = LV.ShortID.generate();
+        console.log("[User] Create user with username:", username);
+        this.user.create(username, password, (ack) => {
+            if (ack.err) {
+                console.log("[User] Unable to save", ack.err);
+                return;
+            }
+            console.log("[User] Saved to browser");
+            this.emit("registered");
+
+            let doc = {
+                "_id" : "creds",
+                "username": username,
+                "password": password
+            }
+            this.local_db.put(doc)
+                .then(() => {
+                    this.authenticate(username, password);
+                })
+                .catch((e) => {
+                    console.log("[User] Unable to save", e);
+                });
+        });
+    }
+}
