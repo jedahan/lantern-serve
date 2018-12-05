@@ -10,7 +10,9 @@
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 const LV = window.LV || {}; if (!window.LV) window.LV = LV;
 
-
+LV.Vue = require("vue");
+LV.VueGraphDB = require("vue-gun");
+LV.PouchDB = require("pouchdb-browser");
 
 //----------------------------------------------------------------------------
 LX.Director = class Director extends LV.EventEmitter {
