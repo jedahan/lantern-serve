@@ -1,15 +1,45 @@
 "use strict";
 
 /***
-* FINISHING TOUCHES
+* PRESENTATION LAYER
 *
-* Load in final logic that references previously defined code
-* and use our director to open dev-defined applications.
+* Load in view logic and MVVM
 */
 
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 const LV = window.LV || {}; if (!window.LV) window.LV = LV;
+
+LV.Vue = require("vue");
 const PouchDB = LV.PouchDB;
+
+
+
+//----------------------------------------------------------------------------
+LX.View = class View extends LV.EventEmitter {
+
+    constructor() {
+        super();
+        // setup vue object
+        LV.Vue.filter('pluralize', (word, amount) => amount != 1 ? `${word}s` : word)
+        this.vue = new LV.Vue({
+            el: '#app-container',
+            data: {
+                app_components: [],
+                user: {
+                    username: null
+                },
+                map: {
+                    mask: true
+                }
+            },
+            mounted() {
+            }
+        });
+
+        this.data = this.vue.$data;
+
+    }
+}
 
 
 //----------------------------------------------------------------------------

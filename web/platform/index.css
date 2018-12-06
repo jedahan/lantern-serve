@@ -76,12 +76,15 @@ html, body, #map {
 
 #map .lx-marker {
 	text-align: center;
-	background: #FFF;
-	border: 2px solid rgba(255,255,255,0);
+	background: #343434;
+	color: #FFF;
+	border-width: 2px;
+	border-style: solid;
 }
 
 #map .lx-marker-draft {
-	border-color: rgba(255,255,255,0.5);
+	border-color: rgba(255,255,255,0);
+	opacity: 0.8;
 }
 
 
@@ -93,18 +96,7 @@ html, body, #map {
 
 
 
-
-.lx-map-zoom-very-close #map .lx-marker {
-	font-size: 20px;
-	line-height: 40px;
-	width: 42px !important;
-	height: 42px !important;
-	margin-left: -20px !important;
-	margin-top: -20px !important;
-}
-
-
-.lx-map-zoom-close #map .lx-marker {
+.lx-map-zoom-close #map .lx-marker, .lx-map-zoom-very-close #map .lx-marker  {
 	font-size: 16px;
 	line-height: 32px;
 	width: 34px !important;
@@ -126,12 +118,12 @@ html, body, #map {
 
 
 .lx-map-zoom-normal #map .lx-marker {
-	font-size: 8px;
-	line-height: 16px;
-	width: 18px !important;
-	height: 18px !important;
-	margin-left: -8px !important;
-	margin-top: -8px !important;
+	font-size: 9px;
+	line-height: 18px;
+	width: 19px !important;
+	height: 19px !important;
+	margin-left: -9px !important;
+	margin-top: -9px !important;
 }
 
 
@@ -141,6 +133,7 @@ html, body, #map {
 	height: 10px !important;
 	margin-left: -5px !important;
 	margin-top: -6px !important;
+	border-color: rgba(255,255,255,0);
 }
 
 
@@ -149,6 +142,7 @@ html, body, #map {
 	height: 6px !important;
 	margin-left: -3px !important;
 	margin-top: -3px !important;
+	border-color: rgba(255,255,255,0);
 }
 
 
@@ -158,6 +152,7 @@ html, body, #map {
 	height: 2px !important;
 	margin-left: -1px !important;
 	margin-top: -1px !important;
+	border-color: rgba(255,255,255,0);
 }
 
 
@@ -204,7 +199,7 @@ html, body, #map {
 
 /*----------------------------------------------------------------------------*/
 
-.leaflet-touch .leaflet-control-layers, .leaflet-contextmenu,  .leaflet-touch .leaflet-bar, .app-frame {
+.lx-marker, .leaflet-touch .leaflet-control-layers, .leaflet-contextmenu,  .leaflet-touch .leaflet-bar, .app-frame {
 
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
 }
