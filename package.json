@@ -26,7 +26,6 @@
         "simple-node-logger": "*",
         "sqlite3": "^4.0.4",
         "vue": "^2.5.17",
-        "vue-gun": "*",
         "pouchdb-browser": "*"
     },
     "browser": {

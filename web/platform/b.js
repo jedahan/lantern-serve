@@ -11,8 +11,9 @@ const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 const LV = window.LV || {}; if (!window.LV) window.LV = LV;
 
 LV.Vue = require("vue");
-LV.VueGraphDB = require("vue-gun");
 LV.PouchDB = require("pouchdb-browser");
+
+
 
 //----------------------------------------------------------------------------
 LX.Director = class Director extends LV.EventEmitter {
@@ -25,12 +26,7 @@ LX.Director = class Director extends LV.EventEmitter {
 
 
         // setup vue object
-        LV.Vue.use(LV.VueGraphDB, {
-            gun: this.db.stor
-        });
-        
         LV.Vue.filter('pluralize', (word, amount) => amount != 1 ? `${word}s` : word)
-
         this.vue = new LV.Vue({
             el: '#app-container',
             data: {
@@ -44,16 +40,17 @@ LX.Director = class Director extends LV.EventEmitter {
             }
         });
 
+        this.atlas = new LX.Atlas();
+
         // get or create a unique profile for this user / device
         this.user = new LX.User(this.db);
         this.user.on("authenticated", () => {
             this.vue.user.username = this.user.username;
+            this.atlas.loadSharedMarkers(this.db);
         });
 
 
         // define atlas to manage map interface
-        this.atlas = new LX.Atlas();
-
         this.emit("start");
         
         // load in dynamic apps
