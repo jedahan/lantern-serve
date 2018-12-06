@@ -10,7 +10,6 @@
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 const LV = window.LV || {}; if (!window.LV) window.LV = LV;
 
-LV.Vue = require("vue");
 LV.PouchDB = require("pouchdb-browser");
 
 
@@ -23,32 +22,15 @@ LX.Director = class Director extends LV.EventEmitter {
         this.ready = false;
         this.apps = {};
         this.db = new LX.Database();
-
-
-        // setup vue object
-        LV.Vue.filter('pluralize', (word, amount) => amount != 1 ? `${word}s` : word)
-        this.vue = new LV.Vue({
-            el: '#app-container',
-            data: {
-                app_components: [],
-                user: {
-                    username: null
-                },
-                map: {
-                    mask: true
-                }
-            }
-        });
-
+        this.view = new LX.View();
         this.atlas = new LX.Atlas();
 
         // get or create a unique profile for this user / device
         this.user = new LX.User(this.db);
         this.user.on("authenticated", () => {
-            this.vue.user.username = this.user.username;
+            this.view.data.user.username = this.user.username;
             this.atlas.loadSharedMarkers(this.db);
         });
-
 
         // define atlas to manage map interface
         this.emit("start");
@@ -80,12 +62,12 @@ LX.Director = class Director extends LV.EventEmitter {
 
         obj.on("open", (component_id) => {
             //console.log("[Direct] App opens component:", component_id);
-            this.vue.app_components.push(component_id);
+            this.view.data.app_components.push(component_id);
         });
 
         obj.on("close", (component_id) => {
             //console.log("[Direct] App closes component:", component_id);
-            this.vue.app_components.removeByValue(component_id);
+            this.view.data.app_components.removeByValue(component_id);
         });
     }
 
