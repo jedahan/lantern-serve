@@ -92,7 +92,6 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
 
         this.map = L.map("map", Object.assign(opts, LX.Config.leaflet_map));
 
-
         this.markers.private = new LX.MarkerCollection("private", this.map);
         this.markers.shared = new LX.MarkerCollection("shared", this.map);
 
@@ -256,14 +255,23 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
     //------------------------------------------------------------------------
    loadSharedMarkers(db) {
         db.get("marker").map().on((data,id) => {
-            let marker = new LX.Marker(id);
-            marker.importWithData(data)
 
-            if (marker.geohash && marker.tags.length) {
+            if (!data) {
+                // item was most likely deleted
+                if (db.objects.hasOwnProperty(id) && db.objects[id]) {
+                    console.log(`[${this.id}] Marker removed from elsewhere`);
+                    db.objects[id].remove(db);     
+                }
+                return;
+            }
+
+            if (data.g && data.t) {
+                let marker = new LX.Marker(id);
+                marker.importWithData(data);
+                db.link(marker);
                 // this is a valid marker we can potentially display
                 this.markers.shared.add(marker);
             }
-
         });
     }
 
@@ -402,6 +410,10 @@ LX.MarkerCollection = class MarkerCollection extends LV.EventEmitter {
             this.emit("hide", marker);
         });
 
+        marker.on("remove", () => {
+            this.emit("remove", marker);
+        });
+
         marker.show();
 
         return marker;
@@ -426,13 +438,18 @@ LX.Marker = class Marker extends LX.SharedObject {
         this._set = null;
         this._latlng = null;
 
+
+        this.on("remove", () => {
+            this.hide();
+        });
+
         this.on("mode", (mode) => {
             if (this.layer) {
                 // keep dom updated to reflect mode
                 this.layer.setIcon(this.getDivIcon());
 
                 // prevent dragging once item is saved
-                console.log(`${this.log_prefix} mode = `, mode);
+                //console.log(`${this.log_prefix} mode = `, mode);
             }
         });
     }
@@ -450,7 +467,7 @@ LX.Marker = class Marker extends LX.SharedObject {
             try {
                 this._latlng = LV.Geohash.decode(val);
                 this._data.geohash = val;
-                console.log(`${this.log_prefix} location = ${this.geohash}`);
+                //console.log(`${this.log_prefix} location = ${this.geohash}`);
                 this.show();
             }
             catch(e) {
@@ -516,7 +533,7 @@ LX.Marker = class Marker extends LX.SharedObject {
     
     setIcon(value) {
         if (!value) return;
-        console.log(`${this.log_prefix} icon = ${value}`);
+        //console.log(`${this.log_prefix} icon = ${value}`);
         this.icon = value;
         this.layer.setIcon(this.getDivIcon());
     }

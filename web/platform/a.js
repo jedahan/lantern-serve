@@ -105,7 +105,7 @@ LX.Database = class Database extends LV.EventEmitter {
         super();
         this.stor = LV.GraphDB(document.baseURI + "gun");
         this.root = this.stor.get(LX.Config.db.namespace);
-
+        this.objects = {};
         this.root.once((v,k) => {
             if (v == undefined) {
                 let obj = {
@@ -129,9 +129,26 @@ LX.Database = class Database extends LV.EventEmitter {
         return this.root.get.apply(this.root, arguments);;
     }
 
+    /**
+    * Sets value from within root namespace
+    */
     put() {
         return this.root.put.apply(this.root, arguments);
     }
+
+
+    /**
+    * Keeps track of shared objects
+    */
+
+    link(shared_obj) {
+        this.objects[shared_obj.id] = shared_obj;
+    }
+
+    unlink(shared_obj) {
+        this.objects[shared_obj.id] = null;
+    }
+
 
 }
 
@@ -163,7 +180,7 @@ LX.SharedObject = class SharedObject extends LV.EventEmitter {
 
     //-------------------------------------------------------------------------
     get log_prefix() {
-        return `[so:${this.id}]`
+        return `[${this.id}]`
     }
 
     /**
@@ -200,8 +217,7 @@ LX.SharedObject = class SharedObject extends LV.EventEmitter {
 
     tag(tag) {
         tag = this._sanitizeTag(tag);
-        console.log(`${this.log_prefix} tag = `, tag);
-
+        //console.log(`${this.log_prefix} tag = `, tag);
 
         // don't allow duplicate tags
         if(this._data.tags.indexOf(tag) > -1) {
@@ -263,6 +279,7 @@ LX.SharedObject = class SharedObject extends LV.EventEmitter {
     */
     unpack(obj) {
         let new_obj = {};
+
         for (var idx in obj) {
             let v = obj[idx];
 
@@ -272,12 +289,11 @@ LX.SharedObject = class SharedObject extends LV.EventEmitter {
                     // this is an array. expand it...
                     v = v.replace("Å", "").split(",");
                 }
-
                 new_obj[k] = v;
             }
         }
-        console.log(`${this.log_prefix} Unpacked:`, obj, new_obj);
-        return new_obj;
+        //console.log(`${this.log_prefix} Unpacked:`, obj, new_obj);
+        return new_obj; 
     }
 
 
@@ -287,12 +303,18 @@ LX.SharedObject = class SharedObject extends LV.EventEmitter {
     * Export to shared database
     */
     export(db) {
+
+        if (!db) {
+            return console.log(`${this.log_prefix} Requires database to export to`);
+        }
+
         this.mode = "locked"; // lock mode
         db.get("marker")
             .get(this.id)
             .put(this.pack(this._data))
             .once((v,k) => {
                 this.mode = "shared"; // shared mode
+                db.link(this);
                 this.emit("export");
             });
     }
@@ -302,9 +324,16 @@ LX.SharedObject = class SharedObject extends LV.EventEmitter {
     * Import from shared database
     */
     import(db) {
+        if (!db) {
+            return console.log(`${this.log_prefix} Requires database to import from`);
+        }
+
         db.get("marker")
             .get(this.id)
-            .once(this.importWithData);
+            .once((v,k) => {
+                this.importWithData(v);
+                db.link(this);
+            });
     }
 
     /**
@@ -314,6 +343,7 @@ LX.SharedObject = class SharedObject extends LV.EventEmitter {
     * for example during a database map()
     */
     importWithData(data) {
+
         this.mode = "shared";
         data = this.unpack(data);
 
@@ -322,6 +352,31 @@ LX.SharedObject = class SharedObject extends LV.EventEmitter {
             this[idx] = data[idx];
         }
         this.emit("import");
+    }
+
+
+    remove(db) {
+
+        if (!db) {
+            return console.log(`${this.log_prefix} Requires database to remove from`);
+        }
+        else if (this.mode == "removed") {
+            // already removed... skip...
+            return;
+        }
+
+        console.log(`${this.log_prefix} Remove`);
+        
+        this.mode = "removed";
+
+        db.get("marker")
+            .get(this.id)
+            .put(null)
+            .once((v,k) => {
+                console.log(v,k);
+                this.emit("remove");
+                db.unlink(this);
+            });
     }
 }
 
