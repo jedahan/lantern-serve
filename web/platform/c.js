@@ -29,6 +29,7 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
         this.map = null;
         this.center = null;
         this.user = null;
+        this.menu = null;
         this.markers = {
         }
         this.precision = {
@@ -92,8 +93,11 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
 
         this.map = L.map("map", Object.assign(opts, LX.Config.leaflet_map));
 
-        this.markers.private = new LX.MarkerCollection("private", this.map);
-        this.markers.shared = new LX.MarkerCollection("shared", this.map);
+        // setup collections for markers to control layering 
+        let collections = ["private", "shared"];
+        collections.forEach((item) => {
+            this.markers[item] = new LX.MarkerCollection(item, this.map);
+        });
 
         // layer in hosted map tiles
         L.tileLayer(this.tile_uri, LX.Config.leaflet_tiles).addTo(this.map);
@@ -261,6 +265,7 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
                 if (db.objects.hasOwnProperty(id) && db.objects[id]) {
                     console.log(`[${this.id}] Marker removed from elsewhere`);
                     db.objects[id].remove(db);     
+                    db.objects[id] = null;
                 }
                 return;
             }
@@ -402,6 +407,10 @@ LX.MarkerCollection = class MarkerCollection extends LV.EventEmitter {
         marker.set = layer_group;
         this.emit("add", marker, this);
 
+        marker.layer.on("click", (ev) => {
+            this.emit("click", marker);
+        });
+
         marker.on("show", () => {
             this.emit("show", marker);
         });
@@ -494,10 +503,6 @@ LX.Marker = class Marker extends LX.SharedObject {
                 autoPan: true
             });
 
-            this.layer.on("click", () => {
-                console.log(`${this.log_prefix} Clicked:`, this);
-            });
-
             this.layer.on("dragend", (e) => {
                 let latlng = e.target._latlng;
                 this.geohash = LV.Geohash.encode(latlng.lat, latlng.lng); 
@@ -516,8 +521,6 @@ LX.Marker = class Marker extends LX.SharedObject {
             this.emit("hide", this);            
         }
     }
-
-
 
     //-------------------------------------------------------------------------
     getDivIcon() {

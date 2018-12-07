@@ -10,27 +10,29 @@
         "directory-tree": "*",
         "event-emitter-es6": "*",
         "express": "*",
-        "gun": "*",
-        "gun-tag": "*",
         "fs-extra": "7.x",
         "geohash-distance": "*",
+        "gun": "*",
+        "gun-tag": "*",
         "helmet": "*",
         "latlon-geohash": "*",
         "leaflet": "*",
         "leaflet-contextmenu": "*",
         "leaflet.locatecontrol": "*",
         "moment": "*",
-        "typeface-montserrat": "0.0.54",
+        "pouchdb-browser": "*",
         "request": "*",
         "shortid": "*",
         "simple-node-logger": "*",
         "sqlite3": "^4.0.4",
+        "typeface-montserrat": "0.0.54",
         "vue": "^2.5.17",
-        "pouchdb-browser": "*"
+        "wheelnav": "*"
     },
     "browser": {
         "vue": "vue/dist/vue.common.js",
-        "sea": "gun/sea.js"
+        "sea": "gun/sea.js",
+        "raphael": "wheelnav/js/dist/raphael.min.js"
     },
     "scripts": {
         "start": "node ./web/index.js",

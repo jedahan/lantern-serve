@@ -10,6 +10,7 @@ const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 const LV = window.LV || {}; if (!window.LV) window.LV = LV;
 
 LV.Vue = require("vue");
+LV.Wheelnav = require("wheelnav");
 const PouchDB = LV.PouchDB;
 
 
@@ -31,15 +32,51 @@ LX.View = class View extends LV.EventEmitter {
                 map: {
                     mask: true
                 }
-            },
-            mounted() {
             }
         });
 
         this.data = this.vue.$data;
+    }
 
+
+}
+
+
+
+//----------------------------------------------------------------------------
+LX.Menu = class Menu extends LV.EventEmitter {
+
+    constructor(items, handlers, target) {
+        super();
+
+        if (!items || !items.length) {
+            return console.log("[View] Refusing to show menu with zero items");
+        }
+
+        this.element = document.getElementById("radial-menu");
+        this.element.classList = "active";
+
+        this.wheel = null;   
+        this.wheel = new wheelnav("radial-menu");
+        this.wheel.wheelRadius = this.wheel.wheelRadius * 0.83;
+        this.wheel.selectedNavItemIndex = null;
+        this.wheel.createWheel(items);
+        this.wheel.navItems.forEach((item) => {
+            if (handlers && typeof(handlers[item.itemIndex]) == "function") {
+                let fn = handlers[item.itemIndex];
+                item.navigateFunction = () => {
+                    fn(target).then(this.remove.call(this));
+                }
+            }
+        });
+    }
+    
+    remove() {
+        this.element.classList = "";
+        this.wheel.removeWheel();
     }
 }
+
 
 
 //----------------------------------------------------------------------------
