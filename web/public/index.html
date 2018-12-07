@@ -23,11 +23,7 @@
     </div>
 
     <div id="app-container">
-        <div class="app-full-screen" v-cloak>
-            <div v-for="app in app_components">
-                <component v-bind:is="app" v-bind:id="app" class="app"></component>
-            </div>
-        </div>
+        <component v-for="app in app_components" v-bind:is="app" :key="app" v-bind:id="app" :class="'app ' + app"></component>
         <transition name="fade">
             <div v-if="map.mask" class="app-mask"></div>
         </transition>

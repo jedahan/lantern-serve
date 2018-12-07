@@ -57,6 +57,7 @@ LX.Config = (() => {
         wheelPxPerZoomLevel: 100,
         contextmenu: true,
         contextmenuWidth: 140,
+        zoomControl: false
     };
     
     self.leaflet_tiles = {
