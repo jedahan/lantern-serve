@@ -191,16 +191,28 @@ html, body, #map {
 }
 
 .app-frame {
-	border: 1px solid #EEE;
-	border-radius: 3px;
 	background: rgba(255,255,255,0.9);
-	margin: 1em;
-	margin: auto;
+	margin: 1em auto;
+	padding: 0.5em;
 }
 
 .app {
 	margin: auto;
-	position: relative;
+	position: absolute;
+	width: 100%;
+	pointer-events: auto;
+	left: 0;
+	right: 0;
+	margin: auto;
+}
+
+
+.app-top {
+	top: 0;
+}
+
+.app-bottom {
+	bottom: 0;
 }
 
 

@@ -45,7 +45,7 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
 
     render() {
         this.setupMap();
-        this.setupControls();
+
         // find current map cache size...
         this.tile_db.info().then((result) => {
             console.log("[Atlas] Cached map tiles: " + result.doc_count);
@@ -100,27 +100,6 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
 
         // layer in hosted map tiles
         L.tileLayer(this.tile_uri, LX.Config.leaflet_tiles).addTo(this.map);
-    }
-
-    setupControls() {
-        // add locate control
-        L.control.locate(LX.Config.leaflet_locatecontrol).addTo(this.map);
-
-        // create custom zoom icons
-        let zoom_in = document.getElementsByClassName("leaflet-control-zoom-in")[0];
-        let elem = document.createElement('span');
-        elem.className = "fa fa-plus";
-        zoom_in.innerHTML = "";
-        zoom_in.appendChild(elem);
-
-
-        let zoom_out = document.getElementsByClassName("leaflet-control-zoom-out")[0];
-        let elem2 = document.createElement('span');
-        elem2.className = "fa fa-minus";
-        zoom_out.innerHTML = "";
-        zoom_out.appendChild(elem2);
-
-        this.map.zoomControl.setPosition("bottomright");
     }
 
     calculateZoomClass() {
@@ -255,14 +234,15 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
         this.map.zoomOut();
     }
     
+
+
     //------------------------------------------------------------------------
    loadSharedMarkers(db) {
-        db.get("marker").map().on((data,id) => {
 
+        db.get("marker").map().on((data,id) => {
             if (!data) {
                 // item was most likely deleted
                 if (db.objects.hasOwnProperty(id) && db.objects[id]) {
-                    console.log(`[${this.id}] Marker removed from elsewhere`);
                     db.objects[id].remove(db);     
                     db.objects[id] = null;
                 }
@@ -279,6 +259,8 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
         });
     }
 
+
+
     //------------------------------------------------------------------------
     getMarkerCount() {
         let tally = 0;
@@ -289,6 +271,20 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
         return tally;
     }
 
+    fitMapToAllMarkers() {
+        let all_layers = [];
+        for (var idx in this.markers) {
+            var collection = this.markers[idx];
+            let layers = collection.getAllLayers();
+            layers.forEach((layer) => {
+                all_layers.push(layer);
+            });
+        }
+        if (all_layers.length) {
+            let group = new L.featureGroup(all_layers);
+            this.map.fitBounds(group.getBounds());
+        }
+    }
 
 
     //------------------------------------------------------------------------
@@ -360,6 +356,7 @@ LX.MarkerCollection = class MarkerCollection extends LV.EventEmitter {
         this.id = id;
         this.map = map;
         this.sets = {};
+        this.markers = {};
 
         // create a seperate layer group for each set for full display control
         sets.forEach((set_id) => {
@@ -370,6 +367,32 @@ LX.MarkerCollection = class MarkerCollection extends LV.EventEmitter {
 
 
     //------------------------------------------------------------------------
+
+    getOne(id) {
+        return this.markers[id];
+    }
+
+    getAll() {
+        let all = [];
+        for (var idx in this.markers) {
+            all.push(this.markers[idx]);
+        }
+        return all;
+    }
+
+
+    getOneLayer(id) {
+        return this.markers[id].layer;
+    }
+
+    getAllLayers() {
+        let all = [];
+        for (var idx in this.markers) {
+            all.push(this.markers[idx].layer);
+        }
+        return all;
+    }
+
     getTotalSize() {
         let tally = 0;
         for (var set in this.sets) {
@@ -399,6 +422,13 @@ LX.MarkerCollection = class MarkerCollection extends LV.EventEmitter {
     //------------------------------------------------------------------------
 
     add(marker, set, data, opts) {
+
+        if (this.markers[marker.id]) {
+            return console.log("[Collection] Skipping marker add since it exists", marker);
+        }
+
+        this.markers[marker.id] = marker;
+
         let layer_group = this.sets[set || "default"];
         layer_group.addLayer(marker.layer).addTo(this.map);
 
