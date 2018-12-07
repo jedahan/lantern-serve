@@ -57,7 +57,7 @@ if (fs.existsSync("../../../routes")) {
 }
 
 // platform route serves core application environment
-const platform_path = path.resolve(__dirname, "./platform/");
+const platform_path = path.resolve(__dirname, "./platform/dist/");
 server.use("/platform/", express.static(platform_path));
 
 
