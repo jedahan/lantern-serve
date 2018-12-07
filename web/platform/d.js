@@ -71,6 +71,15 @@ LX.Menu = class Menu extends LV.EventEmitter {
         });
     }
     
+    center(x,y) {
+        let el = document.getElementById("radial-menu");
+        let svg = el.childNodes[0];
+        let width = svg.width.baseVal.valueAsString;
+        let height = svg.height.baseVal.valueAsString;
+        el.style.left = (x - width/2)+"px";
+        el.style.top = (y - height/2)+"px";
+    }
+
     remove() {
         this.element.classList = "";
         this.wheel.removeWheel();

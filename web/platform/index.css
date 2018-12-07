@@ -26,19 +26,21 @@ html, body, #map {
 #map {
     min-height: 200px;
 }
+
 #map .leaflet-control-attribution {
     display: none;
 }
+
 #map a.leaflet-contextmenu-item {
 	font-size: 14px;
 	padding: 1em;
 	white-space: nowrap;
 }
+
 #map .leaflet-touch .leaflet-control-layers, .leaflet-touch .leaflet-bar {
     border: 1px solid #CCC;
     border-radius: 3px;
 }
-
 
 #map .leaflet-bar a {
 	width: 35px;
@@ -87,14 +89,9 @@ html, body, #map {
 	opacity: 0.8;
 }
 
-
-
 #map .lx-marker, #map .lx-marker i {
 	border-radius: 100em;
 }
-
-
-
 
 .lx-map-zoom-close #map .lx-marker, .lx-map-zoom-very-close #map .lx-marker  {
 	font-size: 16px;
@@ -127,7 +124,6 @@ html, body, #map {
 }
 
 
-
 .lx-map-zoom-somewhat-far #map .lx-marker {
 	width: 10px !important;
 	height: 10px !important;
@@ -145,7 +141,6 @@ html, body, #map {
 	border-color: rgba(255,255,255,0);
 }
 
-
  
 .lx-map-zoom-very-far #map .lx-marker {
 	width: 2px !important;
@@ -159,6 +154,8 @@ html, body, #map {
 .lx-map-zoom-far #map .lx-marker i, .lx-map-zoom-very-far #map .lx-marker  i, .lx-map-zoom-somewhat-far #map .lx-marker  i {
 	visibility: hidden;
 }
+
+
 
 /*----------------------------------------------------------------------------*/
 #app-container, .app-mask {
@@ -206,8 +203,9 @@ html, body, #map {
 	position: relative;
 }
 
-/*----------------------------------------------------------------------------*/
 
+
+/*----------------------------------------------------------------------------*/
 .lx-marker, .leaflet-touch .leaflet-control-layers, .leaflet-contextmenu,  .leaflet-touch .leaflet-bar, .app-frame {
 
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
@@ -216,13 +214,24 @@ html, body, #map {
 
 
 /*----------------------------------------------------------------------------*/
-#radial-menu > svg { width: 100%; height: 100%; }
+#radial-menu > svg { 
+	width: 100%; 
+	height: 100%; 
+    -webkit-filter: drop-shadow(2px 2px 10px rgba(0,0,0,0.1));      
+    filter: drop-shadow(2px 2px 10px rgba(0,0,0,0.1));  
+}
 #radial-menu { height: 200px; width: 200px; margin:auto; }
 @media (max-width: 200px) { #radial-menu { height: 150px; width: 150px; } }
 
-[class|=wheelnav-radial-menu-slice-basic] { fill: #3273dc; stroke: none; }
-[class|=wheelnav-radial-menu-slice-selected] { fill: #3273dc; stroke: none; }
-[class|=wheelnav-radial-menu-slice-hover] { fill: #3273dc;  stroke: none; fill-opacity: 0.77; cursor: pointer; }
+[class|=wheelnav-radial-menu-slice-basic] { fill: #FFF; stroke: none; 
+	fill-opacity: 0.9;
+	stroke: #DDD; 
+	stroke-width: 1px;    -webkit-filter: drop-shadow(12px 12px 7px rgba(0,0,0,0.5));      
+    filter: drop-shadow(12px 12px 7px rgba(0,0,0,0.5));  
+
+}
+[class|=wheelnav-radial-menu-slice-selected] { fill: #3273dc; stroke: #DDD; }
+[class|=wheelnav-radial-menu-slice-hover] { fill: #FFF;  stroke: #DDD; fill-opacity: 1; cursor: pointer; }
 
 [class|=wheelnav-radial-menu-title-basic] { fill: #343434; stroke: none; }
 [class|=wheelnav-radial-menu-title-selected] { fill: #fff; stroke: none; }
@@ -230,8 +239,8 @@ html, body, #map {
 [class|=wheelnav-radial-menu-title] > tspan { font-family: Impact, Charcoal, sans-serif; font-size: 24px; }
 
 
-/*----------------------------------------------------------------------------*/
 
+/*----------------------------------------------------------------------------*/
 body {
     font-family: "montserrat",sans-serif;
     letter-spacing: 0.06em;
@@ -248,6 +257,8 @@ h1 {
 	font-weight: 500;
 	padding: 1.75em 1em;
 }
+
+
 
 /*----------------------------------------------------------------------------*/
 ul.menu li {

@@ -29,7 +29,6 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
         this.map = null;
         this.center = null;
         this.user = null;
-        this.menu = null;
         this.markers = {
         }
         this.precision = {
