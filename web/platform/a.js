@@ -53,7 +53,7 @@ LX.Config = (() => {
     }
 
     self.leaflet_map = {
-        zoomDelta: 1.5,
+        zoomDelta: 1.3,
         wheelPxPerZoomLevel: 100,
         contextmenu: true,
         contextmenuWidth: 140,
@@ -76,6 +76,7 @@ LX.Config = (() => {
         cacheLocation: true,
         showCompass: true,
         flyTo: false,
+        showPopup: false,
         setView: "untilPanOrZoom",
         position: "bottomright"
     }
@@ -374,7 +375,6 @@ LX.SharedObject = class SharedObject extends LV.EventEmitter {
             .get(this.id)
             .put(null)
             .once((v,k) => {
-                console.log(v,k);
                 this.emit("remove");
                 db.unlink(this);
             });

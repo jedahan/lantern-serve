@@ -38,8 +38,8 @@ html, body, #map {
 }
 
 #map .leaflet-touch .leaflet-control-layers, .leaflet-touch .leaflet-bar {
-    border: 1px solid #CCC;
-    border-radius: 3px;
+    border: 1px solid #EEE;
+    border-radius: 6px;
 }
 
 #map .leaflet-bar a {
@@ -60,6 +60,11 @@ html, body, #map {
 
 #map .leaflet-bar a.leaflet-disabled:hover {
 	background: rgba(255,255,255,0.6);
+}
+
+
+#map .leaflet-right .leaflet-control {
+	margin-bottom: 1em;
 }
 
 #map .leaflet-control-zoom-in a:hover, #map .leaflet-control-zoom-out a:hover{
@@ -191,9 +196,11 @@ html, body, #map {
 }
 
 .app-frame {
-	background: rgba(255,255,255,0.9);
-	margin: 1em auto;
+	background: rgba(255,255,255,0.95);
+	margin: 1em;
 	padding: 0.5em;
+	border-radius: 6px;
+	overflow: hidden;
 }
 
 .app {
@@ -207,12 +214,24 @@ html, body, #map {
 }
 
 
-.app-top {
+.app.app-top {
 	top: 0;
+	bottom: auto;
 }
 
-.app-bottom {
+.app.app-left {
+	left: 0;
+	right: auto;
+}
+
+.app.app-right {
+	right: 0;
+	left: auto;
+}
+
+.app.app-bottom {
 	bottom: 0;
+	top: auto;
 }
 
 
@@ -282,13 +301,11 @@ ul.menu li {
     display: block;
 }
 
-ul.menu li:last-child  {
-    border-bottom: 1px solid #EEE;
-}
+
 
 ul.menu li:hover {
     cursor: pointer;
-    background: #FAFAFA;
+    background: #FFF;
 }
 
 ul.menu .icon {
