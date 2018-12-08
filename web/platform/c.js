@@ -110,10 +110,10 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
         if (zoom < 6) {
             distance = "very-far";
         }
-        else if (zoom < 7) {
+        else if (zoom < 8) {
             distance = "far";
         }
-        else if (zoom < 12) {
+        else if (zoom < 10) {
             distance = "somewhat-far";
         }
         else if (zoom < 14) {
@@ -424,7 +424,15 @@ LX.MarkerCollection = class MarkerCollection extends LV.EventEmitter {
     add(marker, set, data, opts) {
 
         if (this.markers[marker.id]) {
-            return console.log("[Collection] Skipping marker add since it exists", marker);
+            // this could be an update...
+
+            if (this.markers[marker.id].geohash != marker.geohash) {
+                this.markers[marker.id].geohash = marker.geohash;
+                return console.log("[Collection] Updating geohash for marker", marker);
+            }
+            else {
+                return console.log("[Collection] Skipping marker add since it exists", marker);
+            }
         }
 
         this.markers[marker.id] = marker;
@@ -504,6 +512,11 @@ LX.Marker = class Marker extends LX.SharedObject {
         if (val) {
             try {
                 this._latlng = LV.Geohash.decode(val);
+
+                if (this.layer) {
+                    this.layer.setLatLng(this._latlng);
+                }
+                
                 this._data.geohash = val;
                 //console.log(`${this.log_prefix} location = ${this.geohash}`);
                 this.show();
