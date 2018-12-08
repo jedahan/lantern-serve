@@ -46,31 +46,46 @@ LX.View = class View extends LV.EventEmitter {
 //----------------------------------------------------------------------------
 LX.Menu = class Menu extends LV.EventEmitter {
 
-    constructor(items, handlers, target) {
+    constructor(opts, target) {
         super();
 
-        if (!items || !items.length) {
+        if (!opts || !opts.length) {
             return console.log("[View] Refusing to show menu with zero items");
         }
 
         this.element = document.getElementById("radial-menu");
         this.element.classList = "active";
 
+        // create icons for menu
+        let items = [];
+        opts.forEach((opt) => {
+            if (opt.icon) {
+                let icon = "imgsrc:/_/@fortawesome/fontawesome-free/svgs/solid/" + opt.icon + ".svg";
+                items.push(icon);                
+            }
+            else if (opt.label) {
+                items.push(opt.label);
+            }
+        });
+
         this.wheel = null;   
         this.wheel = new wheelnav("radial-menu");
         this.wheel.wheelRadius = this.wheel.wheelRadius * 0.83;
         this.wheel.selectedNavItemIndex = null;
         this.wheel.createWheel(items);
+
+        // define custom methods to handle menu selection
         this.wheel.navItems.forEach((item) => {
-            if (handlers && typeof(handlers[item.itemIndex]) == "function") {
-                let fn = handlers[item.itemIndex];
+            if (typeof(opts[item.itemIndex]).hasOwnProperty("method")) {
+                let fn = opts[item.itemIndex].method;
                 item.navigateFunction = () => {
-                    fn(target).then(this.remove.call(this));
+                    fn(target);
+                    this.remove.call(this);
                 }
             }
         });
     }
-    
+
     center(x,y) {
         let el = document.getElementById("radial-menu");
         let svg = el.childNodes[0];

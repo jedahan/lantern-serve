@@ -157,7 +157,10 @@ LX.App = class App extends LV.EventEmitter {
                 cmp.computed = logic.computed;
             }
             if (logic.methods) {
-                cmp.methods = logic.methods;
+                cmp.methods = {};
+                for (var idx in logic.methods) {
+                    cmp.methods[idx] = logic.methods[idx].bind(this);
+                }
             }
             if (logic.mounted) {
                 cmp.mounted = logic.mounted;
