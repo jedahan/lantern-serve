@@ -330,20 +330,15 @@ LX.SharedObject = class SharedObject extends LV.EventEmitter {
 
         let data = this.pack(this._data);
     
-        // sign message so network can verify source...
-        // SEA.sign(data, LT.user.pair)
-        //     .then((signed_data) => {
-                
-                // save to our shared database...
-                db.get("marker")
-                    .get(this.id)
-                    .put(data)
-                    .once((v,k) => {
-                        this.mode = "shared"; // shared mode
-                        db.link(this);
-                        this.emit("export");
-                    });
-        //})
+        // save to our shared database...
+        db.get("marker")
+            .get(this.id)
+            .put(data)
+            .once((v,k) => {
+                this.mode = "shared"; // shared mode
+                db.link(this);
+                this.emit("export");
+            });
 
     }
 
@@ -422,7 +417,6 @@ LX.SharedObject = class SharedObject extends LV.EventEmitter {
         console.log(`${this.log_prefix} Remove`);
         
         this.mode = "removed";
-
         db.get("marker")
             .get(this.id)
             .put(null)

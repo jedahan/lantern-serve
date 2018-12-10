@@ -24,7 +24,7 @@
     <div id="app-container">
         <component v-for="app in app_components" v-bind:is="app" :key="app" v-bind:id="app" :class="'app ' + app"></component>
         <transition name="fade">
-            <div v-if="map.mask" class="app-mask"></div>
+            <div v-if="!map" class="app-mask"></div>
         </transition>
     </div>
     <div id="map">
