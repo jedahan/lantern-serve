@@ -42,6 +42,11 @@ Array.prototype.getIndexForObjectWithKey = function(key, value) {
     }
 }
 
+Math.limit = function(val, min, max) {
+  return val < min ? min : (val > max ? max : val);
+}
+
+
 
 
 //----------------------------------------------------------------------------
@@ -53,11 +58,12 @@ LX.Config = (() => {
     }
 
     self.leaflet_map = {
-        zoomDelta: 1.3,
+        zoomDelta: 1.4,
         wheelPxPerZoomLevel: 100,
         contextmenu: true,
         contextmenuWidth: 140,
-        zoomControl: false
+        zoomControl: false,
+        maxZoom: 18
     };
     
     self.leaflet_tiles = {
@@ -105,9 +111,14 @@ LX.Database = class Database extends LV.EventEmitter {
 
     constructor() {
         super();
+
         this.stor = LV.GraphDB(document.baseURI + "gun");
         this.root = this.stor.get(LX.Config.db.namespace);
+
+        this.packages = {}; // keep track of a subset of overall database
+
         this.objects = {};
+
         this.root.once((v,k) => {
             if (v == undefined) {
                 let obj = {
@@ -128,7 +139,7 @@ LX.Database = class Database extends LV.EventEmitter {
     * Get node from within root namespace
     */
     get() {
-        return this.root.get.apply(this.root, arguments);;
+        return this.root.get.apply(this.root, arguments);
     }
 
     /**
@@ -155,7 +166,6 @@ LX.Database = class Database extends LV.EventEmitter {
 }
 
 
-
 //----------------------------------------------------------------------------
 LX.SharedObject = class SharedObject extends LV.EventEmitter {
     constructor(id, defaults) {
@@ -167,7 +177,7 @@ LX.SharedObject = class SharedObject extends LV.EventEmitter {
         this._data = {};
         for (var idx in defaults) {
             this._data[idx] = defaults[idx][1] || null;
-        }  
+        }
 
         this._key_table = {};
         this._key_table_reverse = {};
@@ -269,7 +279,7 @@ LX.SharedObject = class SharedObject extends LV.EventEmitter {
 
             }
         }
-        console.log(`${this.log_prefix} Packed:`, obj, new_obj);
+        //console.log(`${this.log_prefix} Packed:`, obj, new_obj);
         return new_obj;
     }
 
@@ -311,11 +321,53 @@ LX.SharedObject = class SharedObject extends LV.EventEmitter {
         }
 
         this.mode = "locked"; // lock mode
+
+
+        // record owner when item is first exported...
+        if (!this._data["owner"]) {
+            this._data["owner"] = LT.user.username;
+        }
+
+        let data = this.pack(this._data);
+    
+        // sign message so network can verify source...
+        // SEA.sign(data, LT.user.pair)
+        //     .then((signed_data) => {
+                
+                // save to our shared database...
+                db.get("marker")
+                    .get(this.id)
+                    .put(data)
+                    .once((v,k) => {
+                        this.mode = "shared"; // shared mode
+                        db.link(this);
+                        this.emit("export");
+                    });
+        //})
+
+    }
+
+    exportPartial(field, db) {
+
+        if (!db) {
+            return console.log(`${this.log_prefix} Requires database to export field to`);
+        }
+        else if (!this._data.hasOwnProperty(field)) {
+            return console.log(`${this.log_prefix} Missing field so cannot export: ${field}`);
+        }
+
+        this.mode = "locked"; // lock mode
+
+        let data = {};
+        data[field] = this._data[field];
+
+        data = this.pack(data);
+
+        // save to our shared database...
         db.get("marker")
             .get(this.id)
-            .put(this.pack(this._data))
+            .put(data)
             .once((v,k) => {
-                this.mode = "shared"; // shared mode
                 db.link(this);
                 this.emit("export");
             });
@@ -351,7 +403,7 @@ LX.SharedObject = class SharedObject extends LV.EventEmitter {
 
         // only access approved data keys from our map
         for (var idx in data) {
-            this[idx] = data[idx];
+            this[idx] = this._data[idx] = data[idx];
         }
         this.emit("import");
     }
@@ -393,6 +445,7 @@ LX.User = class User extends LV.EventEmitter {
         this.db = db;
         this.local_db = new LV.PouchDB("lx-user");
         this.user = this.db.stor.user();
+        this.pair = null;
 
         if (skip_check) {
             console.log("[User] Make new credentials by explicit request")
@@ -442,7 +495,10 @@ LX.User = class User extends LV.EventEmitter {
             else {
                 this.username = username;
                 console.log("[User] Authorized:", this.username);
-                this.emit("authenticated");
+                SEA.pair().then((pair) => {
+                    this.pair = pair;
+                    this.emit("authenticated", this.pair);
+                });
             }
         });
     }

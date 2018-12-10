@@ -7,20 +7,19 @@
     <link rel="stylesheet" type="text/css" href="/_/leaflet/dist/leaflet.css"/>
     <link rel="stylesheet" type="text/css" href="/_/@fortawesome/fontawesome-free/css/all.min.css"/>
     <link rel="stylesheet" type="text/css" href="/_/leaflet.locatecontrol/dist/L.Control.Locate.min.css"/>
-    <link rel="stylesheet" type="text/css" href="/_/leaflet-contextmenu/dist/leaflet.contextmenu.min.css"/>
     <link rel="stylesheet" type="text/css" href="/_/bulma/css/bulma.min.css"/>
     <link rel="stylesheet" type="text/css" href="./index.css"/>
 </head>
 <body>
 
-    <div id="radial-menu" 
+    <div id="pie-menu" 
         data-wheelnav
         data-wheelnav-slicepath='DonutSlice'
-        data-wheelnav-wheelradius="110"
         data-wheelnav-init
         data-wheelnav-rotateoff
         data-wheelnav-cssmode>
     </div>
+    <div id="pie-menu-mask"></div>
 
     <div id="app-container">
         <component v-for="app in app_components" v-bind:is="app" :key="app" v-bind:id="app" :class="'app ' + app"></component>

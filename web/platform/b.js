@@ -44,11 +44,6 @@ LX.Director = class Director extends LV.EventEmitter {
             .then((json) => {
                 json.forEach(this.createApp.bind(this));
             });
-
-
-        // clear any open radial menu when interacting with map
-        this.atlas.map.on("movestart", this.closeMenu.bind(this));
-        this.atlas.map.on("click", this.closeMenu.bind(this));
     }
 
 
@@ -92,27 +87,6 @@ LX.Director = class Director extends LV.EventEmitter {
                 this.apps[app_id].open(`lx-app-${app_id}-${page.id}`);
             });
         }
-    }
-
-
-    //------------------------------------------------------------------------
-    /**
-    * Displays a radial menu with dev-supplied / customizable options
-    */
-    openMenu(labels, fns, target) {
-        // clear any existing menu first
-        this.closeMenu();
-
-        // now construct a new one to meet the contextual need
-        this.menu = new LX.Menu(labels, fns, target);
-        return this.menu;
-    }
-
-    /**
-    * Closes radial menu and removed from display
-    */
-    closeMenu() {
-        if (this.menu) this.menu.remove();
     }
 }
 

@@ -44,7 +44,7 @@ LX.View = class View extends LV.EventEmitter {
 
 
 //----------------------------------------------------------------------------
-LX.Menu = class Menu extends LV.EventEmitter {
+LX.PieMenu = class PieMenu extends LV.EventEmitter {
 
     constructor(opts, target) {
         super();
@@ -53,8 +53,14 @@ LX.Menu = class Menu extends LV.EventEmitter {
             return console.log("[View] Refusing to show menu with zero items");
         }
 
-        this.element = document.getElementById("radial-menu");
+        this.element = document.getElementById("pie-menu");
         this.element.classList = "active";
+
+        this.mask_element = document.getElementById("pie-menu-mask");
+
+        this.mask_element.onclick = () => {
+            this.hide();
+        };
 
         // create icons for menu
         let items = [];
@@ -69,8 +75,10 @@ LX.Menu = class Menu extends LV.EventEmitter {
         });
 
         this.wheel = null;   
-        this.wheel = new wheelnav("radial-menu");
-        this.wheel.wheelRadius = this.wheel.wheelRadius * 0.83;
+        this.wheel = new wheelnav("pie-menu");
+        this.wheel.titleWidth = 22;
+        this.wheel.navAngle = 30;
+        this.wheel.wheelRadius = 100;
         this.wheel.selectedNavItemIndex = null;
         this.wheel.createWheel(items);
 
@@ -80,24 +88,28 @@ LX.Menu = class Menu extends LV.EventEmitter {
                 let fn = opts[item.itemIndex].method;
                 item.navigateFunction = () => {
                     fn(target);
-                    this.remove.call(this);
+                    this.hide.call(this);
                 }
             }
         });
     }
 
-    center(x,y) {
-        let el = document.getElementById("radial-menu");
-        let svg = el.childNodes[0];
+    show(x,y) {
+        // create mask for behind the menu
+        this.mask_element.classList = "active";
+        let svg = this.element.childNodes[0];
         let width = svg.width.baseVal.valueAsString;
         let height = svg.height.baseVal.valueAsString;
-        el.style.left = (x - width/2)+"px";
-        el.style.top = (y - height/2)+"px";
+        this.element.style.left = (x - width/2)+"px";
+        this.element.style.top = (y - height/2)+"px";
+        this.emit("show");
     }
 
-    remove() {
+    hide() {
         this.element.classList = "";
+        this.mask_element.classList = "";
         this.wheel.removeWheel();
+        this.emit("hide");
     }
 }
 

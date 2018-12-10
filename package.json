@@ -17,7 +17,6 @@
         "helmet": "*",
         "latlon-geohash": "*",
         "leaflet": "*",
-        "leaflet-contextmenu": "*",
         "leaflet.locatecontrol": "*",
         "moment": "*",
         "pouchdb-browser": "*",
