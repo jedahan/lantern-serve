@@ -68,7 +68,7 @@ LX.Director = class Director extends LV.EventEmitter {
 
         obj.on("close", (component_id) => {
             //console.log("[Direct] App closes component:", component_id);
-            this.view.data.app_components.removeByValue(component_id);
+            this.view.data.app_components.remove(component_id);
         });
     }
 
@@ -104,7 +104,8 @@ LX.App = class App extends LV.EventEmitter {
         this.children = obj.children;
         this.pages = [];
         this.data = {};
-        this.load(); 
+        this.load();
+        this._opened = false;
     }
 
 
@@ -117,7 +118,12 @@ LX.App = class App extends LV.EventEmitter {
         let component_id = ["lx", "app", this.name, page_id].join("-");
 
         let self = this;
-
+        
+        let page = {
+            "id": page_id,
+            "component_id": component_id,
+            "app": this
+        }
         if (logic) {
              if (logic.data) {
                 // keep multiple components in same app together with same data
@@ -133,7 +139,7 @@ LX.App = class App extends LV.EventEmitter {
             if (logic.methods) {
                 cmp.methods = {};
                 for (var idx in logic.methods) {
-                    cmp.methods[idx] = logic.methods[idx].bind(this);
+                    cmp.methods[idx] = logic.methods[idx];
                 }
             }
             if (logic.mounted) {
@@ -142,13 +148,8 @@ LX.App = class App extends LV.EventEmitter {
         }
 
 
-        let component = LV.Vue.component(component_id, cmp);
-        let page = {
-            "id": page_id,
-            "component_id": component_id,
-            "component": component ,
-            "app": this
-        }
+        page.component = LV.Vue.component(component_id, cmp);
+        
         self.pages.push(page)
 
 
@@ -156,7 +157,7 @@ LX.App = class App extends LV.EventEmitter {
 
         if (logic) {
             if (logic.callback) {
-                logic.callback(page);
+                logic.callback.call(page);
             }
             if (logic.open) {
                 self.open(component_id);
@@ -169,6 +170,11 @@ LX.App = class App extends LV.EventEmitter {
     * Displays Vue component on the screen
     */
     open(component_id) {
+        if (this._opened) {
+            // skip already opened app
+            return;
+        }
+        this._opened = true;
         this.emit("open", component_id);
     }
 
@@ -176,7 +182,15 @@ LX.App = class App extends LV.EventEmitter {
     * Hides Vue component but keeps style injection for other open components
     */
     close(component_id) {
+        this._opened = false;
         this.emit("close", component_id);
+    }
+
+    /**
+    * Checks whether this app is open
+    */
+    isOpen() {
+        return this._opened;
     }
 
 
