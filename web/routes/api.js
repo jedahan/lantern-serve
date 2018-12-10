@@ -116,9 +116,18 @@ module.exports = (serv) => {
     serv.get("/api/apps", (req,res) => {
         var layers_path = path.join(__dirname, "..", "..", "apps");
         let filtered_tree = directoryTree(layers_path, {extensions: /\.(html|js|json|css|png|gif|jpg|jpeg)$/});
+
+        let final_result = [];
+
         util.removeMeta(filtered_tree, "path");
         let result = ( filtered_tree.hasOwnProperty("children") ? filtered_tree.children : []);
-        res.status(200).json(result);
+
+        result.forEach((app) => {
+            if (app.name[0] != ".") {
+                final_result.push(app);
+            }
+        });
+        res.status(200).json(final_result);
            
     })
 
