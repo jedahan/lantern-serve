@@ -180,30 +180,51 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
 
 
     //------------------------------------------------------------------------
-   loadSharedMarkers(db) {
 
-        db.get("marker").map()
-            .on((data,id) => {
+    loadOneSharedMarker(db, data, id) {
+        // this runs continuously and for every update to the node
+        if (!data) {
+            // item was most likely deleted
+            if (db.objects.hasOwnProperty(id) && db.objects[id]) {
+                console.log("[Atlas] Requesting Marker Remove,", id);
+                db.objects[id].hide();
+                db.unlink(db.objects[id]);
+            }
+            return;
+        }
 
-                // this runs continuously and for every update to the node
+        if (data.g && data.t) {
+            // do we have the marker already?
+            let marker = new LX.Marker(id);
+            marker.importWithData(data);
 
+            if (db.objects.hasOwnProperty(id)) {
+                // allow geohash updates
+                if (db.objects[id].geohash != marker.geohash) {
 
-                if (!data) {
-                    // item was most likely deleted
-                    if (db.objects.hasOwnProperty(id) && db.objects[id]) {
-                        db.objects[id].remove(db);     
-                        db.objects[id] = null;
-                    }
+                    db.objects[id].geohash = marker.geohash;
+                    console.log("[Atlas] Updating geohash for marker:", marker.id);
                     return;
                 }
+                else {
 
-                if (data.g && data.t) {
-                    let marker = new LX.Marker(id);
-                    marker.importWithData(data);
-                    db.link(marker);
-                    // this is a valid marker we can potentially display
-                    this.markers.shared.add(marker);
+                    console.log("[Atlas] Known marker at location. Skipping...", marker);
+                    return;
                 }
+            }
+            else {
+                db.link(marker);
+                // this is a valid marker we can potentially display
+                this.markers.shared.add(marker);
+            }
+            
+        }
+    }
+
+    loadSharedMarkers(db) {
+        db.get("marker").map()
+            .on((data,id) => {
+                this.loadOneSharedMarker(db,data,id);
             });
     }
 
@@ -371,32 +392,9 @@ LX.MarkerCollection = class MarkerCollection extends LV.EventEmitter {
 
     add(marker, set, data, opts) {
 
-        if (this.markers[marker.id]) {
-
-            // allow geohash updates
-            if (this.markers[marker.id].geohash != marker.geohash) {
-                this.markers[marker.id].geohash = marker.geohash;
-                //console.log("[Collection] Updating geohash for marker", marker);
-                return;
-            }
-            else {
-                //console.log("[Collection] Known marker at location. Skipping...", marker);
-                return;
-            }
-        }
-
         this.markers[marker.id] = marker;
 
-        let layer_group = this.sets[set || "default"];
-        layer_group.addLayer(marker.layer).addTo(this.map);
-
         marker.collection = this;
-        marker.set = layer_group;
-        this.emit("add", marker, this);
-
-        marker.layer.on("click", (ev) => {
-            this.emit("click", marker);
-        });
 
         marker.on("show", () => {
             this.emit("show", marker);
@@ -411,6 +409,19 @@ LX.MarkerCollection = class MarkerCollection extends LV.EventEmitter {
         });
 
         marker.show();
+
+
+        // must show before binding layer events
+        marker.layer.on("click", (ev) => {
+            this.emit("click", marker);
+        });
+
+        let layer_group = this.sets[set || "default"];
+        marker.set = layer_group;
+        layer_group.addLayer(marker.layer).addTo(this.map);
+
+
+        this.emit("add", marker, this);
 
         return marker;
     };
@@ -444,8 +455,6 @@ LX.Marker = class Marker extends LX.SharedObject {
             if (this.layer) {
                 // keep dom updated to reflect mode
                 this.layer.setIcon(this.getDivIcon());
-
-                // prevent dragging once item is saved
                 //console.log(`${this.log_prefix} mode = `, mode);
             }
         });
@@ -461,16 +470,27 @@ LX.Marker = class Marker extends LX.SharedObject {
     */
     set geohash(val) {
         if (val) {
+
+            let starting_val = this._data.geohash;
+
+
             try {
-                this._latlng = LV.Geohash.decode(val);
+                this._latlng = LV.Geohash.decode(val)
+
+                if (val == starting_val) {
+                    return;
+                }
 
                 if (this.layer) {
                     this.layer.setLatLng(this._latlng);
                 }
-                
+
                 this._data.geohash = val;
-                //console.log(`${this.log_prefix} location = ${this.geohash}`);
-                this.show();
+                console.log(`${this.log_prefix} location = ${this.geohash}`);
+
+                if (starting_val) {
+                    this.emit("move", val);
+                }
             }
             catch(e) {
                 console.log(`${this.log_prefix} error with geohash`, e);
@@ -489,26 +509,32 @@ LX.Marker = class Marker extends LX.SharedObject {
     * Show on map
     */
     show() {
-        if (!this.layer) {
-            this.layer = L.marker(this._latlng, {
-                icon: this.getDivIcon(),
-                draggable: false,
-                autoPan: true
-            });
-
-            this.layer.on("dragend", (e) => {
-                let latlng = e.target._latlng;
-                this.geohash = LV.Geohash.encode(latlng.lat, latlng.lng); 
-                //console.log(`${this.log_prefix} Dragged to: `,  this.geohash);
-            });
-            this.emit("show", this);
+        if (this.layer) {
+            return;
         }
+
+        let self = this;
+
+        //console.log(`${this.log_prefix} Show`);
+        this.layer = L.marker(this._latlng, {
+            icon: this.getDivIcon(),
+            draggable: false,
+            autoPan: true
+        });
+
+        this.layer.on("dragend", function(e) {
+            let latlng = e.target._latlng;
+            self.geohash = LV.Geohash.encode(latlng.lat, latlng.lng); 
+            console.log(`${self.log_prefix} Dragged to: `,  self.geohash);
+        });
+        this.emit("show", self);
     }
 
     /**
     * Hide from the map without altering stored data
     */
     hide() {
+        //console.log(`${this.log_prefix} Hide`);
         if (this.layer && this.layer._map) {
             this.layer.remove();
             this.emit("hide", this);            
@@ -533,10 +559,25 @@ LX.Marker = class Marker extends LX.SharedObject {
     }
 
     setIcon(value) {
-        if (!value) return;
-        //console.log(`${this.log_prefix} icon = ${value}`);
+        if (value) {
+            // console.log(`${this.log_prefix} icon = ${value}`);
+        }
+        else {
+            // console.log(`${this.log_prefix} clearing icon`); 
+        }
         this._icon = value;
         this.layer.setIcon(this.getDivIcon());
+    }
+
+    /**
+    * Display custom icon based on marker class names
+    */
+    setIcons (map) {
+        this.tags.forEach((tag) => {
+            if (map.hasOwnProperty(tag)) {
+                this.setIcon(map[tag]);
+            }
+        });
     }
 
 

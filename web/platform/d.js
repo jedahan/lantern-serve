@@ -29,16 +29,12 @@ LX.View = class View extends LV.EventEmitter {
                 user: {
                     username: null
                 },
-                map: {
-                    mask: true
-                }
+                map: false
             }
         });
-
         this.data = this.vue.$data;
+        this.menu = new LX.PieMenu();
     }
-
-
 }
 
 
@@ -46,70 +42,103 @@ LX.View = class View extends LV.EventEmitter {
 //----------------------------------------------------------------------------
 LX.PieMenu = class PieMenu extends LV.EventEmitter {
 
-    constructor(opts, target) {
+    constructor() {
         super();
+        this._locked = false;
+        this.wheel = null;
+        this.element = document.getElementById("pie-menu");
+        this.mask_element = document.getElementById("pie-menu-mask");
+        this.mask_element.onclick = () => {
+            this.close();
+        };
+    }    
 
-        if (!opts || !opts.length) {
-            return console.log("[View] Refusing to show menu with zero items");
+    /**
+    * Display menu on canvas on top of a mask
+    */
+    open(items, pos) {
+        if (!items || !items.length) {
+            return console.log("[PieMenu] Refusing to show menu with zero items");
         }
 
-        this.element = document.getElementById("pie-menu");
-        this.element.classList = "active";
-
-        this.mask_element = document.getElementById("pie-menu-mask");
-
-        this.mask_element.onclick = () => {
-            this.hide();
-        };
+        if (this._locked) {
+            return console.log("[PieMenu] Refusing to open while menu is in locked state");
+        }
 
         // create icons for menu
-        let items = [];
-        opts.forEach((opt) => {
-            if (opt.icon) {
-                let icon = "imgsrc:/_/@fortawesome/fontawesome-free/svgs/solid/" + opt.icon + ".svg";
-                items.push(icon);                
+        let final_items = [];
+
+        items.forEach((item) => {
+            if (item.icon) {
+                let icon = "imgsrc:/_/@fortawesome/fontawesome-free/svgs/solid/" + item.icon + ".svg";
+                final_items.push(icon);                
             }
-            else if (opt.label) {
-                items.push(opt.label);
+            else if (item.label) {
+                final_items.push(item.label);
             }
         });
 
-        this.wheel = null;   
+        // create wheel menu
         this.wheel = new wheelnav("pie-menu");
         this.wheel.titleWidth = 22;
         this.wheel.navAngle = 30;
         this.wheel.wheelRadius = 100;
-        this.wheel.selectedNavItemIndex = null;
-        this.wheel.createWheel(items);
+        this.wheel.selectedNavItemIndex = null;;
+        this.wheel.createWheel(final_items);
 
         // define custom methods to handle menu selection
         this.wheel.navItems.forEach((item) => {
-            if (typeof(opts[item.itemIndex]).hasOwnProperty("method")) {
-                let fn = opts[item.itemIndex].method;
-                item.navigateFunction = () => {
-                    fn(target);
-                    this.hide.call(this);
+        
+            item.navigateFunction = () => {
+                let matched_item = items[item.itemIndex];
+
+                let event_data = null;
+                if(matched_item.method) {
+                    event_data = matched_item.method();
                 }
+                if (matched_item.event) {
+                    this.emit(matched_item.event, event_data);
+                }
+                this.close.call(this);
             }
         });
-    }
 
-    show(x,y) {
         // create mask for behind the menu
         this.mask_element.classList = "active";
-        let svg = this.element.childNodes[0];
-        let width = svg.width.baseVal.valueAsString;
-        let height = svg.height.baseVal.valueAsString;
-        this.element.style.left = (x - width/2)+"px";
-        this.element.style.top = (y - height/2)+"px";
-        this.emit("show");
+
+        // set x/y location for pie menu
+        if(pos.x && pos.y) {
+            let svg = this.element.childNodes[0];
+            let width = svg.width.baseVal.valueAsString;
+            let height = svg.height.baseVal.valueAsString;
+            this.element.style.left = (pos.x - width/2)+"px";
+            this.element.style.top = (pos.y - height/2)+"px";
+        }
+
+        this.element.classList = "active";
+        this.emit("open");
+    }
+    
+    /**
+    * Hide menu from canvas and remove mask
+    */
+    close() {
+        this.element.classList.remove("active")
+        this.mask_element.classList.remove("active");
+        this.emit("close");
     }
 
-    hide() {
-        this.element.classList = "";
-        this.mask_element.classList = "";
-        this.wheel.removeWheel();
-        this.emit("hide");
+
+    lock() {
+        this._locked = true;
+    }
+
+    unlock() {
+        this._locked = false;
+    }
+
+    isLocked() {
+        return this._locked;
     }
 }
 

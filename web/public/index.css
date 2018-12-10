@@ -268,17 +268,17 @@ html, body, #map {
 	pointer-events: auto;
 }
 
-#pie-menu { height: 220px; width: 220px; margin:auto; }
+#pie-menu { height: 200px; width: 200px; margin:auto; }
 
 @media (max-width: 200px) { #pie-menu { height: 150px; width: 150px; } }
 
 [class|=wheelnav-pie-menu-slice-basic] { fill: #FFF; stroke: none; 
-	fill-opacity: 0.85;
+	fill-opacity: 0.90;
 	stroke: #DDD; 
 }
 
 #pie-menu > svg image {
-	fill-opacity: 0.85;
+	fill-opacity: 0.90;
 }
 
 [class|=wheelnav-pie-menu-slice-selected] { fill: #3273dc; 
