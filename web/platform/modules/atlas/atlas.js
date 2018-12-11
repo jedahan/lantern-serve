@@ -1,26 +1,7 @@
 "use strict";
 
-/***
-* MAPS & MARKERS
-*
-* Enables map-based interactions and display
-* for use with all dev-defined apps. 
-*/
-
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
-const LV = window.LV || {}; if (!window.LV) window.LV = LV;
 
-
-
-//----------------------------------------------------------------------------
-LV.Geohash = require("latlon-geohash");
-require('geohash-distance');
-require("leaflet");
-require("leaflet.locatecontrol");
-
-
-
-//----------------------------------------------------------------------------
 LX.Atlas = class Atlas extends LV.EventEmitter {
     
     constructor() {
@@ -34,10 +15,10 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
             user_max: 4,
             center_max: 8
         };
-        this.tile_uri = ["https://maps.tilehosting.com/c/" , LX.Config.maptiler.id, "/styles/", 
-                LX.Config.maptiler.map, "/{z}/{x}/{y}.png?key=", LX.Config.maptiler.key
+        this.tile_uri = ["https://maps.tilehosting.com/c/" , LC.maptiler.id, "/styles/", 
+                LC.maptiler.map, "/{z}/{x}/{y}.png?key=", LC.maptiler.key
             ].join("");
-        this.tile_db = new LV.PouchDB(LX.Config.leaflet_tiles.dbName, {auto_compaction: true});
+        this.tile_db = new LV.PouchDB(LC.leaflet_tiles.dbName, {auto_compaction: true});
         this.user_db = new LV.PouchDB("lx-user", {auto_compaction: true});
         this.render();
     }
@@ -65,7 +46,7 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
     setupMap() {
 
         // bind dom element for leaflet
-        this.map = L.map("map", LX.Config.leaflet_map);
+        this.map = L.map("map", LC.leaflet_map);
 
         // setup collections for markers to control layering 
         let collections = ["private", "shared"];
@@ -74,11 +55,11 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
         });
 
         // layer in hosted map tiles
-        L.tileLayer(this.tile_uri, LX.Config.leaflet_tiles).addTo(this.map);
+        L.tileLayer(this.tile_uri, LC.leaflet_tiles).addTo(this.map);
     }
 
     centerMap(e) {
-        this.map.flyTo(e.latlng, Math.limit(this.map.getZoom()+2, 1, LX.Config.leaflet_map.maxZoom), {
+        this.map.flyTo(e.latlng, Math.limit(this.map.getZoom()+2, 1, LC.leaflet_map.maxZoom), {
             pan: {
                 animate: true,
                 duration: 1.5
@@ -312,274 +293,4 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
             return LV.GeohashDistance.inMiles(geo_a,geo_b);
         }
     }
-}
-
-
-
-//----------------------------------------------------------------------------
-LX.MarkerCollection = class MarkerCollection extends LV.EventEmitter {
-
-    constructor(id, map, sets) {
-        super();
-        sets = sets || ["default"];
-        this.id = id;
-        this.map = map;
-        this.sets = {};
-        this.markers = {};
-
-        // create a seperate layer group for each set for full display control
-        sets.forEach((set_id) => {
-            this.sets[set_id] = L.layerGroup();
-        });
-    }
-
-
-
-    //------------------------------------------------------------------------
-
-    getOne(id) {
-        return this.markers[id];
-    }
-
-    getAll() {
-        let all = [];
-        for (var idx in this.markers) {
-            all.push(this.markers[idx]);
-        }
-        return all;
-    }
-
-
-    getOneLayer(id) {
-        return this.markers[id].layer;
-    }
-
-    getAllLayers() {
-        let all = [];
-        for (var idx in this.markers) {
-            all.push(this.markers[idx].layer);
-        }
-        return all;
-    }
-
-    getTotalSize() {
-        let tally = 0;
-        for (var set in this.sets) {
-            let count = this.getSetSize(set);
-            tally += count;                
-        }
-        return tally;
-    }
-
-    getSetSize(set_id) {
-        set_id = set_id || "default";
-        return this.sets[set_id].getLayers().length;
-    }
-
-    showSet(set_id) {
-        set_id = set_id || "default";
-        return this.map.addLayer(this.sets[set_id]);
-    } 
-
-    hideSet(set_id) {
-        set_id = set_id || "default";
-        return this.map.removeLayer(this.sets[set_id]);
-    }   
-
-
-
-    //------------------------------------------------------------------------
-
-    add(marker, set, data, opts) {
-
-        this.markers[marker.id] = marker;
-
-        marker.collection = this;
-
-        marker.on("show", () => {
-            this.emit("show", marker);
-        });
-
-        marker.on("hide", () => {
-            this.emit("hide", marker);
-        });
-
-        marker.on("remove", () => {
-            this.emit("remove", marker);
-        });
-
-        marker.show();
-
-
-        // must show before binding layer events
-        marker.layer.on("click", (ev) => {
-            this.emit("click", marker);
-        });
-
-        let layer_group = this.sets[set || "default"];
-        marker.set = layer_group;
-        layer_group.addLayer(marker.layer).addTo(this.map);
-
-
-        this.emit("add", marker, this);
-
-        return marker;
-    };
-}
-
-
-
-//----------------------------------------------------------------------------
-LX.Marker = class Marker extends LX.SharedObject {
-    
-    constructor(id) {
-
-        // now set defaults for key compression
-        super(id, {
-           "geohash": ["g"],
-            "tags": ["t", []],
-            "owner": ["o"]
-        });
-
-        this._icon = null;
-        this._collection = null;
-        this._set = null;
-        this._latlng = null;
-
-
-        this.on("remove", () => {
-            this.hide();
-        });
-
-        this.on("mode", (mode) => {
-            if (this.layer) {
-                // keep dom updated to reflect mode
-                this.layer.setIcon(this.getDivIcon());
-                //console.log(`${this.log_prefix} mode = `, mode);
-            }
-        });
-    }
-
-
-
-    //-------------------------------------------------------------------------
-    /**
-    * Defines geographic position on map
-    *
-    * Automatically create a new map layer if not already defined
-    */
-    set geohash(val) {
-        if (val) {
-
-            let starting_val = this._data.geohash;
-
-
-            try {
-                this._latlng = LV.Geohash.decode(val)
-
-                if (val == starting_val) {
-                    return;
-                }
-
-                if (this.layer) {
-                    this.layer.setLatLng(this._latlng);
-                }
-
-                this._data.geohash = val;
-                console.log(`${this.log_prefix} location = ${this.geohash}`);
-
-                if (starting_val) {
-                    this.emit("move", val);
-                }
-            }
-            catch(e) {
-                console.log(`${this.log_prefix} error with geohash`, e);
-            }
-        }
-    }
-
-    get geohash() {
-        return this._data.geohash;
-    }
-
- 
-
-    //-------------------------------------------------------------------------
-    /**
-    * Show on map
-    */
-    show() {
-        if (this.layer) {
-            return;
-        }
-
-        let self = this;
-        this.layer = L.marker(this._latlng, {
-            icon: this.getDivIcon(),
-            draggable: false,
-            autoPan: true
-        });
-
-        //console.log(`${this.log_prefix} Show`, this.layer);
-
-        this.layer.on("dragend", function(e) {
-            let latlng = e.target._latlng;
-            self.geohash = LV.Geohash.encode(latlng.lat, latlng.lng); 
-            console.log(`${self.log_prefix} Dragged to: `,  self.geohash);
-        });
-        this.emit("show", self);
-    }
-
-    /**
-    * Hide from the map without altering stored data
-    */
-    hide() {
-        //console.log(`${this.log_prefix} Hide`);
-        if (this.layer && this.layer._map) {
-            this.layer.remove();
-            this.emit("hide", this);            
-        }
-    }
-
-    //-------------------------------------------------------------------------
-    getDivIcon() {
-        let cls = "fa";
-        if (this._icon) {
-            cls += " fa-"+this._icon;
-        }
-        return L.divIcon({
-            html: `<i class="${cls}"></i>`,
-            className: `lx-marker lx-marker-${this.mode} ${this.tags.join(" ")}`
-        });
-    }
-    
-
-    getIcon() {
-        return this._icon;
-    }
-
-    setIcon(value) {
-        if (value) {
-            // console.log(`${this.log_prefix} icon = ${value}`);
-        }
-        else {
-            // console.log(`${this.log_prefix} clearing icon`); 
-        }
-        this._icon = value;
-        this.layer.setIcon(this.getDivIcon());
-    }
-
-    /**
-    * Display custom icon based on marker class names
-    */
-    setIcons (map) {
-        this.tags.forEach((tag) => {
-            if (map.hasOwnProperty(tag)) {
-                this.setIcon(map[tag]);
-            }
-        });
-    }
-
-
-
 }
