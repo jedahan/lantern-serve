@@ -6,3 +6,5 @@ Dockerfile
 .DS_store
 public
 node_modules
+db/*
+apps/*

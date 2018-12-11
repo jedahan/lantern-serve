@@ -2,3 +2,5 @@ tmp
 makefile
 Dockerfile
 public
+db/*
+apps/*
