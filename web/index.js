@@ -31,8 +31,8 @@ log.info("##############################################");
 
 //----------------------------------------------------------------------------
 // start web server
-const private_key  = fs.readFileSync(path.resolve(__dirname, './sslcert/privkey1.pem'), 'utf8');
-const certificate = fs.readFileSync(path.resolve(__dirname, './sslcert/fullchain1.pem'), 'utf8');
+const private_key  = fs.readFileSync(path.resolve(__dirname, '../certs/privkey1.pem'), 'utf8');
+const certificate = fs.readFileSync(path.resolve(__dirname, '../certs/fullchain1.pem'), 'utf8');
 const credentials = {key: private_key, cert: certificate};
 const httpServer = http.createServer(app);
 const httpsServer = https.createServer(credentials, app);
