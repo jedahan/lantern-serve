@@ -4,6 +4,7 @@ node_modules
 certs/*
 web/logs/*
 web/public/platform/*
-apps
+apps/*
 *.json/*
 tmp/*
+db/*
