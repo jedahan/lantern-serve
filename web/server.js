@@ -10,7 +10,7 @@
 *
 **/
 const express = require("express");
-const Gun = require('gun');
+const GraphDB = require('gun');
 const fs = require("fs-extra");
 const path = require("path");
 const compression = require("compression");
@@ -28,7 +28,7 @@ server.use(helmet({
   noCache: true,
   hsts: false
 }));
-server.use(Gun.serve);
+server.use(GraphDB.serve);
 
 
 // auto-load middleware
@@ -55,11 +55,6 @@ if (fs.existsSync("../../../routes")) {
         require("../../../routes/" + file)(server);
     });   
 }
-
-// platform route serves core application environment
-const platform_path = path.resolve(__dirname, "./platform/dist/");
-server.use("/platform/", express.static(platform_path));
-
 
 // layers for custom app functionality
 const apps_path = path.resolve(__dirname, "..", "apps")

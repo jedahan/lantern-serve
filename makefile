@@ -7,33 +7,33 @@ TAG?=latest
 
 
 pack:
-	browserify web/platform/helpers/array.js \
-		web/platform/helpers/math.js \
-		web/platform/config/fetch.js \
-		web/platform/config/db.js \
-		web/platform/vendor/core.js \
-		web/platform/vendor/storage.js \
-		web/platform/modules/network/database.js \
-		web/platform/modules/network/object.js \
-		web/platform/modules/network/user.js \
-		-o web/platform/dist/a.js
+	browserify platform/helpers/array.js \
+		platform/helpers/math.js \
+		platform/config/fetch.js \
+		platform/config/db.js \
+		platform/vendor/core.js \
+		platform/vendor/storage.js \
+		platform/modules/network/database.js \
+		platform/modules/network/object.js \
+		platform/modules/network/user.js \
+		-o web/public/platform/a.js
 
-	browserify web/platform/config/leaflet.js \
-		web/platform/vendor/map.js \
-		web/platform/modules/apps/director.js \
-		web/platform/modules/apps/app.js \
-		-o web/platform/dist/b.js
+	browserify platform/config/leaflet.js \
+		platform/vendor/map.js \
+		platform/modules/application/director.js \
+		platform/modules/application/app.js \
+		-o web/public/platform/b.js
 
-	browserify web/platform/vendor/map.js \
-		web/platform/modules/atlas/atlas.js \
-		web/platform/modules/atlas/collection.js \
-		web/platform/modules/atlas/marker.js \
-		 -o web/platform/dist/c.js
+	browserify platform/vendor/map.js \
+		platform/modules/atlas/atlas.js \
+		platform/modules/atlas/collection.js \
+		platform/modules/atlas/marker.js \
+		 -o web/public/platform/c.js
 
-	browserify web/platform/vendor/display.js \
-		web/platform/modules/apps/view.js \
-		web/platform/modules/apps/menu.js \
-		-o web/platform/dist/d.js
+	browserify platform/vendor/display.js \
+		platform/modules/application/view.js \
+		platform/modules/application/menu.js \
+		-o web/public/platform/d.js
 
 install: 
 	npm install
