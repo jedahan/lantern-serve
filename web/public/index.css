@@ -273,7 +273,7 @@ html, body, #map {
 @media (max-width: 200px) { #pie-menu { height: 150px; width: 150px; } }
 
 [class|=wheelnav-pie-menu-slice-basic] { fill: #FFF; stroke: none; 
-	fill-opacity: 0.90;
+	fill-opacity: 0.95;
 	stroke: #DDD; 
 }
 
@@ -317,6 +317,7 @@ h1 {
 
 /*----------------------------------------------------------------------------*/
 ul.menu li {
+	font-weight: 500;
     color: #3273dc;
     padding: 1.25em;
     padding-right: 0.25em;

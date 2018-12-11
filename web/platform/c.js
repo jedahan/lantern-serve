@@ -514,13 +514,13 @@ LX.Marker = class Marker extends LX.SharedObject {
         }
 
         let self = this;
-
-        //console.log(`${this.log_prefix} Show`);
         this.layer = L.marker(this._latlng, {
             icon: this.getDivIcon(),
             draggable: false,
             autoPan: true
         });
+
+        //console.log(`${this.log_prefix} Show`, this.layer);
 
         this.layer.on("dragend", function(e) {
             let latlng = e.target._latlng;

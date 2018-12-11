@@ -195,6 +195,10 @@ LX.SharedObject = class SharedObject extends LV.EventEmitter {
         return `[${this.id}]`
     }
 
+    get data() {
+        return this._data;
+    }
+
     /**
     * Defines tags for data filtering and user interface display
     */
