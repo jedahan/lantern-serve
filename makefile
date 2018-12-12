@@ -8,9 +8,9 @@ TAG?=latest
 
 pack:
 	browserify platform/helpers/array.js \
+		platform/helpers/string.js \
 		platform/helpers/math.js \
 		platform/config/fetch.js \
-		platform/config/db.js \
 		platform/vendor/core.js \
 		platform/vendor/storage.js \
 		platform/modules/network/database.js \
