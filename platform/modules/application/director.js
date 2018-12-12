@@ -9,7 +9,7 @@ LX.Director = class Director extends LV.EventEmitter {
         super();
         this.ready = false;
         this.apps = {};
-        this.db = new LX.Database();
+        this.db = new LX.SharedDatabase(document.baseURI + "gun");
         this.view = new LX.View();
         this.atlas = new LX.Atlas();
         this.menu = null;
