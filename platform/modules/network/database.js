@@ -17,8 +17,6 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
         this.packages = {}; // installed packages
         this.objects = {}; // cached shared objects
 
-        this._keys_omit = ["#", "_"] // ignore these when traversing database results
-
         this.check(this.namespace)
             .then((root) => {
                 if (!root) {
@@ -154,20 +152,25 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
     /**
     *  Print out the graph structure of a specified node
     */
-    inspect(node,level) {
-        level = level || "";
-        node = node || this.stor.get(this.namespace);
+    inspect(json,level) {
+        let self = this;
+        if (!json) {
+            return self.jsonify().then(self.inspect.bind(this));
+        }
 
-        node.once().map().once((v,k) => {
+        level = level || "";
+        
+        Object.keys(json).forEach(k => {
+            let v = json[k];
 
             if (v === null) {
                 console.log(`${level}[ø] ${k.truncate(30)}`);
             }
             else if (typeof(v) == "object") {
                 let length = Object.keys(v).length;
-                if (length > 1) {
+                if (length) {
                     console.log(`${level}[+] ${k.truncate(30)}`);
-                    this.inspect(node.get(k),level+"  ");
+                    self.inspect(v,level+"  ");
                 }
                 else {
                  console.log(`${level}[-] ${k.truncate(30)}`);
@@ -178,8 +181,44 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
                 console.log(`${level}|- ${k.truncate(30)} = `, v.truncate(30));
             }
         });
-        return "===== Inspect DB =====";
     }
+
+
+    /**
+    * Exports data structure to a basic JSON object with hierarchy
+    */
+    jsonify(node, tree, pointer) {
+
+        let self = this;
+        node = node || self.root;
+        tree = tree || {};
+        pointer = pointer || tree;
+
+        return new Promise((resolve, reject) => {
+            node.once((v,k) => {
+                pointer[k] = {};
+                let promises = [];
+                if (v) {
+                    let items = Object.keys(v).filter(key => key != "_");
+                    items.forEach((item) => {
+                        var promise;
+                        let val = v[item];
+                        if (val !== null && typeof(val) == "object") {
+                            promise = self.jsonify.apply(self, [node.get(item), tree, pointer[k]]);
+                        }
+                        else {
+                            promise = pointer[k][item] = val;
+                        }
+                        promises.push(promise);
+                    });
+                }
+              
+                Promise.all(promises).then((val) => {
+                    resolve(tree);
+                });
+            });
+        });
+    };
 
 
 
