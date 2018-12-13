@@ -26,6 +26,7 @@ pack:
 		-o web/public/platform/b.js
 
 	browserify platform/vendor/map.js \
+		platform/modules/atlas/location.js \
 		platform/modules/atlas/atlas.js \
 		platform/modules/atlas/collection.js \
 		platform/modules/atlas/marker.js \
