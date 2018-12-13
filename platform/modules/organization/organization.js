@@ -82,7 +82,7 @@ LX.Organization = class Organization extends LV.EventEmitter {
     /**
     * Publish a new data package to the network
     */
-    publish(name, version, objects) {
+    publish(name, objects, version, is_public) {
 
         if (!name) {
             return console.error("[Organization] please name your package to publish");
@@ -95,6 +95,7 @@ LX.Organization = class Organization extends LV.EventEmitter {
         let publish_package = {
             "name": name,
             "version": version,
+            "public": (is_public === true || is_public === null ? true : false)
         };
 
         this.db.get("pkg").get(name)
