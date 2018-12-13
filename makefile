@@ -14,6 +14,7 @@ pack:
 		platform/vendor/core.js \
 		platform/vendor/storage.js \
 		platform/modules/network/database.js \
+		platform/modules/network/organization.js \
 		platform/modules/network/object.js \
 		platform/modules/network/user.js \
 		-o web/public/platform/a.js

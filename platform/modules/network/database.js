@@ -20,9 +20,13 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
         this._keys_omit = ["#", "_"] // ignore these when traversing database results
 
         this.check(this.namespace)
+            .then((root) => {
+                if (!root) {
+                    this.initialize(this.namespace, {force: true});
+                }
+            })
             .catch((err) => {
                 console.error(err);
-                this.initialize(this.namespace, {force: true});
             });
     }
 
@@ -39,7 +43,8 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
                     let invalid_keys = [];
 
                     if (typeof(v) != "object") {
-                         return reject(`[Database] Check failed. Missing database namespace: ${namespace}`);
+                        // database does not exist yet
+                         return resolve();
                     }
 
                     // compare to our template for the node to make sure nodes are expected
@@ -51,23 +56,23 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
                             }
                             // nullify bad value
                             top_level_node.get(key).put(null);
-                            console.log("[Database] Nullify bad value for key: " + key);
+                            console.log("[DB] Nullify bad value for key: " + key);
                             invalid_keys.push(key);
                         }
                         else if (self.template.hasOwnProperty(key) && v[key] === null) {
-                            console.log(`[Database] Value ${key} is null but should not be`);
+                            console.log(`[DB] Value ${key} is null but should not be`);
                             top_level_node.get(key).put(self.template[key]);
                         }
                     });
                             
                     if (invalid_keys.length > 0) {
-                        reject(`[Database] Cleared unexpected keys at root of node ${namespace}: ${invalid_keys.join(", ")}`);
+                        reject(`[DB] Cleared unexpected keys at root of node ${namespace}: ${invalid_keys.join(", ")}`);
                     }
                     // expected all nodes. good to go!
                     self.root = top_level_node;
-                    console.log("[Database] Check completed successfully for namespace: " + namespace);
+                    console.log("[DB] Check completed successfully for namespace: " + namespace);
                     self.emit("check");
-                    resolve();
+                    resolve(self.root);
                 });
         });
     }
@@ -76,7 +81,7 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
     * Create entirely new database at our selected root
     */
     initialize(namespace, opts) {
-        console.log(`[Database] Initializing at namespace: ${namespace}`);
+        console.log(`[DB] Initializing at namespace: ${namespace}`);
         let self = this;
         opts = opts || {};
         return new Promise((resolve, reject) => {
@@ -84,16 +89,19 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
             root.once(function(v,k) {
                 // caution: forced initialization is possible here but will reset entire database
                 if (v == undefined || opts.force) {
+
                     self.stor.get(namespace)
                         .put(self.template)
                         .once((v,k) => {
-                            console.log(`[Database] Created root node: ${namespace}`);
+                            console.log(`[DB] Created root node: ${namespace}`);
+                            self.root = root;
                             self.emit("initialize");
                             resolve(namespace);
                         });
                 }
                 else {
-                    console.log(`[Database] Existing root node found: ${namespace}`);                       
+                    console.log(`[DB] Existing root node found: ${namespace}`);                       
+                    self.root = root;
                     resolve(namespace);
                 }
 
@@ -128,16 +136,16 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
         // recursive attempt to narrow down to target node
         if (!pointer) pointer = path;
         if (!node) node = this.root;
-        let split = pointer.split("/");
+        let split = pointer.split(".");
         node.get(split[0]).once((v,k) => {
             if (split.length > 1) {
-                let new_pointer = split.slice(1).join("/");
+                let new_pointer = split.slice(1).join(".");
                 node = node.get(k);
                 this.print(path,new_pointer,node);
             }
             else {
                 // we reached the target node here
-                console.log(`[Database] ${path} = `, v);
+                console.log(`[DB] ${path} = `, v);
             }
         });
         return split.length;
@@ -149,26 +157,29 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
     inspect(node,level) {
         level = level || "";
         node = node || this.stor.get(this.namespace);
-        node.map().once((v,k) => {
-            
-            if (this._keys_omit.indexOf(k) != -1) {
-                return;
-            }
+
+        node.once().map().once((v,k) => {
 
             if (v === null) {
                 console.log(`${level}[ø] ${k.truncate(30)}`);
             }
             else if (typeof(v) == "object") {
-                console.log(`${level}[+] ${k.truncate(30)}`);
-                this.inspect(node.get(k),level+"  ");
+                let length = Object.keys(v).length;
+                if (length > 1) {
+                    console.log(`${level}[+] ${k.truncate(30)}`);
+                    this.inspect(node.get(k),level+"  ");
+                }
+                else {
+                 console.log(`${level}[-] ${k.truncate(30)}`);
+                }
+
             }
             else {
                 console.log(`${level}|- ${k.truncate(30)} = `, v.truncate(30));
             }
         });
-        return "===== Inspect Database =====";
+        return "===== Inspect DB =====";
     }
-
 
 
 
