@@ -14,8 +14,8 @@ pack:
 		platform/vendor/core.js \
 		platform/vendor/storage.js \
 		platform/modules/network/database.js \
-		platform/modules/network/collection.js \
 		platform/modules/network/object.js \
+		platform/modules/user/feed.js \
 		platform/modules/user/user.js \
 		platform/modules/organization/organization.js \
 		-o web/public/platform/a.js

@@ -8,14 +8,12 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
         super();
 
         this.namespace = "__LX__";
-        this.root = null; // root node
+        this.root_node = null; // root node
         this.template = {
             "pkg": {},
             "org": {}
         } // template for creating a root node
         this.stor = LV.GraphDB(uri); // database instance
-        this.packages = {}; // installed packages
-        this.objects = {}; // cached shared objects
 
         this.check(this.namespace)
             .then((root) => {
@@ -67,11 +65,11 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
                         reject(`[DB] Cleared unexpected keys at root of node ${namespace}: ${invalid_keys.join(", ")}`);
                     }
                     // expected all nodes. good to go!
-                    self.root = top_level_node;
-                    console.log("[DB] Check completed successfully for namespace: " + namespace);
+                    self.root_node = top_level_node;
+                    //console.log("[DB] Check completed successfully for namespace: " + namespace);
                     self.emit("check");
                     self.emit("load");
-                    resolve(self.root);
+                    resolve(self.root_node);
                 });
         });
     }
@@ -93,7 +91,7 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
                         .put(self.template)
                         .once((v,k) => {
                             console.log(`[DB] Created root node: ${namespace}`);
-                            self.root = root;
+                            self.root_node = root;
                             self.emit("initialize");
                             self.emit("load");
                             resolve(namespace);
@@ -101,7 +99,7 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
                 }
                 else {
                     console.log(`[DB] Existing root node found: ${namespace}`);                       
-                    self.root = root;
+                    self.root_node = root;
                     self.emit("load");
                     resolve(namespace);
                 }
@@ -116,14 +114,14 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
     * Get node from within root namespace
     */
     get() {
-        return this.root.get.apply(this.root, arguments);
+        return this.root_node.get.apply(this.root_node, arguments);
     }
 
     /**
     * Sets value from within root namespace
     */
     put() {
-        return this.root.put.apply(this.root, arguments);
+        return this.root_node.put.apply(this.root_node, arguments);
     }
 
 
@@ -136,7 +134,7 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
     print(path,pointer,node) {
         // recursive attempt to narrow down to target node
         if (!pointer) pointer = path;
-        if (!node) node = this.root;
+        if (!node) node = this.root_node;
         let split = pointer.split(".");
         node.get(split[0]).once((v,k) => {
             if (split.length > 1) {
@@ -208,7 +206,7 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
     jsonify(node, tree, pointer) {
 
         let self = this;
-        node = node || self.root;
+        node = node || self.root_node;
         tree = tree || {};
         pointer = pointer || tree;
 
@@ -237,23 +235,5 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
             });
         });
     };
-
-
-
-    //-------------------------------------------------------------------------
-    /**
-    * Makes it easy to find object to match database node
-    */
-    link(shared_obj) {
-        this.objects[shared_obj.id] = shared_obj;
-    } 
-
-    /**
-    * Drop the reference to the object to match database node
-    */
-    unlink(shared_obj) {
-        this.objects[shared_obj.id] = null;
-    }
-
 
 }
