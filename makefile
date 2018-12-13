@@ -15,6 +15,7 @@ pack:
 		platform/vendor/storage.js \
 		platform/modules/network/database.js \
 		platform/modules/network/organization.js \
+		platform/modules/network/collection.js \
 		platform/modules/network/object.js \
 		platform/modules/network/user.js \
 		-o web/public/platform/a.js
@@ -28,7 +29,6 @@ pack:
 	browserify platform/vendor/map.js \
 		platform/modules/atlas/location.js \
 		platform/modules/atlas/atlas.js \
-		platform/modules/atlas/collection.js \
 		platform/modules/atlas/marker.js \
 		 -o web/public/platform/c.js
 
