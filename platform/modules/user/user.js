@@ -5,14 +5,10 @@ const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 LX.User = class User extends LV.EventEmitter {
 
     constructor(db, skip_check) {
-
         super();
-
-        this.db = db;
         this.local_db = new LV.PouchDB("lx-user");
-        this.user = this.db.stor.user();
+        this.node = db.stor.user();
         this.pair = null;
-
         if (skip_check) {
             console.log("[User] Make new credentials by explicit request")
             this.register();
@@ -52,8 +48,14 @@ LX.User = class User extends LV.EventEmitter {
         }
     }
 
+
+
+    //-------------------------------------------------------------------------
+    /**
+    * Authenticates the user with decentralized database
+    */
     authenticate(username, password) {
-        this.user.auth(username, password, (ack) => {
+        this.node.auth(username, password, (ack) => {
             if (ack.err) {
                 console.log("[User] Authorize failed:", ack.err);
                 this.register();
@@ -69,11 +71,15 @@ LX.User = class User extends LV.EventEmitter {
         });
     }
 
+
+    /**
+    * Registers first-time user into the decentralized database
+    */
     register() {
         let username = LV.ShortID.generate();
         let password = LV.ShortID.generate();
         console.log("[User] Create user with username:", username);
-        this.user.create(username, password, (ack) => {
+        this.node.create(username, password, (ack) => {
             if (ack.err) {
                 console.log("[User] Unable to save", ack.err);
                 return;
@@ -95,4 +101,40 @@ LX.User = class User extends LV.EventEmitter {
                 });
         });
     }
+
+
+    //-------------------------------------------------------------------------
+    /**
+    * Installs a package for a given user and thereby makes available to end-user device
+    */
+    install(pkg_id) {
+        this.emit("install", path);
+    }
+
+     /**
+    * Removes a package for a given user and cleans up references to related data
+    */
+    uninstall(pkg_id) {
+        this.emit("publish", path);
+
+    }
+
+
+
+
+    //-------------------------------------------------------------------------
+    /**
+    * Explicitly gather data on a given topic from available packages
+    */
+    subscribe(topic) {
+
+    }
+    
+    /**
+    * Remove and stop watching for data on a given topic
+    */
+    unsubscribe(topic) {
+
+    }
+
 }

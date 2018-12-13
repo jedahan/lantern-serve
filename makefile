@@ -16,7 +16,7 @@ pack:
 		platform/modules/network/database.js \
 		platform/modules/network/collection.js \
 		platform/modules/network/object.js \
-		platform/modules/network/user.js \
+		platform/modules/user/user.js \
 		platform/modules/organization/organization.js \
 		-o web/public/platform/a.js
 
