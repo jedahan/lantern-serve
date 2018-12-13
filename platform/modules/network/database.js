@@ -70,6 +70,7 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
                     self.root = top_level_node;
                     console.log("[DB] Check completed successfully for namespace: " + namespace);
                     self.emit("check");
+                    self.emit("load");
                     resolve(self.root);
                 });
         });
@@ -94,12 +95,14 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
                             console.log(`[DB] Created root node: ${namespace}`);
                             self.root = root;
                             self.emit("initialize");
+                            self.emit("load");
                             resolve(namespace);
                         });
                 }
                 else {
                     console.log(`[DB] Existing root node found: ${namespace}`);                       
                     self.root = root;
+                    self.emit("load");
                     resolve(namespace);
                 }
 
@@ -149,6 +152,8 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
         return split.length;
     }
 
+
+
     /**
     *  Print out the graph structure of a specified node
     */
@@ -163,22 +168,35 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
         Object.keys(json).forEach(k => {
             let v = json[k];
 
+
+            // printable key
+            let kp = k;
+            if (typeof(k) == "String") {
+                ks = k.truncate(30);
+            }
+
+            // printable value
+            let vp = v;
+            if (typeof(v) == "String") {
+                vp = v.truncate(30);
+            }
+
             if (v === null) {
-                console.log(`${level}[ø] ${k.truncate(30)}`);
+                // console.log(`${level}[ø] ${kp}`);
             }
             else if (typeof(v) == "object") {
                 let length = Object.keys(v).length;
                 if (length) {
-                    console.log(`${level}[+] ${k.truncate(30)}`);
+                    console.log(`${level}[+] ${kp}`);
                     self.inspect(v,level+"  ");
                 }
                 else {
-                 console.log(`${level}[-] ${k.truncate(30)}`);
+                 console.log(`${level}[-] ${kp}`);
                 }
 
             }
             else {
-                console.log(`${level}|- ${k.truncate(30)} = `, v.truncate(30));
+                console.log(`${level}|- ${kp} = `, vp);
             }
         });
     }
