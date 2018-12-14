@@ -10,7 +10,7 @@ LX.User = class User extends LV.EventEmitter {
         this.db = db;
         this.user_node = this.db.stor.user();
         this.pair = null;
-        this.feed = new LX.Feed(this.db);
+        this.feed = new LX.Feed(this);
 
 
         if (skip_check) {
@@ -148,6 +148,8 @@ LX.User = class User extends LV.EventEmitter {
                 else {
                     console.log(`${this.log_prefix} installed package ${name}`);
                     this.user_node.get("packages").get(name).put(v);
+
+                    this.feed.addOnePackage(name);
                     this.emit("install", name);
                 }
             });
@@ -162,6 +164,7 @@ LX.User = class User extends LV.EventEmitter {
             .once((v,k) => {
                     console.log(`${this.log_prefix} uninstalled package ${name}`);
                     this.user_node.get("packages").get(name).put(null);
+                    this.feed.removeOnePackage(name);
                     this.emit("uninstall", name);
                 });
 

@@ -5,9 +5,10 @@ const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 
 LX.Feed = class Feed extends LV.EventEmitter {
 
-	constructor(db) {
+	constructor(user) {
 		super();
-		this.db = db;    
+        this.user = user;
+		this.db = user.db;    
 		this.packages = {};  // only watch these
 		this.topics = {}; // only watch these
 		this._watching = {}; // keep track of what we're already watching to avoid duplicates
@@ -18,7 +19,7 @@ LX.Feed = class Feed extends LV.EventEmitter {
 
     //-------------------------------------------------------------------------
     get log_prefix() {
-    	return "[Feed]";
+    	return `[f:${this.user.username}]`;
     }
 
 
@@ -37,13 +38,13 @@ LX.Feed = class Feed extends LV.EventEmitter {
     	console.log(`${this.log_prefix} add package ${name}`)
     	this.packages[name] = true;
 
-        let package_node = this.db.get("pkg").get(name);            
+        let package_node = this.db.get("pkg").get(name);
+
         // use latest version of data
         package_node.get("version")
             .then((version,k) => {
                 package_node.get("data").get(version).map()
                 .on((v,k) => {
-
                     let data = v;
 
                     if (v !== null && typeof(v) == "object") {
@@ -54,7 +55,6 @@ LX.Feed = class Feed extends LV.EventEmitter {
                             }
                         });
                     }
-
 
                 	this.emit("update", {
                         id: k,
