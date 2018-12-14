@@ -91,6 +91,16 @@ LX.Organization = class Organization extends LV.EventEmitter {
     }
 
 
+    getOrRegister(name) {
+        return new Promise((resolve, reject) => {
+            this.org_node.once((v,k) => {
+                if (v) return resolve(v);
+                return this.register(name).then(resolve);
+            })
+        });
+    }
+
+
 
     //-------------------------------------------------------------------------
     /**
@@ -157,8 +167,6 @@ LX.Organization = class Organization extends LV.EventEmitter {
                 "version": version,
                 "public": (is_public === true || is_public === null ? true : false)
             };
-
-            console.log("package ot publish is", publish_package);
 
             pkg_node.once((v,k) => {
                 if (!v) {
