@@ -131,7 +131,7 @@ LX.Organization = class Organization extends LV.EventEmitter {
     /**
     * Publish a new data package to the network
     */
-    publish(name, objects, version, is_public) {
+    publish(name, is_public, objects, version) {
 
         return new Promise((resolve, reject) => {
 
@@ -161,11 +161,12 @@ LX.Organization = class Organization extends LV.EventEmitter {
             let data = {};
             version = version || "0.0.1";
             objects = objects || {};
-
+            is_public = (is_public === true || is_public === null ? true : false);
+            
             let publish_package = {
                 "name": name,
                 "version": version,
-                "public": (is_public === true || is_public === null ? true : false)
+                "public": is_public
             };
 
             pkg_node.once((v,k) => {
