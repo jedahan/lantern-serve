@@ -155,23 +155,21 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
     /**
     *  Print out the graph structure of a specified node
     */
-    inspect(json,level) {
+    inspect(show_deleted,json,level) {
         let self = this;
         if (!json) {
-            return self.jsonify().then(self.inspect.bind(this));
+            return self.jsonify().then((new_json) => {
+                this.inspect(show_deleted, new_json, level);
+            });
         }
 
         level = level || "";
         
         Object.keys(json).forEach(k => {
+
+            if (k == "#") return;
+
             let v = json[k];
-
-
-            // printable key
-            let kp = k;
-            if (typeof(k) == "String") {
-                ks = k.truncate(30);
-            }
 
             // printable value
             let vp = v;
@@ -180,21 +178,18 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
             }
 
             if (v === null) {
-                // console.log(`${level}[ø] ${kp}`);
+                if (show_deleted) {
+                    console.log(`${level}[ø] ${k}`);
+                }
             }
             else if (typeof(v) == "object") {
                 let length = Object.keys(v).length;
-                if (length) {
-                    console.log(`${level}[+] ${kp}`);
-                    self.inspect(v,level+"  ");
-                }
-                else {
-                 console.log(`${level}[-] ${kp}`);
-                }
+                console.log(`${level}[+] ${k}`);
+                self.inspect(show_deleted,v,level+"  ");
 
             }
             else {
-                console.log(`${level}|- ${kp} = `, vp);
+                console.log(`${level}|- ${k} = `, vp);
             }
         });
     }
@@ -215,11 +210,35 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
                 pointer[k] = {};
                 let promises = [];
                 if (v) {
+
+
                     let items = Object.keys(v).filter(key => key != "_");
                     items.forEach((item) => {
                         var promise;
                         let val = v[item];
-                        if (val !== null && typeof(val) == "object") {
+
+
+                        if (item == "organization" || item == "packages") {
+                            // special rule for packages to avoid circular display of organization data
+                            promise = new Promise((resolve, reject) => {
+                                node.get(item).once((val,key) => {
+                                    let names = {};
+                                    
+                                    if (val.name) {
+                                        pointer[k][item] = val.name;
+                                        return resolve(val.name);
+                                    }
+
+                                    Object.keys(val).forEach((name) => {
+                                        if (name != "_") names[name] = true;
+                                    });
+                                    
+                                    pointer[k][item] = names;
+                                    resolve(names);
+                                });
+                            });
+                        }
+                        else if (val !== null && typeof(val) == "object") {
                             promise = self.jsonify.apply(self, [node.get(item), tree, pointer[k]]);
                         }
                         else {
