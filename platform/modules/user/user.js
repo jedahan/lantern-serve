@@ -51,7 +51,7 @@ LX.User = class User extends LV.EventEmitter {
         }
 
 
-        this.on("authenticated", () => {
+        this.on("auth", () => {
             this.listPackages().then((packages) => {
                 this.feed.addManyPackages(packages);
             });
@@ -79,7 +79,7 @@ LX.User = class User extends LV.EventEmitter {
                 console.log(`${this.log_prefix} good auth`);
                 SEA.pair().then((pair) => {
                     this.pair = pair;
-                    this.emit("authenticated", this.pair);
+                    this.emit("auth", this.pair);
                 });
             }
         });
