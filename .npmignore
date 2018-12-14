@@ -3,4 +3,4 @@ makefile
 Dockerfile
 public
 db/*
-apps/*
+apps
