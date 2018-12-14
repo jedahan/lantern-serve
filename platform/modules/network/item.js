@@ -41,9 +41,6 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
         return this._data;
     }
 
-    /**
-    * Defines tags for data filtering and user interface display
-    */
     set tags(val) {
         if (!val || val.length == 0 ) return;
 
@@ -72,6 +69,7 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
     }
 
 
+
     //-------------------------------------------------------------------------
     inspect() {
         console.log(`${this.log_prefix} data = `, this._data);
@@ -81,12 +79,11 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
 
 
     //-------------------------------------------------------------------------
-    _sanitizeTag(tag) {
-        return tag.toLowerCase().replace(/[^a-z0-9\-]+/g, '');
-    }
-
+    /**
+    * Add tag for data filtering and user interface display
+    */
     tag(tag) {
-        tag = this._sanitizeTag(tag);
+        tag = this.sanitizeTag(tag);
         //console.log(`${this.log_prefix} tag = `, tag);
 
         // don't allow duplicate tags
@@ -98,20 +95,34 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
         this.emit("tag", tag);
         return this.tags;
     }
-
+    
+    /**
+    * Remove tag
+    */
     untag(tag) {
-        tag = this._sanitizeTag(tag);
+        tag = this.sanitizeTag(tag);
         this._data.tags.remove(tag);
         this.emit("untag", tag);
         return this.tags;
     }
+    
 
+    /**
+    * Remove all tags
+    */
     untagAll() {
         this._data.tags.forEach((tag) => {
             this.emit("untag", tag);
         });
         this._data.tags = [];
         return this.tags;
+    }
+    
+    /**
+    * Keep tags lowercase and with dash seperators
+    */
+    sanitizeTag(tag) {
+        return tag.toLowerCase().replace(/[^a-z0-9\-]+/g, '');
     }
 
 
@@ -166,10 +177,6 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
         return new_obj; 
     }
 
-
-
-    //-------------------------------------------------------------------------
-
     /*
     * Updates the local item with packed data
     */
@@ -185,100 +192,121 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
     }
 
 
+
+
+    //-------------------------------------------------------------------------
     /**
-    * Export to shared database
+    * Stores the composed item into a decentralized database
     */
-    save(package_name, field) {
+    save(package_name, field, version) {
 
-        if (!LT.db) {
-            return console.log(`${this.log_prefix} Requires database to publish to`);
-        }
+        return new Promise((resolve, reject) => {
 
-        if (!package_name) {
-            return console.log(`${this.log_prefix} Requires package to publish to`);
-        }
-
-        this.mode = "locked"; // lock mode
-
-        // record owner when item is first exported...
-        if (!this._data["owner"]) {
-            this._data["owner"] = LT.user.username;
-        }
-
-
-        // are we trying to change just a partial?
-        let val = (field ? this._data[field] : this._data);
-        let data = {};
-
-        if (field) {
-            if (!val) {
-                return console.error(`${this.log_prefix} unable to save missing field`, field);
+            if (!LT.db) {
+                console.log(`${this.log_prefix} Requires database to publish to`);
+                return reject("db_required");
             }
-            let obj = {};
-            obj[field] = val;
-            data = this.pack(obj);
-        }
-        else if (val) {
-            data = this.pack(val);
-        }
 
-        // save to our shared database...
-        let package_node = LT.db.get("pkg")
-            .get(package_name);
+            if (!package_name) {
+                console.log(`${this.log_prefix} Requires package to publish to`);
+                return reject("name_required");
+            }
 
-        package_node.get("version").then((version,k) => {
+            this.mode = "locked"; // lock mode
 
-            this.node = package_node.get("data")
-                .get(version)
-                .get(this.id);
+            // record owner when item is first exported...
+            if (!this._data["owner"]) {
+                this._data["owner"] = LT.user.username;
+            }
 
-            this.node.put(data)
-                .once((v,k) => {
-                    this.mode = "shared"; // shared mode
-                    this.emit("save");
-                });
+
+            // are we trying to change just a partial?
+            let val = (field ? this._data[field] : this._data);
+            let data = {};
+
+            if (field) {
+                if (!val) {
+                    return console.error(`${this.log_prefix} unable to save missing field`, field);
+                }
+                let obj = {};
+                obj[field] = val;
+                data = this.pack(obj);
+            }
+            else if (val) {
+                data = this.pack(val);
+            }
+
+            // save to our shared database...
+            let package_node = LT.db.get("pkg")
+                .get(package_name);
+
+            const completeSave = (version) => {
+                this.node = package_node.get("data")
+                    .get(version)
+                    .get(this.id);
+
+                this.node.put(data)
+                    .once((v,k) => {
+                        this.mode = "shared"; // shared mode
+                        this.emit("save");
+                    });
+            }
+
+
+            package_node.get("version").then(completeSave);
         });
     }
 
 
+
+    /**
+    * Clears the value of the item and nullifies in database (full delete not possible)
+    */
     drop(package_name, version) {
 
-        if (!LT.db) {
-            return console.error(`${this.log_prefix} requires database to remove from`);
-        }
-        else if (this.mode == "dropped") {
-            // already deleted... skip...
-            return;
-        }
-        
-        if (!version) {
-            return console.error(`${this.log_prefix} must specify a version you want to remove`);
-        }
-        if (!package_name) {
-            return console.error(`${this.log_prefix} requires package to remove from`);
-        }
+        return new Promise((resolve, reject) => {
 
-        console.log(`${this.log_prefix} Dropped`);
-        
-        let package_node = LT.db.get("pkg")
-            .get(package_name);
+            if (!LT.db) {
+                console.error(`${this.log_prefix} requires database to remove from`);
+                return reject("db_required");
+            }
+            else if (this.mode == "dropped") {
+                // already deleted... skip...
+                return resolve();
+            }
+            
+            if (!package_name) {
+                return console.error(`${this.log_prefix} requires package to remove from`);
+            }
 
+            let package_node = LT.db.get("pkg")
+                .get(package_name);
 
-        let original_data = {};
+            const completeDrop = (version) => {
+                let original_data = {};
+                package_node
+                    .get("data")
+                    .get(version)
+                    .get(this.id)
+                    .once((v,k) => {
+                        original_data = v;
+                    })
+                    .put(null)
+                    .once(() => {
+                        console.log(`${this.log_prefix} Dropped`);
+                        this.mode = "dropped";
+                        this.emit("drop");
+                        resolve();
+                    });
+            }
 
-        package_node.get("version").then((version,k) => {
-            this.node = package_node
-                .get("data")
-                .get(version)
-                .get(this.id)
-                .once((v,k) => {
-                    original_data = v;
-                })
-                .put(null)
-                .once(() => {
-                    this.mode = "dropped";
-                    this.emit("drop");
-                });
-            });
+            if (version) {
+                completeDrop(version);
+            }
+            else {
+                package_node.get("version").then(completeDrop); 
+            }
+
+        });
     }
 }
