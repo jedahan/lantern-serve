@@ -14,26 +14,22 @@ LX.Director = class Director extends LV.EventEmitter {
         this.atlas = new LX.Atlas();
         this.menu = null;
 
-
-        // get or create a unique profile for this user / device
-        this.user = new LX.User(this.db);
-
-        // require successful auth before any app starts
-        this.user.on("authenticated", () => {
-            this.view.data.user.username = this.user.username;
-        
-        });
-
-        // define atlas to manage map interface
-        this.emit("start");
-        
         // load in dynamic apps
         fetch("/api/apps")
             .then((result) => {
                 return result.json()
             })
             .then((json) => {
-                json.forEach(this.createApp.bind(this));
+
+                // get or create a unique profile for this user / device
+                this.user = new LX.User(this.db);
+
+                // require successful auth before any app starts
+                this.user.on("auth", function() {
+                    this.view.data.user.username = this.user.username;
+                    json.forEach(this.createApp.bind(this));
+                    this.emit("start");
+                }.bind(this));
             });  
 
     }
