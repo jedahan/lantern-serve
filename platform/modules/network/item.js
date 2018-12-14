@@ -2,8 +2,8 @@
 
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 
-LX.SharedObject = class SharedObject extends LV.EventEmitter {
-    constructor(id, defaults) {
+LX.SharedItem = class SharedItem extends LV.EventEmitter {
+    constructor(id, data, defaults) {
         super();
         this.id = id || LV.ShortID.generate();
         this._mode = "draft";
@@ -20,6 +20,13 @@ LX.SharedObject = class SharedObject extends LV.EventEmitter {
             this._key_table[idx] = defaults[idx][0];
             this._key_table_reverse[defaults[idx][0]] = idx;
         }
+
+
+        if (data) {
+            this.mode = "shared";
+            this.update(data);
+        }
+
         return this;
     }
 
@@ -27,7 +34,7 @@ LX.SharedObject = class SharedObject extends LV.EventEmitter {
 
     //-------------------------------------------------------------------------
     get log_prefix() {
-        return `[${this.id}]`
+        return `[i:${this.id}]`
     }
 
     get data() {
@@ -59,6 +66,10 @@ LX.SharedObject = class SharedObject extends LV.EventEmitter {
         return this._mode;
     }
 
+
+    set owner(val) {
+        this._data.owner = val;
+    }
 
 
     //-------------------------------------------------------------------------
@@ -150,118 +161,116 @@ LX.SharedObject = class SharedObject extends LV.EventEmitter {
 
 
     //-------------------------------------------------------------------------
+
+    /*
+    * Updates the local item with packed data
+    */
+    update(data) {
+        let new_data = this.unpack(data);
+        
+        //console.log(`${this.log_prefix} updating data to:`, data, new_data);
+        // only access approved data keys from our map
+        for (var idx in new_data) {
+            this[idx] = new_data[idx];
+        }
+        this.emit("update");
+    }
+
+
     /**
     * Export to shared database
     */
-    export(db) {
+    save(package_name, field) {
 
-        if (!db) {
-            return console.log(`${this.log_prefix} Requires database to export to`);
+        if (!LT.db) {
+            return console.log(`${this.log_prefix} Requires database to publish to`);
+        }
+
+        if (!package_name) {
+            return console.log(`${this.log_prefix} Requires package to publish to`);
         }
 
         this.mode = "locked"; // lock mode
-
 
         // record owner when item is first exported...
         if (!this._data["owner"]) {
             this._data["owner"] = LT.user.username;
         }
 
-        let data = this.pack(this._data);
-    
-        // save to our shared database...
-        db.get("marker")
-            .get(this.id)
-            .put(data)
-            .once((v,k) => {
-                this.mode = "shared"; // shared mode
-                db.link(this);
-                this.emit("export");
-            });
 
-    }
-
-    exportPartial(field, db) {
-
-        if (!db) {
-            return console.log(`${this.log_prefix} Requires database to export field to`);
-        }
-        else if (!this._data.hasOwnProperty(field)) {
-            return console.log(`${this.log_prefix} Missing field so cannot export: ${field}`);
-        }
-
-        this.mode = "locked"; // lock mode
-
+        // are we trying to change just a partial?
+        let val = (field ? this._data[field] : this._data);
         let data = {};
-        data[field] = this._data[field];
 
-        data = this.pack(data);
+        if (field) {
+            if (!val) {
+                return console.error(`${this.log_prefix} unable to save missing field`, field);
+            }
+            let obj = {};
+            obj[field] = val;
+            data = this.pack(obj);
+        }
+        else if (val) {
+            data = this.pack(val);
+        }
 
         // save to our shared database...
-        db.get("marker")
-            .get(this.id)
-            .put(data)
-            .once((v,k) => {
-                db.link(this);
-                this.emit("export");
-            });
+        let package_node = LT.db.get("pkg")
+            .get(package_name);
+
+        package_node.get("version").then((version,k) => {
+
+            this.node = package_node.get("data")
+                .get(version)
+                .get(this.id);
+
+            this.node.put(data)
+                .once((v,k) => {
+                    this.mode = "shared"; // shared mode
+                    this.emit("save");
+                });
+        });
     }
 
 
-    /**
-    * Import from shared database
-    */
-    import(db) {
-        if (!db) {
-            return console.log(`${this.log_prefix} Requires database to import from`);
+    drop(package_name, version) {
+
+        if (!LT.db) {
+            return console.error(`${this.log_prefix} requires database to remove from`);
         }
-
-        db.get("marker")
-            .get(this.id)
-            .once((v,k) => {
-                this.importWithData(v);
-                db.link(this);
-            });
-    }
-
-    /**
-    * Complete an import given database content
-    *
-    * May be used separately from import(),
-    * for example during a database map()
-    */
-    importWithData(data) {
-
-        this.mode = "shared";
-        data = this.unpack(data);
-
-        // only access approved data keys from our map
-        for (var idx in data) {
-            this[idx] = this._data[idx] = data[idx];
-        }
-        this.emit("import");
-    }
-
-
-    remove(db) {
-
-        if (!db) {
-            return console.log(`${this.log_prefix} Requires database to remove from`);
-        }
-        else if (this.mode == "removed") {
-            // already removed... skip...
+        else if (this.mode == "dropped") {
+            // already deleted... skip...
             return;
         }
-
-        console.log(`${this.log_prefix} Remove`);
         
-        this.mode = "removed";
-        db.get("marker")
-            .get(this.id)
-            .put(null)
-            .once((v,k) => {
-                this.emit("remove");
-                db.unlink(this);
+        if (!version) {
+            return console.error(`${this.log_prefix} must specify a version you want to remove`);
+        }
+        if (!package_name) {
+            return console.error(`${this.log_prefix} requires package to remove from`);
+        }
+
+        console.log(`${this.log_prefix} Dropped`);
+        
+        let package_node = LT.db.get("pkg")
+            .get(package_name);
+
+
+        let original_data = {};
+
+        package_node.get("version").then((version,k) => {
+            this.node = package_node
+                .get("data")
+                .get(version)
+                .get(this.id)
+                .once((v,k) => {
+                    original_data = v;
+                })
+                .put(null)
+                .once(() => {
+                    this.mode = "dropped";
+                    this.emit("drop");
+                });
             });
     }
 }
