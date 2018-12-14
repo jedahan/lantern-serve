@@ -14,7 +14,7 @@ LX.User = class User extends LV.EventEmitter {
 
 
         if (skip_check) {
-            console.log("[User] Make new credentials by explicit request")
+            console.log(`${this.log_prefix} make new credentials by explicit request`)
             this.register();
         }
         else {
@@ -26,14 +26,14 @@ LX.User = class User extends LV.EventEmitter {
                     requirements.forEach((key) =>  {
                         if (!creds.hasOwnProperty(key)) {
                             is_valid = false;
-                            console.log(`${this.log_prefix} Existing saved credentials missing required key: ${key}`);
+                            console.log(`${this.log_prefix} existing saved credentials missing required key: ${key}`);
                         }
                     });
                     if (is_valid) {
                         this.authenticate(creds.username, creds.password);
                     }
                     else {
-                        console.log(`${this.log_prefix}  Removing invalid creds from storage`);
+                        console.log(`${this.log_prefix}  removing invalid creds from storage`);
                         this.local_db.remove(creds).then(() => { 
                             this.register();
                         });
@@ -41,11 +41,11 @@ LX.User = class User extends LV.EventEmitter {
                 })
                 .catch((e) => {
                     if (e.name == "not_found") {
-                        console.log(`${this.log_prefix} No user discovered. Created anonymous guest user...`)
+                        console.log(`${this.log_prefix} no user discovered. Created anonymous guest user...`)
                         this.register()
                     }
                     else {
-                        console.log(`${this.log_prefix} Error getting creds`, e);
+                        console.log(`${this.log_prefix} error getting creds`, e);
                     }
                 });
         }
@@ -60,7 +60,7 @@ LX.User = class User extends LV.EventEmitter {
     }
 
     get log_prefix() {
-        return `[${this.username || "anonymous" }]`;
+        return `[u:${this.username || "anonymous" }]`;
     }
 
 
@@ -71,12 +71,12 @@ LX.User = class User extends LV.EventEmitter {
     authenticate(username, password) {
         this.user_node.auth(username, password, (ack) => {
             if (ack.err) {
-                console.log(`${this.log_prefix} Bad Auth`, ack.err);
+                console.log(`${this.log_prefix} bad auth`, ack.err);
                 this.register();
             }
             else {
                 this.username = username;
-                console.log(`${this.log_prefix} Good Auth`);
+                console.log(`${this.log_prefix} good auth`);
                 SEA.pair().then((pair) => {
                     this.pair = pair;
                     this.emit("authenticated", this.pair);
@@ -92,13 +92,13 @@ LX.User = class User extends LV.EventEmitter {
     register() {
         let username = LV.ShortID.generate();
         let password = LV.ShortID.generate();
-        console.log("[User] Create user with username:", username);
+        console.log(`${this.log_prefix} create user with username: ${username}`);
         this.user_node.create(username, password, (ack) => {
             if (ack.err) {
-                console.log("[User] Unable to save", ack.err);
+                console.log(`${this.log_prefix} unable to save`, ack.err);
                 return;
             }
-            console.log("[User] Saved to browser");
+            console.log(`${this.log_prefix} saved to browser`);
             this.emit("registered");
 
             let doc = {
@@ -111,7 +111,7 @@ LX.User = class User extends LV.EventEmitter {
                     this.authenticate(username, password);
                 })
                 .catch((e) => {
-                    console.log("[User] Unable to save", e);
+                    console.log(`${this.log_prefix}unable to save`, e);
                 });
         });
     }
@@ -143,10 +143,10 @@ LX.User = class User extends LV.EventEmitter {
         this.db.get("pkg").get(name)
             .once((v,k) => {
                 if (!v) {
-                    console.log(`${this.log_prefix} Unable to find package ${name} to install...`);
+                    console.log(`${this.log_prefix} unable to find package ${name} to install...`);
                 }
                 else {
-                    console.log(`${this.log_prefix} Installed package ${name}`);
+                    console.log(`${this.log_prefix} installed package ${name}`);
                     this.user_node.get("packages").get(name).put(v);
                     this.emit("install", name);
                 }
@@ -160,7 +160,7 @@ LX.User = class User extends LV.EventEmitter {
          this.user_node.get("packages").get(name)
             .put(null)
             .once((v,k) => {
-                    console.log(`${this.log_prefix} Uninstalled package ${name}`);
+                    console.log(`${this.log_prefix} uninstalled package ${name}`);
                     this.user_node.get("packages").get(name).put(null);
                     this.emit("uninstall", name);
                 });
@@ -180,7 +180,7 @@ LX.User = class User extends LV.EventEmitter {
             if (!v) return;
             Object.keys(v).forEach((pkg) => {
                 if (pkg == "_" || v[pkg] == null) return;
-                console.log(`${this.log_prefix} Subscribed Topics ${pkg}:`, v[pkg]);
+                console.log(`${this.log_prefix} subscribed topics ${pkg}:`, v[pkg]);
             });
         });
     }
@@ -190,7 +190,7 @@ LX.User = class User extends LV.EventEmitter {
     */
     subscribe(topic) {
         this.user_node.get("topics").get(topic).set(true).once(() => {
-            console.log(`${this.log_prefix} Subscribe to topic ${topic}`);
+            console.log(`${this.log_prefix} subscribe to topic ${topic}`);
             this.emit("subscribe", name);
         });
     }
@@ -200,7 +200,7 @@ LX.User = class User extends LV.EventEmitter {
     */
     unsubscribe(topic) {
         this.user_node.get("topics").get(topic).set(false).once(() => {
-            console.log(`${this.log_prefix} Unsubscribe from topic ${topic}`);        
+            console.log(`${this.log_prefix} unsubscribe from topic ${topic}`);        
             this.emit("subscribe", name);
         });
     }

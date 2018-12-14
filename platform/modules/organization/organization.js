@@ -16,20 +16,26 @@ LX.Organization = class Organization extends LV.EventEmitter {
         this.name = null;
 
         this.db = db;
-        this.node = db.get("org")
+        this.org_node = db.get("org")
             .get(id);
 
-        this.node.on((v,k) => {
+        console.log(`${this.log_prefix} id = ${this.id}`)
+
+        this.org_node.on((v,k) => {
             // always keep object up-to-date as data changes
             if (v.hasOwnProperty("name")) {
-                console.log("[Organization] name changed to = ", v.name);
+                console.log(`${this.log_prefix} name --> ${v.name}`);
                 this.name = v.name;
             }
         })
-        console.log(`[Organization] id = ${this.id}`)
     }
     
 
+
+    //-------------------------------------------------------------------------
+    get log_prefix() {
+        return `[o:${this.id || "Organization"}]`
+    }
 
     //-------------------------------------------------------------------------
     /**
@@ -37,22 +43,31 @@ LX.Organization = class Organization extends LV.EventEmitter {
     */
     register(name) {
         if (!name) {
-            return console.error("[Organization] please name your organization to register");
+            return console.error(`${this.log_prefix} please name your organization to register`);
         }
-        this.node.put({
-                "name": name,
-                "members": {},
-                "packages": {},
-            })
-            .once(() => {
-                this.emit("register");
-            })
+    
+        this.org_node.get(name).once((v,k) => {
+            if (v !== null) {
+                return console.log(`${this.log_prefix} organization already exists with name ${name}`);
+                return;
+            }
+
+            this.org_node.put({
+                    "name": name,
+                    "members": {},
+                    "packages": {},
+                })
+                .once(() => {
+                    this.emit("register");
+                })
+        });
+
     }
 
     unregister() {
-        this.node.put(null)
+        this.org_node.put(null)
             .once((v,k) => {
-                console.log(`[Organization] unregistered`)
+                console.log(`${this.log_prefix} unregistered`)
                 this.emit("unregister");
             });
     }
@@ -64,7 +79,7 @@ LX.Organization = class Organization extends LV.EventEmitter {
     * Add member user to the organization
     */
     addOneMember(user) {
-        this.node.get("members")
+        this.org_node.get("members")
             .set(user);
     }
 
@@ -72,7 +87,7 @@ LX.Organization = class Organization extends LV.EventEmitter {
     * Remove member user from the organization
     */
     removeOneMember(user) {
-        this.node.get("members")
+        this.org_node.get("members")
             .unset(user);
     }
 
@@ -85,8 +100,19 @@ LX.Organization = class Organization extends LV.EventEmitter {
     publish(name, objects, version, is_public) {
 
         if (!name) {
-            return console.error("[Organization] please name your package to publish");
+            return console.error(`${this.log_prefix} please name your package to publish`);
         }
+
+
+        const publishVersion = () => {
+            this.db.get("pkg").get(name).get("data").get(version)
+                .put(objects)
+                .once((v,k) => {
+                    console.log(`${this.log_prefix} published ${name} version ${version}`);
+                    this.emit("publish", name);
+                });
+        }
+
 
         let data = {};
         version = version || "0.0.1";
@@ -98,24 +124,33 @@ LX.Organization = class Organization extends LV.EventEmitter {
             "public": (is_public === true || is_public === null ? true : false)
         };
 
-        this.db.get("pkg").get(name)
-            .put(publish_package)
-            .once((v,k) => {
+        let pkg_node = this.db.get("pkg").get(name);
+
+        pkg_node.once((v,k) => {
+            if (!v) {
+                pkg_node.put(publish_package);
 
                 this.db.get("pkg").get(name)
                     .get("organization")
-                    .put(this.node);
-
-                this.db.get("pkg").get(name).get("data").get(version)
-                    .put(objects)
+                    .put(this.org_node);
+                publishVersion();
+            }
+            else {
+                pkg_node.get("data").get(version)
                     .once((v,k) => {
-                        console.log(v,k);
-                        this.emit("publish", name);
+                        // publishing a version that does not yet exist
+                        if (!v) {
+                            publishVersion();
+                        }
+                        else {
+                            console.log(`${this.log_prefix} version ${version} for ${name} already exists`);
+                        }
                     });
-            });
-
-
+            }
+        });
     }
+
+
 
     /*
     * Unpublish removes a data package from the network
@@ -123,7 +158,7 @@ LX.Organization = class Organization extends LV.EventEmitter {
     unpublish(name, version) {
         
         if (!name) {
-            return console.error("[Organization] please input name of package to unpublish (this is a destructive action)");
+            return console.error(`${this.log_prefix}please input name of package to unpublish (this is a destructive action)`);
         }
 
         const cb = (v,k) => {

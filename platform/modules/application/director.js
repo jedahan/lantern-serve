@@ -14,11 +14,14 @@ LX.Director = class Director extends LV.EventEmitter {
         this.atlas = new LX.Atlas();
         this.menu = null;
 
+
         // get or create a unique profile for this user / device
         this.user = new LX.User(this.db);
+
+        // require successful auth before any app starts
         this.user.on("authenticated", () => {
             this.view.data.user.username = this.user.username;
-            this.atlas.loadSharedMarkers(this.db);
+        
         });
 
         // define atlas to manage map interface
@@ -31,7 +34,8 @@ LX.Director = class Director extends LV.EventEmitter {
             })
             .then((json) => {
                 json.forEach(this.createApp.bind(this));
-            });
+            });  
+
     }
 
 

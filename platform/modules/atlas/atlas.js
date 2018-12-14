@@ -8,7 +8,7 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
         super();
         this.map = null;
         this.center = null;
-        this.user = null;
+        this.user_location = null;
         this.markers = {
         }
         this.precision = {
@@ -47,12 +47,6 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
 
         // bind dom element for leaflet
         this.map = L.map("map", LC.leaflet_map);
-
-        // setup collections for markers to control layering 
-        let collections = ["private", "shared"];
-        collections.forEach((item) => {
-            this.markers[item] = new LX.MarkerCollection(item, this.map);
-        });
 
         // layer in hosted map tiles
         L.tileLayer(this.tile_uri, LC.leaflet_tiles).addTo(this.map);
@@ -106,9 +100,9 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
     //------------------------------------------------------------------------
     cacheUserLocation(e) {
         let new_geo = LX.Location.toGeohash(e.latlng, this.precision.user_max);
-        if (new_geo != this.user) {
-            this.user = new_geo;
-            console.log("[Atlas] New user location found:", this.user);    
+        if (new_geo != this.user_location) {
+            this.user_location = new_geo;
+            console.log("[Atlas] New user location found:", this.user_location);    
         }
     }
 
@@ -161,75 +155,35 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
 
 
     //------------------------------------------------------------------------
-
-    loadOneSharedMarker(db, data, id) {
-        // this runs continuously and for every update to the node
-        if (!data) {
-            // item was most likely deleted
-            if (db.objects.hasOwnProperty(id) && db.objects[id]) {
-                console.log("[Atlas] Requesting Marker Remove,", id);
-                db.objects[id].hide();
-                db.unlink(db.objects[id]);
-            }
-            return;
-        }
-
-        if (data.g && data.t) {
-            // do we have the marker already?
-            let marker = new LX.Marker(id);
-            marker.importWithData(data);
-
-            if (db.objects.hasOwnProperty(id)) {
-                // allow geohash updates
-                if (db.objects[id].geohash != marker.geohash) {
-
-                    db.objects[id].geohash = marker.geohash;
-                    console.log("[Atlas] Updating geohash for marker:", marker.id);
-                    return;
-                }
-                else {
-
-                    console.log("[Atlas] Known marker at location. Skipping...", marker);
-                    return;
-                }
-            }
-            else {
-                db.link(marker);
-                // this is a valid marker we can potentially display
-                this.markers.shared.add(marker);
-            }
-            
-        }
+    addToMap(marker) {
+        marker.layer.addTo(this.map);
+        this.markers[marker.id] = marker;
+        this.emit("marker-add", marker);
     }
 
-    loadSharedMarkers(db) {
-        db.get("marker").map()
-            .on((data,id) => {
-                this.loadOneSharedMarker(db,data,id);
-            });
+    removeFromMap(marker) {
+        marker.layer.remove();
+        this.markers[marker.id] = null;
+        this.emit("marker-remove", marker);
     }
 
-
-
-    //------------------------------------------------------------------------
     getMarkerCount() {
-        let tally = 0;
-        for (var idx in this.markers) {
-            var collection = this.markers[idx];
-            tally += collection.getTotalSize();
-        }
-        return tally;
+        let count = 0;
+        Object.keys(this.markers).forEach(id => {
+            if (this.markers[id] !== null) count++;
+        });
+        return count;
     }
 
     fitMapToAllMarkers() {
         let all_layers = [];
-        for (var idx in this.markers) {
-            var collection = this.markers[idx];
-            let layers = collection.getAllLayers();
-            layers.forEach((layer) => {
-                all_layers.push(layer);
-            });
-        }
+
+        Object.keys(this.markers).forEach((key) => {
+            let marker = this.markers[key];
+            let layer = marker.layer;
+            all_layers.push(layer);
+        });
+
         if (all_layers.length) {
             let group = new L.featureGroup(all_layers);
             this.map.fitBounds(group.getBounds());

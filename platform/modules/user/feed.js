@@ -30,11 +30,11 @@ LX.Feed = class Feed extends LV.EventEmitter {
 
     addOnePackage(name) {
     	if (this.packages[name]) {
-            console.log(`${this.log_prefix} Already watching package ${name}`);
+            console.log(`${this.log_prefix} already watching package ${name}`);
             return;
         }
 
-    	console.log(`[Feed] Add Package ${name}`)
+    	console.log(`${this.log_prefix} add package ${name}`)
     	this.packages[name] = true;
 
         let package_node = this.db.get("pkg").get(name);            
@@ -43,7 +43,23 @@ LX.Feed = class Feed extends LV.EventEmitter {
             .then((version,k) => {
                 package_node.get("data").get(version).map()
                 .on((v,k) => {
-                	this.emit("update", v);
+
+                    let data = v;
+
+                    if (v !== null && typeof(v) == "object") {
+                        data = {};
+                        Object.keys(v).forEach(key => {
+                            if (key != "_") {
+                                data[key] = v[key];
+                            }
+                        });
+                    }
+
+
+                	this.emit("update", {
+                        id: k,
+                        data: data
+                    });
                 });
             });
     }
@@ -54,7 +70,7 @@ LX.Feed = class Feed extends LV.EventEmitter {
     }
 
     removeOnePackage(name) {
-    	console.log(`[Feed] Remove Package ${name}`)    	
+    	console.log(`${this.log_prefix} remove package ${name}`)    	
     	this.packages[name] = false;
     }
 
@@ -67,7 +83,7 @@ LX.Feed = class Feed extends LV.EventEmitter {
     }
 
     addOneTopic(name) {    	
-    	console.log(`[Feed] Add Topic ${name}`)
+    	console.log(`${this.log_prefix} add topic ${name}`)
     	this.topics[name] = true;
     }
 
@@ -76,7 +92,7 @@ LX.Feed = class Feed extends LV.EventEmitter {
     	topics.forEach(this.removeOneTopic.bind(this));
     }
     removeOnePackage(name) {
-    	console.log(`[Feed] Remove Topic ${name}`)
+    	console.log(`${this.log_prefix} remove topic ${name}`)
     	this.topics[name] = false;
     }
 }

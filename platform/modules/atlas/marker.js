@@ -3,21 +3,22 @@
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 
 
-LX.Marker = class Marker extends LX.SharedObject {
+LX.MarkerItem = class MarkerItem extends LX.SharedItem {
     
-    constructor(id) {
+    constructor(id, data) {
+
+
 
         // now set defaults for key compression
-        super(id, {
+        super(id, data, {
            "geohash": ["g"],
             "tags": ["t", []],
             "owner": ["o"]
         });
 
         this._icon = null;
-        this._collection = null;
         this._set = null;
-        this._latlng = null;
+        this.layer = null;
 
 
         this.on("remove", () => {
@@ -31,6 +32,12 @@ LX.Marker = class Marker extends LX.SharedObject {
                 //console.log(`${this.log_prefix} mode = `, mode);
             }
         });
+
+        // intercept to see if we have a cached version in our atlas already
+        if (LT.atlas.markers[id]) {
+            console.warn(`${this.log_prefix} using cached marker from atlas`);
+            return LT.atlas.markers[id];
+        }
     }
 
 
@@ -46,29 +53,31 @@ LX.Marker = class Marker extends LX.SharedObject {
 
             let starting_val = this._data.geohash;
 
-
             try {
-                this._latlng = LV.Geohash.decode(val)
 
                 if (val == starting_val) {
                     return;
                 }
 
-                if (this.layer) {
-                    this.layer.setLatLng(this._latlng);
-                }
-
                 this._data.geohash = val;
                 console.log(`${this.log_prefix} location = ${this.geohash}`);
 
+
+                if (this.layer) {
+                    this.layer.setLatLng(this.latlng);
+                }
                 if (starting_val) {
                     this.emit("move", val);
                 }
             }
             catch(e) {
-                console.log(`${this.log_prefix} error with geohash`, e);
+                console.error(`${this.log_prefix} error with geohash`, e);
             }
         }
+    }
+
+    get latlng() {
+        return LV.Geohash.decode(this._data.geohash);
     }
 
     get geohash() {
@@ -82,23 +91,31 @@ LX.Marker = class Marker extends LX.SharedObject {
     * Show on map
     */
     show() {
-        if (this.layer) {
+
+        if (this.layer !== null) {
+            return;
+        }
+        else if (!this.latlng) {
+            console.error(`${this.log_prefix} cannot show marker with missing geolocation`);
             return;
         }
 
+        //console.log(`${this.log_prefix} showing marker`, this);
+
         let self = this;
-        this.layer = L.marker(this._latlng, {
+        this.layer = L.marker(this.latlng, {
             icon: this.getDivIcon(),
             draggable: false,
             autoPan: true
         });
+
+        LT.atlas.addToMap(this);
 
         //console.log(`${this.log_prefix} Show`, this.layer);
 
         this.layer.on("dragend", function(e) {
             let latlng = e.target._latlng;
             self.geohash = LV.Geohash.encode(latlng.lat, latlng.lng); 
-            console.log(`${self.log_prefix} Dragged to: `,  self.geohash);
         });
         this.emit("show", self);
     }
@@ -109,7 +126,7 @@ LX.Marker = class Marker extends LX.SharedObject {
     hide() {
         //console.log(`${this.log_prefix} Hide`);
         if (this.layer && this.layer._map) {
-            this.layer.remove();
+            LT.atlas.removeFromMap(this);
             this.emit("hide", this);            
         }
     }
@@ -132,6 +149,11 @@ LX.Marker = class Marker extends LX.SharedObject {
     }
 
     setIcon(value) {
+        if (!this.layer) {
+            console.error(`${this.log_prefix} marker must have layer before icon can be set`);
+            return;
+        }
+
         if (value) {
             // console.log(`${this.log_prefix} icon = ${value}`);
         }
@@ -145,7 +167,7 @@ LX.Marker = class Marker extends LX.SharedObject {
     /**
     * Display custom icon based on marker class names
     */
-    setIcons (map) {
+    setIcons(map) {
         this.tags.forEach((tag) => {
             if (map.hasOwnProperty(tag)) {
                 this.setIcon(map[tag]);
