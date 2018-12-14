@@ -85,7 +85,7 @@ LX.MarkerItem = class MarkerItem extends LX.SharedItem {
     }
 
  
-
+ 
     //-------------------------------------------------------------------------
     /**
     * Show on map
@@ -130,6 +130,8 @@ LX.MarkerItem = class MarkerItem extends LX.SharedItem {
             this.emit("hide", this);            
         }
     }
+
+
 
     //-------------------------------------------------------------------------
     getDivIcon() {
