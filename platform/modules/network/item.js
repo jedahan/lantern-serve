@@ -73,6 +73,14 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
 
 
     //-------------------------------------------------------------------------
+    inspect() {
+        console.log(`${this.log_prefix} data = `, this._data);
+    }
+
+
+
+
+    //-------------------------------------------------------------------------
     _sanitizeTag(tag) {
         return tag.toLowerCase().replace(/[^a-z0-9\-]+/g, '');
     }
