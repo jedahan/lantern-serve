@@ -4,16 +4,9 @@
 * Lantern Utilities
 *
 */
-
-
 const path = require("path");
 const fs = require("fs-extra");
 const self = {};
-
-
-
-//----------------------------------------------------------------------
-fs.ensureDirSync(path.resolve(__dirname, "../logs"));
 
 
 
@@ -32,7 +25,6 @@ self.removeMeta = function(obj) {
 
 
 //----------------------------------------------------------------------
-
 /**
 * Log facility
 */

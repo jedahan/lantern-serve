@@ -21,6 +21,12 @@ const log = util.Logger;
 
 
 
+//----------------------------------------------------------------------
+fs.ensureDirSync(path.resolve(__dirname, "../logs"));
+fs.ensureDirSync(path.resolve(__dirname, "../db"));
+
+
+
 //----------------------------------------------------------------------------
 log.setLevel(process.env.LOG_LEVEL || "debug");
 log.info("##############################################");
