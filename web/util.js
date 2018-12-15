@@ -13,7 +13,7 @@ const self = {};
 
 
 //----------------------------------------------------------------------
-fs.ensureDirSync(path.resolve(__dirname, "logs"));
+fs.ensureDirSync(path.resolve(__dirname, "../logs"));
 
 
 
@@ -37,7 +37,7 @@ self.removeMeta = function(obj) {
 * Log facility
 */
 self.Logger = require("simple-node-logger").createSimpleLogger({
-    logFilePath: path.resolve(__dirname, 'logs', 'http.log'),
+    logFilePath: path.resolve(__dirname, '../logs', 'http.log'),
     dateFormat:'YYYY.MM.DD'
 });
 

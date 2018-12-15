@@ -1,10 +1,15 @@
-app_server:
+link:
     build: .
     restart: always
     ports:
         - 80:80
         - 443:443
+        - 8765:8765
     environment:
         - CLOUD=true
+        - DB=db/prod
+        - SSL_PRIVATE_KEY=/opt/lantern/certs/privkey.pem
+        - SSL_CERTIFICATE=/opt/lantern/certs/fullchain.pem
     labels:
         - triton.cns.services=lnt
+        - com.joyent.package=g4-highcpu-512M

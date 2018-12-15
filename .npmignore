@@ -4,3 +4,4 @@ Dockerfile
 public
 db/*
 apps
+logs

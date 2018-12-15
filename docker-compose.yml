@@ -1,12 +1,17 @@
-app_server:
-    build: .
-    restart: always
-    ports:
-        - 80:80
-        - 443:443
-    environment:
-        - CLOUD=false
-        - DB=db/docker
-    volumes:
-        - ./web/db:/opt/lantern/db
-        - ./web/public:/opt/lantern/public
+version: '3'
+services:
+  link:
+      build:
+        context: .
+        args:
+            apps: https://github.com/lantern-works/lantern-apps
+      restart: always
+      ports:
+          - 80:80
+          - 443:443
+          - 8765:8765
+      environment:
+          - CLOUD=false
+          - DB=db/docker
+          - SSL_PRIVATE_KEY=/opt/lantern/certs/privkey.pem
+          - SSL_CERTIFICATE=/opt/lantern/certs/fullchain.pem
