@@ -177,6 +177,11 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
 
     //------------------------------------------------------------------------
     addToMap(marker) {
+        if (this.markers[marker.id]) {
+            console.log(`${this.log_prefix} ${marker.id} already added to map. skipping...`);
+            return;
+        }
+
         marker.layer.addTo(this.map);
         this.markers[marker.id] = marker;
         marker.layer.on("click", (e) => {

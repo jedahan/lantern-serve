@@ -23,6 +23,40 @@ LX.Feed = class Feed extends LV.EventEmitter {
     }
 
 
+    onDataUpdate(v,k) {
+        let data = v;
+
+        if (v !== null && typeof(v) == "object") {
+            data = {};
+            Object.keys(v).forEach(key => {
+                if (key != "_") {
+                    data[key] = v[key];
+                }
+            });
+        }
+
+        this.emit("update", {
+            id: k,
+            data: data
+        });
+    }
+
+    /**
+    * Allows for manual refresh of data from the feed
+    */
+    refreshData() {
+        Object.keys(this.packages).forEach(name => {
+            let package_node = this.db.get("pkg").get(name)
+            package_node.get("version")
+                .once((version,k) => {
+                    package_node.get("data")
+                        .get(version).map()
+                        .once(this.onDataUpdate.bind(this));
+                });
+        });
+    }
+
+
 
     //-------------------------------------------------------------------------
   	addManyPackages(packages) {
@@ -42,25 +76,10 @@ LX.Feed = class Feed extends LV.EventEmitter {
 
         // use latest version of data
         package_node.get("version")
-            .then((version,k) => {
-                package_node.get("data").get(version).map()
-                .on((v,k) => {
-                    let data = v;
-
-                    if (v !== null && typeof(v) == "object") {
-                        data = {};
-                        Object.keys(v).forEach(key => {
-                            if (key != "_") {
-                                data[key] = v[key];
-                            }
-                        });
-                    }
-
-                	this.emit("update", {
-                        id: k,
-                        data: data
-                    });
-                });
+            .once((version,k) => {
+                package_node.get("data")
+                    .get(version).map()
+                    .on(this.onDataUpdate.bind(this));
             });
     }
 
