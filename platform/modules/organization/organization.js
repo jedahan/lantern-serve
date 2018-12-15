@@ -34,7 +34,7 @@ LX.Organization = class Organization extends LV.EventEmitter {
 
     //-------------------------------------------------------------------------
     get log_prefix() {
-        return `[o:${this.id || "Organization"}]`
+        return `[o:${this.id || "Organization"}]`.padEnd(20, " ")
     }
 
     //-------------------------------------------------------------------------

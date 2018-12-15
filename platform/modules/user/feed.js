@@ -19,7 +19,7 @@ LX.Feed = class Feed extends LV.EventEmitter {
 
     //-------------------------------------------------------------------------
     get log_prefix() {
-    	return `[f:${this.user.username}]`;
+    	return `[f:${this.user.username}]`.padEnd(20, " ");
     }
 
 

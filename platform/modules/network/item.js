@@ -34,7 +34,7 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
 
     //-------------------------------------------------------------------------
     get log_prefix() {
-        return `[i:${this.id}]`
+        return `[i:${this.id}]`.padEnd(20, " ")
     }
 
     get data() {

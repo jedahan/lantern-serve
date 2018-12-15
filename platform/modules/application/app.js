@@ -8,7 +8,6 @@ LX.App = class App extends LV.EventEmitter {
     constructor(obj) {
         super();
         this.name = obj.name;
-        this.tag = `[lx-app-${this.name}]`;
         this.css_id = `lx-app-${this.name}-css`;
         this.children = obj.children;
         this.pages = [];
@@ -75,6 +74,10 @@ LX.App = class App extends LV.EventEmitter {
 
     }
 
+    get log_prefix() {
+        return `[a:lx-app-${this.name}]`.padEnd(20, " ");
+    }
+
     /**
     * Displays Vue component on the screen
     */
@@ -84,6 +87,7 @@ LX.App = class App extends LV.EventEmitter {
             return;
         }
         this._opened = true;
+        console.log(`${this.log_prefix} open`);
         this.emit("open", component_id);
     }
 
@@ -92,6 +96,7 @@ LX.App = class App extends LV.EventEmitter {
     */
     close(component_id) {
         this._opened = false;
+        console.log(`${this.log_prefix} close`);
         this.emit("close", component_id);
     }
 
@@ -186,7 +191,7 @@ LX.App = class App extends LV.EventEmitter {
                     resolve(contents);
                 })
                 .catch((e) => {
-                    console.warn(this.tag + " Could not load file for " + this.name + ": " + name, e);
+                    console.warn(`${this.log_prefix} Could not load file for ${this.name}: ${name}`, e);
                 })
         });
     }
