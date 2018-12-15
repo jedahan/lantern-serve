@@ -1,16 +1,25 @@
 FROM node:carbon
-RUN npm install npm@latest -g
-RUN npm install sqlite3 --build-from-source=sqlite3
-RUN apt-get update && apt-get install nano && apt-get install unzip
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y apt-utils \
+	&& apt-get install -y nano
 
-EXPOSE 80
-EXPOSE 443
-
+RUN mkdir -p /opt/lantern/
 WORKDIR /opt/lantern/
-COPY web ./web
-RUN mkdir -p ./web/db
-RUN mkdir -p ./web/public
 COPY package.json .
 RUN npm install
 
-CMD ["npm", "run", "start]
+RUN mkdir -p ./db
+COPY bin ./bin
+COPY web ./web
+
+COPY certs ./certs
+
+ARG apps
+RUN git clone "${apps:-https://github.com/lantern-works/lantern-apps}" ./apps
+RUN ls -al
+
+EXPOSE 80
+EXPOSE 443
+EXPOSE 8765
+
+CMD ["npm", "run", "start"]
