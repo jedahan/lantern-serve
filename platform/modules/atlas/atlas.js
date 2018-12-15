@@ -139,7 +139,7 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
         // http://www.bigfastblog.com/geohash-intro
         let precision = Math.round(this.precision.center_max * (doc.zoom/20))
         let gh = LX.Location.toGeohash(doc, precision);
-        console.log(`${this.log_prefix} center geohash: ${gh}`);
+        //console.log(`${this.log_prefix} center geohash: ${gh}`);
         this.center = gh;
 
         // only save to database if user has paused on this map for a few seconds
@@ -149,11 +149,17 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
                 && this.map.getCenter().lng == doc.lng
                 ) {   
                 this.user_db.get("atlas_view").then((old_doc) => {
-                    this.user_db.remove(old_doc).then(() => {
-                        this.user_db.put(doc).then(() => {
-                            console.log(`${this.log_prefix} re-saved center for user`, this.center);
-                        });
-                    });
+
+                    if (JSON.stringify(doc) == JSON.stringify(old_doc)) {
+                        // skip save for same location
+                    }
+                    else {
+                        this.user_db.remove(old_doc).then(() => {
+                            this.user_db.put(doc).then(() => {
+                                console.log(`${this.log_prefix} re-saved center for user`, this.center);
+                            });
+                        });   
+                    }
                 })
                 .catch((e) => {
                     this.user_db.put(doc).then(() => {

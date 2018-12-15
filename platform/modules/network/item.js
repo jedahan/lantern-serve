@@ -50,7 +50,7 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
     }
 
     get tags() {
-        return this._data.tags;
+        return this._data.tags || [];
     }
 
 
@@ -84,6 +84,8 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
     */
     tag(tag) {
         tag = this.sanitizeTag(tag);
+
+        this._data.tags = this._data.tags || [];
         //console.log(`${this.log_prefix} tag = `, tag);
 
         // don't allow duplicate tags
@@ -139,10 +141,10 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
             let v = obj[idx];
             if (this._key_table.hasOwnProperty(idx)) {
                 let k = this._key_table[idx];
-                if (v.constructor === Array) {
+                if (v && v.constructor === Array) {
                     new_obj[k] = "Å"+v.join(",");
                 }
-                else {
+                else if (v) {
                     new_obj[k] = v;
                 }
 
@@ -151,7 +153,6 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
         //console.log(`${this.log_prefix} Packed:`, obj, new_obj);
         return new_obj;
     }
-
 
     /**
     * Extracts data from shared database and places back in javascript object
@@ -183,10 +184,19 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
     update(data) {
         let new_data = this.unpack(data);
         
-        //console.log(`${this.log_prefix} updating data to:`, data, new_data);
         // only access approved data keys from our map
         for (var idx in new_data) {
-            this[idx] = new_data[idx];
+            if (JSON.stringify(this[idx]) != JSON.stringify(new_data[idx])) {
+                if (this[idx]) {
+                    /*if (typeof(this[idx]) == "object") {
+                        console.log(`${this.log_prefix} updating ${idx} object to ${new_data[idx]}`);
+                    }
+                    else {
+                        console.log(`${this.log_prefix} updating ${idx} from ${this[idx]} to ${new_data[idx]}`);
+                    }*/
+                }
+                this[idx] = new_data[idx];
+            }
         }
         this.emit("update");
     }

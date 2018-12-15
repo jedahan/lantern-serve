@@ -30,43 +30,44 @@ log.info("##############################################");
 
 
 //----------------------------------------------------------------------------
-try {
 
+let secure_server = null;
+try {
 	// read in ssl certificate data
 	let private_key_path = process.env.SSL_PRIVATE_KEY || path.resolve(__dirname, "../certs/privkey.pem");
 	let certificate_path = process.env.SSL_CERTIFICATE || path.resolve(__dirname, "../certs/fullchain.pem");
-
 	let credentials = {
 		key: fs.readFileSync(private_key_path, 'utf8'), 
 		cert: fs.readFileSync(certificate_path, 'utf8')
 	};
-
-
-	// start the web server with built-in database solution
-	let http_server = http.createServer(app);
-	let secure_server = https.createServer(credentials, app);
-	let port = util.getHttpsPort();
-
-	let web = http_server.listen(util.getHttpPort(), () => {
-
-		let secure_web = secure_server.listen(port, () => {
-			log.info(`port = ${port}`);
-			log.info(`cert = ${certificate_path}`);
-			GraphDB({
-				file: process.env.DB || "db/dev", 
-				web: secure_web
-			});
-		});
-	});
-
-
+	secure_server = https.createServer(credentials, app);
 }
 catch(e) {
 	if (e.code == "ENOENT") {
-		log.error("SSL certificates not found. Unable to start without HTTPS, required for database encryption.");
-		log.error("Please use 'certs' script in /opt/lantern/bin to generate SSL certs and try again...");
+		log.error(`SSL certificates not found in "certs" directory...`);
 	}
 	else {
 		log.error(e);
 	}
 }
+
+
+// start the web server with built-in database solution
+let http_server = http.createServer(app);
+
+let web = http_server.listen(util.getHttpPort(), () => {
+
+	GraphDB({
+		file: process.env.DB || "db/dev", 
+		web: web
+	});
+
+	if (secure_server) {
+		let secure_web = secure_server.listen(util.getHttpsPort());
+		log.info(`secure port = ${util.getHttpsPort()}`);
+	}
+	else {
+		log.warn("falling back to http for local development...");
+		log.info(`standard port = ${util.getHttpPort()}`);
+	}
+});

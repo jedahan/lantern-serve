@@ -5,7 +5,6 @@ TAG?=latest
 
 .PHONY: build
 
-
 pack:
 	browserify platform/config/fetch.js \
 		platform/helpers/array.js \
@@ -44,13 +43,13 @@ install:
 start:
 	npm start	
 
-docker-build:
+build:
 	docker-compose build
 
-docker-run:
+run:
 	docker-compose up
 	
-docker-deploy:
+deploy:
 	triton profile set-current lantern
 	triton-compose -f triton-compose.yml build
 	triton-compose -f triton-compose.yml up -d

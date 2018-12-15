@@ -87,7 +87,7 @@ LX.App = class App extends LV.EventEmitter {
             return;
         }
         this._opened = true;
-        console.log(`${this.log_prefix} open`);
+        //console.log(`${this.log_prefix} open`);
         this.emit("open", component_id);
     }
 
@@ -96,7 +96,7 @@ LX.App = class App extends LV.EventEmitter {
     */
     close(component_id) {
         this._opened = false;
-        console.log(`${this.log_prefix} close`);
+        //console.log(`${this.log_prefix} close`);
         this.emit("close", component_id);
     }
 

@@ -11,7 +11,6 @@ LX.Feed = class Feed extends LV.EventEmitter {
 		this.db = user.db;    
 		this.packages = {};  // only watch these
 		this.topics = {}; // only watch these
-		this._watching = {}; // keep track of what we're already watching to avoid duplicates
 
 	}
     
@@ -46,9 +45,15 @@ LX.Feed = class Feed extends LV.EventEmitter {
     */
     refreshData() {
         Object.keys(this.packages).forEach(name => {
+            if (this.packages[name] == false) {
+                return;
+            }
+
             let package_node = this.db.get("pkg").get(name)
+
             package_node.get("version")
                 .once((version,k) => {
+                    console.log(`${this.log_prefix} refreshing data for ${name} version ${version}...`)
                     package_node.get("data")
                         .get(version).map()
                         .once(this.onDataUpdate.bind(this));
@@ -69,14 +74,14 @@ LX.Feed = class Feed extends LV.EventEmitter {
             return;
         }
 
-    	console.log(`${this.log_prefix} add package ${name}`)
-    	this.packages[name] = true;
+    	console.log(`${this.log_prefix} watching changes for package ${name}`)
 
         let package_node = this.db.get("pkg").get(name);
 
         // use latest version of data
         package_node.get("version")
             .once((version,k) => {
+                this.packages[name] = version;
                 package_node.get("data")
                     .get(version).map()
                     .on(this.onDataUpdate.bind(this));
@@ -89,7 +94,7 @@ LX.Feed = class Feed extends LV.EventEmitter {
     }
 
     removeOnePackage(name) {
-    	console.log(`${this.log_prefix} remove package ${name}`)    	
+    	console.log(`${this.log_prefix} unwatch changes for ${name}`)    	
     	this.packages[name] = false;
     }
 
