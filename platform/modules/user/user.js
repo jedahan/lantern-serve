@@ -60,7 +60,7 @@ LX.User = class User extends LV.EventEmitter {
     }
 
     get log_prefix() {
-        return `[u:${this.username || "anonymous" }]`;
+        return `[u:${this.username || "anonymous" }]`.padEnd(20, " ");
     }
 
 

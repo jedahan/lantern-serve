@@ -28,7 +28,7 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
 
         // find current map cache size...
         this.tile_db.info().then((result) => {
-            console.log("[Atlas] Cached map tiles: " + result.doc_count);
+            console.log(`${this.log_prefix} cached tiles: ${result.doc_count}`);
         });
         this.setViewFromCenterLocationCache();
         // map event for when location is found...
@@ -40,6 +40,10 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
         });
     }
 
+
+    get log_prefix() {
+        return "[atlas]".padEnd(20, " ");
+    }
 
 
     //------------------------------------------------------------------------
@@ -102,7 +106,7 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
         let new_geo = LX.Location.toGeohash(e.latlng, this.precision.user_max);
         if (new_geo != this.user_location) {
             this.user_location = new_geo;
-            console.log("[Atlas] New user location found:", this.user_location);    
+            console.log(`${log_prefix} New user location found: ${this.user_location}`);    
         }
     }
 
@@ -118,7 +122,7 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
         // http://www.bigfastblog.com/geohash-intro
         let precision = Math.round(this.precision.center_max * (doc.zoom/22))
         let gh = LX.Location.toGeohash(doc, precision);
-        //console.log("[Atlas] Center point geohash: " + gh );
+        //console.log("[atlas] Center point geohash: " + gh );
         this.center = gh;
 
         // only save to database if user has paused on this map for a few seconds
@@ -130,13 +134,13 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
                 this.user_db.get("atlas_view").then((old_doc) => {
                     this.user_db.remove(old_doc).then(() => {
                         this.user_db.put(doc).then(() => {
-                            //console.log("[Atlas] Re-saved map view:", [doc.lat, doc.lng], doc.zoom);
+                            //console.log("[atlas] Re-saved map view:", [doc.lat, doc.lng], doc.zoom);
                         });
                     });
                 })
                 .catch((e) => {
                     this.user_db.put(doc).then(() => {
-                        //console.log("[Atlas] Saved map view:", [doc.lat, doc.lng], doc.zoom);
+                        //console.log("[atlas] Saved map view:", [doc.lat, doc.lng], doc.zoom);
                     });
                 });
             }
