@@ -55,11 +55,11 @@ catch(e) {
 // start the web server with built-in database solution
 let http_server = http.createServer(app);
 
-let web = http_server.listen(util.getHttpPort(), () => {
+let std_server = http_server.listen(util.getHttpPort(), () => {
 
 	GraphDB({
 		file: process.env.DB || "db/dev", 
-		web: web
+		web: secure_server || std_server
 	});
 
 	if (secure_server) {
