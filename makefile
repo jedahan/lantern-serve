@@ -19,22 +19,21 @@ pack:
 		platform/modules/organization/organization.js \
 		-o web/public/platform/a.js
 
+
 	browserify platform/config/leaflet.js \
 		platform/vendor/map.js \
-		platform/modules/application/director.js \
-		platform/modules/application/app.js \
-		-o web/public/platform/b.js
-
-	browserify platform/vendor/map.js \
 		platform/modules/atlas/location.js \
 		platform/modules/atlas/atlas.js \
 		platform/modules/atlas/marker.js \
-		 -o web/public/platform/c.js
+		-o web/public/platform/b.js
+
 
 	browserify platform/vendor/display.js \
+		platform/modules/application/director.js \
+		platform/modules/application/app.js \
 		platform/modules/application/view.js \
 		platform/modules/application/menu.js \
-		-o web/public/platform/d.js
+		-o web/public/platform/c.js
 
 install: 
 	npm install
