@@ -30,7 +30,13 @@ LX.User = class User extends LV.EventEmitter {
                         }
                     });
                     if (is_valid) {
-                        this.authenticate(creds.username, creds.password);
+                        this.authenticate(creds.username, creds.password)
+                            .catch(err => {
+                                console.log(`${this.log_prefix}  removing invalid creds from storage`);
+                                this.local_db.remove(creds).then(() => { 
+                                    this.register();
+                                });
+                            });
                     }
                     else {
                         console.log(`${this.log_prefix}  removing invalid creds from storage`);
@@ -41,7 +47,6 @@ LX.User = class User extends LV.EventEmitter {
                 })
                 .catch((e) => {
                     if (e.name == "not_found") {
-                        console.log(`${this.log_prefix} no user discovered. Created anonymous guest user...`)
                         this.register()
                     }
                     else {
@@ -69,19 +74,22 @@ LX.User = class User extends LV.EventEmitter {
     * Authenticates the user with decentralized database
     */
     authenticate(username, password) {
-        this.user_node.auth(username, password, (ack) => {
-            if (ack.err) {
-                console.log(`${this.log_prefix} bad auth`, ack.err);
-                this.register();
-            }
-            else {
-                this.username = username;
-                console.log(`${this.log_prefix} good auth`);
-                SEA.pair().then((pair) => {
-                    this.pair = pair;
-                    this.emit("auth", this.pair);
-                });
-            }
+        return new Promise((resolve, reject) => {
+            this.user_node.auth(username, password, (ack) => {
+                if (ack.err) {
+                    console.log(`${this.log_prefix} bad auth`, ack.err);
+                    reject(ack.err);
+                }
+                else {
+                    this.username = username;
+                    console.log(`${this.log_prefix} good auth`);
+                    SEA.pair().then((pair) => {
+                        this.pair = pair;
+                        this.emit("auth", this.pair);
+                        resolve(this.pair);
+                    });
+                }
+            });
         });
     }
 
@@ -90,29 +98,36 @@ LX.User = class User extends LV.EventEmitter {
     * Registers first-time user into the decentralized database
     */
     register() {
-        let username = LV.ShortID.generate();
-        let password = LV.ShortID.generate();
-        console.log(`${this.log_prefix} create user with username: ${username}`);
-        this.user_node.create(username, password, (ack) => {
-            if (ack.err) {
-                console.log(`${this.log_prefix} unable to save`, ack.err);
-                return;
-            }
-            console.log(`${this.log_prefix} saved to browser`);
-            this.emit("registered");
+        return new Promise((resolve, reject) => {
 
-            let doc = {
-                "_id" : "creds",
-                "username": username,
-                "password": password
-            }
-            this.local_db.put(doc)
-                .then(() => {
-                    this.authenticate(username, password);
-                })
-                .catch((e) => {
-                    console.log(`${this.log_prefix}unable to save`, e);
-                });
+            let username = LV.ShortID.generate();
+            let password = LV.ShortID.generate();
+            console.log(`${this.log_prefix} create user with username: ${username}`);
+            this.user_node.create(username, password, (ack) => {
+                if (ack.err) {
+                    console.log(`${this.log_prefix} unable to save`, ack.err);
+                    return reject(ack.err);
+                }
+
+                console.log(`${this.log_prefix} saved to browser`);
+
+                let doc = {
+                    "_id" : "creds",
+                    "username": username,
+                    "password": password
+                }
+                this.local_db.put(doc)
+                    .then(() => {
+                        this.authenticate(username, password);
+                    })
+                    .catch((e) => {
+                        console.log(`${this.log_prefix}unable to save`, e);
+                    });
+
+
+                this.emit("registered");
+                resolve();
+            });
         });
     }
 
@@ -146,13 +161,20 @@ LX.User = class User extends LV.EventEmitter {
                     console.log(`${this.log_prefix} unable to find package ${name} to install...`);
                 }
                 else {
-                    this.user_node.get("packages").get(name)
-                        .put(v, () => {
-                            console.log(`${this.log_prefix} installed package ${name}`);
-                            this.feed.addOnePackage(name);
-                            this.emit("install", name);
-                        });
+                    let package_node = this.user_node.get("packages").get(name)
 
+                    package_node.once((v, k) => {
+                            if (v) {
+                                console.log(`${this.log_prefix} ${name} package already installed`);
+                            }
+                            else {
+                                package_node.put(v, () => {
+                                    console.log(`${this.log_prefix} ${name} package installed`);
+                                    this.feed.addOnePackage(name);
+                                    this.emit("install", name);
+                                });
+                            }
+                        });
                 }
             });
     }

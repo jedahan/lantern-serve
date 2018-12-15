@@ -19,12 +19,12 @@ LX.Organization = class Organization extends LV.EventEmitter {
         this.org_node = db.get("org")
             .get(id);
 
-        console.log(`${this.log_prefix} id = ${this.id}`)
+        //console.log(`${this.log_prefix} id = ${this.id}`)
 
         this.org_node.on((v,k) => {
             // always keep object up-to-date as data changes
             if (v.hasOwnProperty("name")) {
-                console.log(`${this.log_prefix} name --> ${v.name}`);
+                //console.log(`${this.log_prefix} name --> ${v.name}`);
                 this.name = v.name;
             }
         })
@@ -189,7 +189,7 @@ LX.Organization = class Organization extends LV.EventEmitter {
                                 publishVersion();
                             }
                             else {
-                                console.log(`${this.log_prefix} version ${version} for ${name} already exists`);
+                                console.log(`${this.log_prefix} ${name} version ${version} already published`);
                                 resolve(pkg_node)
                             }
                         });
