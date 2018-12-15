@@ -72,7 +72,7 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
 
     //-------------------------------------------------------------------------
     inspect() {
-        console.log(`${this.log_prefix} data = `, this._data);
+        console.log(`${this.log_prefix} data = ${JSON.stringify(this._data)}`);
     }
 
 
@@ -249,6 +249,7 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
                     .once((v,k) => {
                         this.mode = "shared"; // shared mode
                         this.emit("save");
+                        return resolve();
                     });
             }
 
