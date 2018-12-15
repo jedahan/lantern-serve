@@ -30,7 +30,7 @@ LC.maptiler = {
 LC.leaflet_tiles = {
     attribution: false,
     dbName: "lx-tiles",
-    minZoom: 3,
+    minZoom: 2,
     maxZoom: 20,
     useCache:  true,
     useOnlyCache: false,

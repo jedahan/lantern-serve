@@ -85,16 +85,17 @@ LX.PieMenu = class PieMenu extends LV.EventEmitter {
         this.element.classList.remove("active")
         this.mask_element.classList.remove("active");
         this.emit("close");
-        this.unlock();
     }
 
 
     lock() {
         this._locked = true;
+        this.emit("lock");
     }
 
     unlock() {
         this._locked = false;
+        this.emit("unlock");
     }
 
     isLocked() {

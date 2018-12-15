@@ -13,7 +13,7 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
         }
         this.precision = {
             user_max: 4,
-            center_max: 8
+            center_max: 10
         };
         this.tile_uri = ["https://maps.tilehosting.com/c/" , LC.maptiler.id, "/styles/", 
                 LC.maptiler.map, "/{z}/{x}/{y}.png?key=", LC.maptiler.key
@@ -33,8 +33,14 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
         this.setViewFromCenterLocationCache();
         // map event for when location is found...
         this.map.on("locationfound", this.cacheUserLocation.bind(this));
+
         // map event for when location changes...
-        this.map.on("moveend", (e) => {
+        this.map.on("dragend", (e) => {
+            this.calculateZoomClass();
+            this.cacheCenterLocation(e);
+        });
+
+        this.map.on("zoomend", (e) => {
             this.calculateZoomClass();
             this.cacheCenterLocation(e);
         });
@@ -54,6 +60,17 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
 
         // layer in hosted map tiles
         L.tileLayer(this.tile_uri, LC.leaflet_tiles).addTo(this.map);
+
+
+        // stop map from going off-world
+        var sw = L.latLng(-89.98155760646617, -180),
+        ne = L.latLng(89.99346179538875, 180);
+        var bounds = L.latLngBounds(sw, ne);
+        this.map.setMaxBounds(bounds);
+        this.map.on('drag', function() {
+            this.map.panInsideBounds(bounds, { animate: false });
+        }.bind(this));
+
     }
 
     centerMap(e) {
@@ -120,9 +137,9 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
         }
 
         // http://www.bigfastblog.com/geohash-intro
-        let precision = Math.round(this.precision.center_max * (doc.zoom/22))
+        let precision = Math.round(this.precision.center_max * (doc.zoom/20))
         let gh = LX.Location.toGeohash(doc, precision);
-        //console.log("[atlas] Center point geohash: " + gh );
+        console.log(`${this.log_prefix} center geohash: ${gh}`);
         this.center = gh;
 
         // only save to database if user has paused on this map for a few seconds
@@ -134,22 +151,22 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
                 this.user_db.get("atlas_view").then((old_doc) => {
                     this.user_db.remove(old_doc).then(() => {
                         this.user_db.put(doc).then(() => {
-                            //console.log("[atlas] Re-saved map view:", [doc.lat, doc.lng], doc.zoom);
+                            console.log(`${this.log_prefix} re-saved center for user`, this.center);
                         });
                     });
                 })
                 .catch((e) => {
                     this.user_db.put(doc).then(() => {
-                        //console.log("[atlas] Saved map view:", [doc.lat, doc.lng], doc.zoom);
+                        console.log(`${this.log_prefix} saved center for user`, this.center);
                     });
                 });
             }
-        }, 4000);
+        }, 10000);
     }
 
     setViewFromCenterLocationCache() {
         this.user_db.get("atlas_view").then((doc) => {
-            this.map.setView([doc.lat, doc.lng], doc.zoom);
+            this.map.setView([doc.lat, doc.lng], doc.zoom-2);
         }).catch((e) => {
             this.map.setView([38.42, -12.79], 3);
             // fine if we don't have context or can't retrieve...
@@ -187,8 +204,11 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
 
         Object.keys(this.markers).forEach((key) => {
             let marker = this.markers[key];
-            let layer = marker.layer;
-            all_layers.push(layer);
+            // markers can include null objects from past deleted markers, so ignore those...
+            if (marker !== null && marker.hasOwnProperty("layer")) {            
+                let layer = marker.layer;
+                all_layers.push(layer);
+            }
         });
 
         if (all_layers.length) {

@@ -146,11 +146,13 @@ LX.User = class User extends LV.EventEmitter {
                     console.log(`${this.log_prefix} unable to find package ${name} to install...`);
                 }
                 else {
-                    console.log(`${this.log_prefix} installed package ${name}`);
-                    this.user_node.get("packages").get(name).put(v);
+                    this.user_node.get("packages").get(name)
+                        .put(v, () => {
+                            console.log(`${this.log_prefix} installed package ${name}`);
+                            this.feed.addOnePackage(name);
+                            this.emit("install", name);
+                        });
 
-                    this.feed.addOnePackage(name);
-                    this.emit("install", name);
                 }
             });
     }
