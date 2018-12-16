@@ -2,12 +2,24 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="stylesheet" type="text/css" href="/_/leaflet/dist/leaflet.css"/>
     <script src="/scripts/load.js"></script>
+    <style>
+    #map,body, html {  
+        height: 100%;
+        width: 100%;
+        padding: 0em;
+        margin: 0em;
+    }
+    </style>
 </head>
 <body>
+    <!-- map display -->
+    <div id="map">
+    </div>
     <!-- menu interface -->
     <div id="pie-menu" 
         data-wheelnav
@@ -18,14 +30,12 @@
     </div>
     <div id="pie-menu-mask"></div>
 
+
     <!-- application display -->
     <div id="app-container">
         <component v-for="app in app_components" v-bind:is="app" :key="app" v-bind:id="app" class="app"></component>
     </div>
-
-    <!-- map display -->
-    <div id="map">
-    </div>
+    
 
     <!-- platform setup -->
     <script>
