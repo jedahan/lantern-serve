@@ -30,10 +30,10 @@ LC.maptiler = {
 LC.leaflet_tiles = {
     attribution: false,
     dbName: "lx-tiles",
-    minZoom: 2,
+    minZoom: 3,
     maxZoom: 20,
-    useCache:  true,
-    useOnlyCache: false,
+    useCache:  localStorage.hasOwnProperty("lx-map-cache"),
+    useOnlyCache: localStorage.hasOwnProperty("lx-map-cache-only"),
     cacheMaxAge: 365*24*3600*1000,
     crossOrigin: true
 };

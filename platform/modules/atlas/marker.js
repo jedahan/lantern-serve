@@ -60,7 +60,7 @@ LX.MarkerItem = class MarkerItem extends LX.SharedItem {
                 }
 
                 this._data.geohash = val;
-                console.log(`${this.log_prefix} location = ${this.geohash}`);
+                //console.log(`${this.log_prefix} location = ${this.geohash}`);
 
 
                 if (this.layer) {

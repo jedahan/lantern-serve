@@ -3,12 +3,6 @@
 
 
 /*----------------------------------------------------------------------------*/
-html, body, #map {
-    height: 100%;
-    width: 100%;
-    padding: 0em;
-    margin: 0em;
-}
 
 body {
     font-family: "montserrat",sans-serif;
@@ -37,6 +31,8 @@ h1 {
 
 /*----------------------------------------------------------------------------*/
 #map {
+	top: 0;
+	position: fixed !important;
     min-height: 200px;
     background: #88cdf8;
 }
@@ -191,27 +187,16 @@ h1 {
 }
 
 #app-container {
-	z-index: 2000;
 	pointer-events: none;
 }
 
 .app-mask {	
-	z-index: -1;
-	background: rgba(255,255,255,1);
+	background: rgba(255,255,255,0.85);
     pointer-events: auto;
 }
 
 .app-full-screen, .app-left-screen, .app-right-screen {
     pointer-events: auto;
-}
-
-#pie-menu {
-	position: absolute;
-}
-
-#pie-menu.active {
-    pointer-events: auto;
-	z-index: 5000;
 }
 
 .app-frame {
@@ -230,6 +215,7 @@ h1 {
 	left: 0;
 	right: 0;
 	margin: auto;
+	z-index: 100;
 }
 
 
@@ -268,6 +254,17 @@ h1 {
 
 
 /*----------------------------------------------------------------------------*/
+#pie-menu {
+	position: absolute;
+	z-index: -100;
+
+}
+
+#pie-menu.active {
+	z-index: 3;
+    pointer-events: auto;
+}
+
 #pie-menu > svg { 
 	width: 100%; 
 	height: 100%; 
@@ -277,12 +274,12 @@ h1 {
 
 #pie-menu-mask {
 	background: rgba(0,0,0,0.15);
-	z-index: 4000;
 	display: none;
 	pointer-events: none;
 }
 
 #pie-menu-mask.active {
+	z-index: 2;
 	display: block;
 	pointer-events: auto;
 }

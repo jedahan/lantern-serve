@@ -61,6 +61,15 @@ class Atlas extends LV.EventEmitter {
         // layer in hosted map tiles
         L.tileLayer(this.tile_uri, LC.leaflet_tiles).addTo(this.map);
 
+        // stop map from going off-world
+        var sw = L.latLng(-89.98155760646617, -180),
+        ne = L.latLng(89.99346179538875, 180);
+        var bounds = L.latLngBounds(sw, ne);
+        this.map.setMaxBounds(bounds);
+        this.map.on('drag', function() {
+            this.map.panInsideBounds(bounds, { animate: false });
+        }.bind(this));
+
     }
 
     centerMap(e) {
@@ -157,7 +166,7 @@ class Atlas extends LV.EventEmitter {
                     });
                 });
             }
-        }, 10000);
+        }, 7000);
     }
 
     setViewFromCenterLocationCache() {
