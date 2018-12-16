@@ -6,7 +6,7 @@ LV.Geohash = require("latlon-geohash");
 require('geohash-distance');
 require("leaflet");
 require("leaflet.locatecontrol");
-const PouchDB = LV.PouchDB;
+const PouchDB = LV.PouchDB = require("pouchdb-browser");
 
 
 /*

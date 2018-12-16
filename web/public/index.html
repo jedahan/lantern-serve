@@ -5,13 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"> 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="stylesheet" type="text/css" href="/_/leaflet/dist/leaflet.css"/>
-    <link rel="stylesheet" type="text/css" href="/_/@fortawesome/fontawesome-free/css/all.min.css"/>
-    <link rel="stylesheet" type="text/css" href="/_/leaflet.locatecontrol/dist/L.Control.Locate.min.css"/>
-    <link rel="stylesheet" type="text/css" href="/_/bulma/css/bulma.min.css"/>
-    <link rel="stylesheet" type="text/css" href="./index.css"/>
+    <script src="/scripts/load.js"></script>
 </head>
 <body>
-
+    <!-- menu interface -->
     <div id="pie-menu" 
         data-wheelnav
         data-wheelnav-slicepath='DonutSlice'
@@ -21,21 +18,30 @@
     </div>
     <div id="pie-menu-mask"></div>
 
+    <!-- application display -->
     <div id="app-container">
         <component v-for="app in app_components" v-bind:is="app" :key="app" v-bind:id="app" class="app"></component>
-        <transition name="fade">
-            <div v-if="!map" class="app-mask"></div>
-        </transition>
     </div>
+
+    <!-- map display -->
     <div id="map">
     </div>
-    <script src="/_/wheelnav/js/dist/raphael.min.js"></script>
-    <script src="/platform/a.js"></script>
-    <script src="/platform/b.js"></script>
-    <script src="/platform/c.js"></script>
+
+    <!-- platform setup -->
     <script>
-        // all required items are loaded in by now. time to start everything up...
-        window.LT = new LX.Director();
+
+        head.load(["/platform/a.js", "/platform/b.js"], function() {
+            window.LT = new LX.Director();
+            head.load(["/platform/c.js", "/_/bulma/css/bulma.min.css"], function() {
+                LT.start();
+                head.load(
+                    "./styles/global.css",
+                    "/_/leaflet.locatecontrol/dist/L.Control.Locate.min.css",
+                    "/_/@fortawesome/fontawesome-free/css/all.min.css", 
+                    "./scripts/raphael.min.js"
+                );
+            });
+        });
     </script>
 </body>
 </html>
