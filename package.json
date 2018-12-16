@@ -11,7 +11,7 @@
         "express": "*",
         "fs-extra": "7.x",
         "geohash-distance": "*",
-        "gun": "*",
+        "gun": "^0.9.999993",
         "gun-tag": "*",
         "helmet": "*",
         "latlon-geohash": "*",

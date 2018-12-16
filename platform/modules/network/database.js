@@ -151,6 +151,14 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
     }
 
 
+    /**
+    * Output basic node on .once or .map
+    */
+    log(v,k) {
+        console.log(`[db] Key ${k} =`, v);
+    }
+
+
 
     /**
     *  Print out the graph structure of a specified node
