@@ -32,6 +32,7 @@ pack:
 		platform/modules/user/feed.js \
 		platform/modules/user/user.js \
 		platform/modules/organization/organization.js \
+		platform/modules/organization/package.js \
 		-o web/public/platform/c.js
 		
 

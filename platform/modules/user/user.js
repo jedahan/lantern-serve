@@ -8,7 +8,7 @@ LX.User = class User extends LV.EventEmitter {
         super();
         this.local_db = new LV.PouchDB("lx-user");
         this.db = db;
-        this.user_node = this.db.stor.user();
+        this.node = this.db.stor.user();
         this.pair = null;
         this.feed = new LX.Feed(this);
 
@@ -75,7 +75,7 @@ LX.User = class User extends LV.EventEmitter {
     */
     authenticate(username, password) {
         return new Promise((resolve, reject) => {
-            this.user_node.auth(username, password, (ack) => {
+            this.node.auth(username, password, (ack) => {
                 if (ack.err) {
                     console.log(`${this.log_prefix} bad auth`, ack.err);
                     reject(ack.err);
@@ -102,8 +102,9 @@ LX.User = class User extends LV.EventEmitter {
 
             let username = LV.ShortID.generate();
             let password = LV.ShortID.generate();
+            this.username = username;
             console.log(`${this.log_prefix} create user with username: ${username}`);
-            this.user_node.create(username, password, (ack) => {
+            this.node.create(username, password, (ack) => {
                 if (ack.err) {
                     console.log(`${this.log_prefix} unable to save`, ack.err);
                     return reject(ack.err);
@@ -139,58 +140,68 @@ LX.User = class User extends LV.EventEmitter {
     */
     listPackages() {
         return new Promise((resolve, reject) => {
-            let packages = [];
-            this.user_node.get("packages").once((v,k) => {
-                if (!v) return;
+            let node = this.node.get("packages");
+            node.once((v,k) => {
+                let packages = [];
+                if (!v) {
+                    return resolve(packages);
+                }
                 Object.keys(v).forEach((pkg) => {
-                    if (pkg == "_" || v[pkg] == null) return;
+                    if (pkg == "_"  || pkg == "#" || v[pkg] == null) return;
                     packages.push(pkg);
                 });
                 resolve(packages);
             });
         });
-    }
 
+    }
     /**
     * Installs a package for a given user and thereby makes available to end-user device
     */
-    install(name) {
-        this.db.get("pkg").get(name)
-            .once((v,k) => {
-                if (!v) {
-                    console.log(`${this.log_prefix} unable to find package ${name} to install...`);
-                }
-                else {
-                    let package_node = this.user_node.get("packages").get(name)
+    install(pkg) {
+        return new Promise((resolve, reject) => {
+            let node_to_install = this.node.get("packages").get(pkg.name)
 
-                    package_node.once((v, k) => {
-                            if (v) {
-                                console.log(`${this.log_prefix} ${name} package already installed`);
+            node_to_install.once((v, k) => {
+                    if (v) {
+                        console.log(`${this.log_prefix} ${pkg.name}@${pkg.version} package already installed`);
+                        resolve(pkg);
+                    }
+                    else {
+                        console.log("package not yet installed", this.node.get("packages"), pkg.name);
+
+                        // does not erase other key/value pairs here
+                        this.node.get("packages").get(pkg.name).put(pkg.version, (ack) => {
+                            if (ack.err) {
+                                reject(ack.err)
                             }
                             else {
-                                package_node.put(v, () => {
-                                    console.log(`${this.log_prefix} ${name} package installed`);
-                                    this.feed.addOnePackage(name);
-                                    this.emit("install", name);
-                                });
+                                console.log(`${this.log_prefix} ${pkg.name}@${pkg.version} installed`);
+                                this.feed.addOnePackage(pkg.name);
+                                this.emit("install", pkg.name);                            
+                                resolve(pkg);
                             }
                         });
-                }
-            });
+                    }
+                });
+        });
     }
 
      /**
     * Removes a package for a given user and cleans up references to related data
     */
-    uninstall(name) {
-         this.user_node.get("packages").get(name)
-            .put(null)
-            .once((v,k) => {
-                    console.log(`${this.log_prefix} uninstalled package ${name}`);
-                    this.user_node.get("packages").get(name).put(null);
-                    this.feed.removeOnePackage(name);
-                    this.emit("uninstall", name);
-                });
+    uninstall(pkg) {
+        return new Promise((resolve, reject) => {
+             this.node.get("packages").get(pkg.name)
+                .put(null)
+                .once((v,k) => {
+                        console.log(`${this.log_prefix} uninstalled package ${pkg.name}`);
+                        this.node.get("packages").get(pkg.name).put(null);
+                        this.feed.removeOnePackage(pkg.name);
+                        this.emit("uninstall", pkg.name);
+                        resolve();
+                    });
+            });
 
     }
 
@@ -203,7 +214,7 @@ LX.User = class User extends LV.EventEmitter {
     * List topics the user has subscribed to and wants to receive data for
     */
     listTopics() {
-        this.user_node.get("topics").once((v,k) => {
+        this.node.get("topics").once((v,k) => {
             if (!v) return;
             Object.keys(v).forEach((pkg) => {
                 if (pkg == "_" || v[pkg] == null) return;
@@ -216,7 +227,7 @@ LX.User = class User extends LV.EventEmitter {
     * Explicitly gather data on a given topic from available packages
     */
     subscribe(topic) {
-        this.user_node.get("topics").get(topic).set(true).once(() => {
+        this.node.get("topics").get(topic).set(true).once(() => {
             console.log(`${this.log_prefix} subscribe to topic ${topic}`);
             this.emit("subscribe", name);
         });
@@ -226,7 +237,7 @@ LX.User = class User extends LV.EventEmitter {
     * Remove and stop watching for data on a given topic
     */
     unsubscribe(topic) {
-        this.user_node.get("topics").get(topic).set(false).once(() => {
+        this.node.get("topics").get(topic).set(false).once(() => {
             console.log(`${this.log_prefix} unsubscribe from topic ${topic}`);        
             this.emit("subscribe", name);
         });

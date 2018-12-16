@@ -21,33 +21,31 @@ LX.Director = class Director extends LV.EventEmitter {
 
         // require database be ready before apps start
         this.db.on("load", () => {
-
-
+            
             // get or create a unique profile for this user / device
             this.user = new LX.User(this.db);
 
             this.user.on("auth", function() {
                 this.view.data.user.username = this.user.username;
-            }.bind(this));
+                // load in dynamic apps
+                fetch("/api/apps")
+                    .then((result) => {
+                        if (result.status == 200) {
+                            return result.json()
+                        }
+                        else {
+                            reject(result);
+                        }
+                    })
+                    .then((json) => {
+                        json.forEach(this.createApp.bind(this));
+                    })
+                    .catch((err) => {
+                        console.warn("[Direct] No available apps to work with");
+                    });
+                this.emit("start");
 
-
-            // load in dynamic apps
-            fetch("/api/apps")
-                .then((result) => {
-                    if (result.status == 200) {
-                        return result.json()
-                    }
-                    else {
-                        reject(result);
-                    }
-                })
-                .then((json) => {
-                    json.forEach(this.createApp.bind(this));
-                })
-                .catch((err) => {
-                    console.warn("[Direct] No available apps to work with");
-                });
-            this.emit("start");
+             }.bind(this));
         });        
 
 
