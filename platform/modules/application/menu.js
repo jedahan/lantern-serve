@@ -1,3 +1,7 @@
+"use strict";
+const LX = window.LX || {}; if (!window.LX) window.LX = LX;
+
+
 LX.PieMenu = class PieMenu extends LV.EventEmitter {
 
     constructor() {

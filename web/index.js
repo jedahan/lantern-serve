@@ -9,21 +9,24 @@
 *
 **/
 
-const http = require("http");
-const https = require("https");
-const GraphDB = require("gun")
-const path = require("path");
+
+
+//----------------------------------------------------------------------
 const fs = require("fs-extra");
-const request = require("request");
-const util = require("./util");
-const app = require("./server")
-const log = util.Logger;
+const path = require("path");
+fs.ensureDirSync(path.resolve(__dirname, "../logs"));
+fs.ensureDirSync(path.resolve(__dirname, "../db"));
 
 
 
 //----------------------------------------------------------------------
-fs.ensureDirSync(path.resolve(__dirname, "../logs"));
-fs.ensureDirSync(path.resolve(__dirname, "../db"));
+const http = require("http");
+const https = require("https");
+const GraphDB = require("gun")
+const request = require("request");
+const util = require("./util");
+const app = require("./server")
+const log = util.Logger;
 
 
 
@@ -64,7 +67,7 @@ let http_server = http.createServer(app);
 let std_server = http_server.listen(util.getHttpPort(), () => {
 
 	GraphDB({
-		file: process.env.DB || "db/dev", 
+		file: process.env.DB || path.resolve(__dirname, "../db/dev"), 
 		web: secure_server || std_server
 	});
 

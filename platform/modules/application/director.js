@@ -9,19 +9,28 @@ LX.Director = class Director extends LV.EventEmitter {
         super();
         this.ready = false;
         this.apps = {};
-        this.db = new LX.SharedDatabase(document.baseURI + "gun");
+        this.db = null;
         this.view = new LX.View();
-        this.atlas = new LX.Atlas();
+        this.atlas = LX.Atlas;
         this.menu = null;
-        
+        this.user = null;
+    }
 
-        // get or create a unique profile for this user / device
-        this.user = new LX.User(this.db);
-
-
+    start() {
+        this.db = new LX.SharedDatabase(document.baseURI + "gun");
 
         // require database be ready before apps start
         this.db.on("load", () => {
+
+
+            // get or create a unique profile for this user / device
+            this.user = new LX.User(this.db);
+
+            this.user.on("auth", function() {
+                this.view.data.user.username = this.user.username;
+            }.bind(this));
+
+
             // load in dynamic apps
             fetch("/api/apps")
                 .then((result) => {
@@ -42,9 +51,6 @@ LX.Director = class Director extends LV.EventEmitter {
         });        
 
 
-        this.user.on("auth", function() {
-            this.view.data.user.username = this.user.username;
-        }.bind(this));
     }
 
 

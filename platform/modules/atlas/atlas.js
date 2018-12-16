@@ -2,7 +2,7 @@
 
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 
-LX.Atlas = class Atlas extends LV.EventEmitter {
+class Atlas extends LV.EventEmitter {
     
     constructor() {
         super();
@@ -230,4 +230,6 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
 
 
    
-}
+};
+
+LX.Atlas = new Atlas();

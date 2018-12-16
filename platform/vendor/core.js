@@ -3,4 +3,3 @@
 const LV = window.LV || {}; if (!window.LV) window.LV = LV;
 
 LV.EventEmitter = require("event-emitter-es6");
-LV.ShortID = require("shortid");
