@@ -2,8 +2,7 @@
 tmp
 node_modules
 certs/*
-web/logs/*
-web/public/platform/*
+logs/*
 apps
 *.json/*
 tmp/*

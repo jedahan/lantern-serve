@@ -1,7 +1,9 @@
 tmp
 makefile
-Dockerfile
 public
 db/*
 apps
 logs
+Dockerfile
+docker-compose.yml
+triton-compose.yml
