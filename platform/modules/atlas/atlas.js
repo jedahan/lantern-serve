@@ -37,12 +37,12 @@ class Atlas extends LV.EventEmitter {
         // map event for when location changes...
         this.map.on("dragend", (e) => {
             this.calculateZoomClass();
-            this.cacheCenterLocation(e);
+            this.cacheCenterLocation();
         });
 
         this.map.on("zoomend", (e) => {
             this.calculateZoomClass();
-            this.cacheCenterLocation(e);
+            this.cacheCenterLocation();
         });
     }
 
@@ -127,46 +127,52 @@ class Atlas extends LV.EventEmitter {
     }
 
 
-    cacheCenterLocation(e) {
-        let doc = {
-            "_id": "atlas_view",
-            "lat": this.map.getCenter().lat,
-            "lng": this.map.getCenter().lng,
-            "zoom": this.map.getZoom()
-        }
+    cacheCenterLocation(timeout) {
 
-        // http://www.bigfastblog.com/geohash-intro
-        let precision = Math.round(this.precision.center_max * (doc.zoom/20))
-        let gh = LX.Location.toGeohash(doc, precision);
-        //console.log(`${this.log_prefix} center geohash: ${gh}`);
-        this.center = gh;
-
-        // only save to database if user has paused on this map for a few seconds
-        setTimeout(() => {
-            if (this.map.getZoom() == doc.zoom 
-                && this.map.getCenter().lat == doc.lat
-                && this.map.getCenter().lng == doc.lng
-                ) {   
-                this.user_db.get("atlas_view").then((old_doc) => {
-
-                    if (JSON.stringify(doc) == JSON.stringify(old_doc)) {
-                        // skip save for same location
-                    }
-                    else {
-                        this.user_db.remove(old_doc).then(() => {
-                            this.user_db.put(doc).then(() => {
-                                console.log(`${this.log_prefix} re-saved center for user`, this.center);
-                            });
-                        });   
-                    }
-                })
-                .catch((e) => {
-                    this.user_db.put(doc).then(() => {
-                        console.log(`${this.log_prefix} saved center for user`, this.center);
-                    });
-                });
+        return new Promise((resolve, reject) => {
+            let doc = {
+                "_id": "atlas_view",
+                "lat": this.map.getCenter().lat,
+                "lng": this.map.getCenter().lng,
+                "zoom": this.map.getZoom()
             }
-        }, 7000);
+
+            // http://www.bigfastblog.com/geohash-intro
+            let precision = Math.round(this.precision.center_max * (doc.zoom/20))
+            let gh = LX.Location.toGeohash(doc, precision);
+            //console.log(`${this.log_prefix} center geohash: ${gh}`);
+            this.center = gh;
+
+            // only save to database if user has paused on this map for a few seconds
+            setTimeout(() => {
+                if (this.map.getZoom() == doc.zoom 
+                    && this.map.getCenter().lat == doc.lat
+                    && this.map.getCenter().lng == doc.lng
+                    ) {   
+                    this.user_db.get("atlas_view").then((old_doc) => {
+
+                        if (JSON.stringify(doc) == JSON.stringify(old_doc)) {
+                            // skip save for same location
+                            resolve();
+                        }
+                        else {
+                            this.user_db.remove(old_doc).then(() => {
+                                this.user_db.put(doc).then(() => {
+                                    console.log(`${this.log_prefix} re-saved center for user`, this.center);
+                                    resolve();
+                                });
+                            });   
+                        }
+                    })
+                    .catch((e) => {
+                        this.user_db.put(doc).then(() => {
+                            console.log(`${this.log_prefix} saved center for user`, this.center);
+                            resolve();
+                        });
+                    });
+                }
+            }, timeout || 7000);
+        })
     }
 
     setViewFromCenterLocationCache() {
