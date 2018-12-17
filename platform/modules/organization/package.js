@@ -52,6 +52,10 @@ LX.Package =  class Package extends LV.EventEmitter {
 		this._data.version = val;
 	}
 
+	get id() {
+		return this._data.name +"@"+this._data.version;
+	}
+
 
     //-------------------------------------------------------------------------
     /**

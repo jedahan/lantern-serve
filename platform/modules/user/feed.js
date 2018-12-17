@@ -22,41 +22,55 @@ LX.Feed = class Feed extends LV.EventEmitter {
     }
 
 
-    onDataUpdate(v,k) {
-        let data = v;
+    onDataUpdate(val, id, pkg_id) {
+        var data;
 
-        if (v !== null && typeof(v) == "object") {
+        if (val !== null && typeof(val) == "object") {
             data = {};
-            Object.keys(v).forEach(key => {
-                if (key != "_") {
-                    data[key] = v[key];
+            Object.keys(val).forEach(k => {
+                if (k != "_") {
+                    data[k] = val[k];
                 }
             });
         }
 
-        this.emit("update", {
-            id: k,
+        let event = {
+            id: id,
+            package: pkg_id,
             data: data
-        });
+        };
+
+        if (this.packages[pkg_id]) {
+            this.emit("update", event);
+        }
+        else {
+            console.log("skipping", event)
+        }
     }
 
     /**
     * Allows for manual refresh of data from the feed
     */
     refreshData() {
-        Object.keys(this.packages).forEach(name => {
-            if (this.packages[name] == false) {
+        Object.keys(this.packages).forEach(id => {
+            if (this.packages[id] == false) {
                 return;
             }
 
+            console.log(`${this.log_prefix} refreshing data for ${id}...`)
+            let parts = id.split("@");
+            let name = parts[0];
+            let version = parts[1];
             let package_node = this.db.get("pkg").get(name)
+            package_node.get("data")
+                .get(version).once((v,k) => {
+                    Object.keys(v).forEach((item) => {
+                        package_node.get("data").get(version).get(item)
+                        .once((v,k) => {
+                            this.onDataUpdate(v,k, id);
+                        });
+                    });
 
-            package_node.get("version")
-                .once((version,k) => {
-                    console.log(`${this.log_prefix} refreshing data for ${name} version ${version}...`)
-                    package_node.get("data")
-                        .get(version).map()
-                        .once(this.onDataUpdate.bind(this));
                 });
         });
     }
@@ -68,24 +82,41 @@ LX.Feed = class Feed extends LV.EventEmitter {
     	packages.forEach(this.addOnePackage.bind(this));
     }
 
-    addOnePackage(name) {
-    	if (this.packages[name]) {
-            console.log(`${this.log_prefix} already watching package ${name}`);
+    addOnePackage(id) {
+        var parts,name,version;
+        try {
+            parts = id.split("@");
+            name = parts[0];
+            version = parts[1];            
+        }
+        catch(e) {
+            console.error(`${this.log_prefix} invalid identifier provided to add package ${id}`);
             return;
         }
 
-    	console.log(`${this.log_prefix} watching changes for package ${name}`)
+    	if (this.packages[id]) {
+            console.log(`${this.log_prefix} already watching package ${id}`);
+            return;
+        }
 
-        let package_node = this.db.get("pkg").get(name);
+    	console.log(`${this.log_prefix} watching changes for package ${id}`)
 
-        // use latest version of data
-        package_node.get("version")
-            .once((version,k) => {
-                this.packages[name] = version;
-                package_node.get("data")
-                    .get(version).map()
-                    .on(this.onDataUpdate.bind(this));
-            });
+
+        if (!this.packages.hasOwnProperty(id)) {
+
+            this.packages[id] = true;
+            let package_node = this.db.get("pkg").get(name);
+            package_node.get("data")
+                .get(version).map()
+                .on((v,k) => {
+                    this.onDataUpdate(v,k,id);
+                });
+   
+        }
+        else {
+            this.packages[id] = true;
+        }
+
     }
 
 
@@ -93,9 +124,17 @@ LX.Feed = class Feed extends LV.EventEmitter {
     	packages.forEach(this.removeOnePackage.bind(this));
     }
 
-    removeOnePackage(name) {
-    	console.log(`${this.log_prefix} unwatch changes for ${name}`)    	
-    	this.packages[name] = false;
+    removeOnePackage(id) {
+         try {
+            let parts = id.split("@");         
+        }
+        catch(e) {
+            console.error(`${this.log_prefix} invalid identifier provided to remove package ${id}`);
+            return;
+        }
+
+    	console.log(`${this.log_prefix} unwatch changes for ${id}`)    	
+    	this.packages[id] = false;
     }
 
 
@@ -112,10 +151,10 @@ LX.Feed = class Feed extends LV.EventEmitter {
     }
 
 
-    removeManyPackages(topics) {
+    removeManyTopics(topics) {
     	topics.forEach(this.removeOneTopic.bind(this));
     }
-    removeOnePackage(name) {
+    removeOneTopic(name) {
     	console.log(`${this.log_prefix} remove topic ${name}`)
     	this.topics[name] = false;
     }
