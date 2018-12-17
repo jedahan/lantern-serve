@@ -148,7 +148,7 @@ LX.User = class User extends LV.EventEmitter {
                 }
                 Object.keys(v).forEach((pkg) => {
                     if (pkg == "_"  || pkg == "#" || v[pkg] == null) return;
-                    packages.push(pkg);
+                    packages.push(pkg + "@" + v[pkg]);
                 });
                 resolve(packages);
             });
@@ -176,9 +176,10 @@ LX.User = class User extends LV.EventEmitter {
                                 reject(ack.err)
                             }
                             else {
-                                console.log(`${this.log_prefix} ${pkg.name}@${pkg.version} installed`);
-                                this.feed.addOnePackage(pkg.name);
-                                this.emit("install", pkg.name);                            
+                                // id is name@version combined
+                                console.log(`${this.log_prefix} ${pkg.id} installed`);
+                                this.feed.addOnePackage(pkg.id);
+                                this.emit("install", pkg.id);                            
                                 resolve(pkg);
                             }
                         });
