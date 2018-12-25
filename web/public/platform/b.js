@@ -15209,6 +15209,8 @@ LX.Director = class Director extends LV.EventEmitter {
                 this.emit("start");
 
              }.bind(this));
+
+            this.user.authOrRegister();
         });        
 
 

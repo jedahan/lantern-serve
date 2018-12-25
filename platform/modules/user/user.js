@@ -4,7 +4,7 @@ const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 
 LX.User = class User extends LV.EventEmitter {
 
-    constructor(db, skip_check) {
+    constructor(db) {
         super();
         this.local_db = new LV.PouchDB("lx-user");
         this.db = db;
@@ -12,7 +12,23 @@ LX.User = class User extends LV.EventEmitter {
         this.pair = null;
         this.feed = new LX.Feed(this);
 
+        this.on("auth", () => {
+            this.listPackages().then((packages) => {
+                this.feed.addManyPackages(packages);
+            });
+        });
 
+    }
+
+    get log_prefix() {
+        return `[u:${this.username || "anonymous" }]`.padEnd(20, " ");
+    }
+
+
+    //-------------------------------------------------------------------------
+
+
+    authOrRegister(skip_check) {
         if (skip_check) {
             console.log(`${this.log_prefix} make new credentials by explicit request`)
             this.register();
@@ -54,22 +70,8 @@ LX.User = class User extends LV.EventEmitter {
                     }
                 });
         }
-
-
-        this.on("auth", () => {
-            this.listPackages().then((packages) => {
-                this.feed.addManyPackages(packages);
-            });
-        });
-
     }
-
-    get log_prefix() {
-        return `[u:${this.username || "anonymous" }]`.padEnd(20, " ");
-    }
-
-
-    //-------------------------------------------------------------------------
+    
     /**
     * Authenticates the user with decentralized database
     */
