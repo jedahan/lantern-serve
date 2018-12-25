@@ -19,7 +19,7 @@ LC.leaflet_map = {
 */
 LC.maptiler = {
     id: "ade1b05a-496f-40d1-ae23-5d5aeca37da2",
-    key: "ZokpyarACItmA6NqGNhr",
+    key: "qWyTrARTq6ekRwvFiV9t",
     map: "streets"
 };
 
