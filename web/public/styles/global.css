@@ -246,7 +246,7 @@ h1 {
 
 
 /*----------------------------------------------------------------------------*/
-.lx-marker-shared, .leaflet-touch .leaflet-control-layers, .leaflet-contextmenu,  .leaflet-bar, .app-frame {
+.lx-marker-shared, .leaflet-touch .leaflet-control-layers, .leaflet-contextmenu,  #map .leaflet-bar, .app-frame {
 
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
 }
