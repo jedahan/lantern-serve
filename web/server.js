@@ -45,17 +45,6 @@ route_files.forEach((file) => {
     require("./routes/" + file)(server);
 });
 
-
-
-// check for additional routes (e.g. device-specific controls)
-if (fs.existsSync("../../../routes")) {
-    const extra_route_files = fs.readdirSync(path.resolve(__dirname, "../../../routes"));
-    extra_route_files.forEach((file) => {        
-        log.debug("[route] " + file);
-        require("../../../routes/" + file)(server);
-    });   
-}
-
 // layers for custom app functionality
 const apps_path = path.resolve(__dirname, "..", "apps")
 server.use("/apps/", express.static(apps_path))
