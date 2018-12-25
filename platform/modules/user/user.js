@@ -14,7 +14,6 @@ LX.User = class User extends LV.EventEmitter {
 
         this.on("auth", () => {
             this.listPackages().then((packages) => {
-                console.log(packages);
                 this.feed.addManyPackages(packages);
             });
         });
