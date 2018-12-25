@@ -14,6 +14,7 @@ LX.User = class User extends LV.EventEmitter {
 
         this.on("auth", () => {
             this.listPackages().then((packages) => {
+                console.log(packages);
                 this.feed.addManyPackages(packages);
             });
         });
@@ -150,7 +151,13 @@ LX.User = class User extends LV.EventEmitter {
                 }
                 Object.keys(v).forEach((pkg) => {
                     if (pkg == "_"  || pkg == "#" || v[pkg] == null) return;
-                    packages.push(pkg + "@" + v[pkg]);
+                    if (typeof(v[pkg]) != "string") {
+                        console.warn(`${this.log_prefix} Nullifying non-string value for ${pkg} package:`, v[pkg]);
+                        node.get(pkg).put(null);
+                    }
+                    else {
+                        packages.push(pkg + "@" + v[pkg]);
+                    }
                 });
                 resolve(packages);
             });
