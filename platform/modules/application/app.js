@@ -201,6 +201,9 @@ LX.App = class App extends LV.EventEmitter {
         let accepted = ["data", "computed", "methods", "open", "callback", "mounted"];
         this.loadOneFile("app.js")
             .then((result) => {
+                if (!result) {
+                    return console.warn(`${this.log_prefix} Could not load app.js`);
+                }
                 result = eval(result);
                 accepted.forEach((key) => {
                     if (result.hasOwnProperty(key)) {
