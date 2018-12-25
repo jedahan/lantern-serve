@@ -3,15 +3,18 @@ services:
   link:
       build:
         context: .
-        args:
-            apps: https://github.com/lantern-works/lantern-apps
       restart: always
       ports:
           - 80:80
           - 443:443
           - 8765:8765
+      volumes:
+          - ./apps:/opt/server/apps
       environment:
           - CLOUD=false
           - DB=db/docker
-          - SSL_PRIVATE_KEY=/opt/lantern/certs/privkey.pem
-          - SSL_CERTIFICATE=/opt/lantern/certs/fullchain.pem
+          - SSL_PRIVATE_KEY=/opt/server/certs/privkey.pem
+          - SSL_CERTIFICATE=/opt/server/certs/fullchain.pem
+
+volumes:
+  apps: 

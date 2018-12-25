@@ -1,13 +1,10 @@
 MAKEFLAGS += --warn-undefined-variables
 SHELL := /bin/bash
-
 TAG?=latest
 
 .PHONY: build
 
 pack:
-
-
 	browserify platform/vendor/core.js \
 		platform/config/leaflet.js \
 		platform/vendor/map.js \
@@ -35,23 +32,23 @@ pack:
 		platform/modules/organization/package.js \
 		-o web/public/platform/c.js
 		
-
-
-
 install: 
 	npm install
-
 
 start:
 	npm start	
 
 build:
-	docker-compose build
+	docker-compose -f dc-dev.yml build
 
 run:
-	docker-compose up
-	
+	docker-compose -f dc-dev.yml up
+
+stage:
+	docker-compose -f dc-stage.yml build
+	docker-compuse -f dc-stage.yml up -d
+
 deploy:
 	triton profile set-current lantern
-	triton-compose -f triton-compose.yml build
-	triton-compose -f triton-compose.yml up -d
+	triton-compose -f dc-stage.yml build
+	triton-compose -f dc-prod.yml up -d
