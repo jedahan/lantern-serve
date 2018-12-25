@@ -6,7 +6,8 @@ class Atlas extends LV.EventEmitter {
     
     constructor() {
         super();
-        this.map = null;
+        this.map = null; // leaflet map
+        this.pointer = null; // leaflet location pointer
         this.center = null;
         this.user_location = null;
         this.markers = {
@@ -20,6 +21,7 @@ class Atlas extends LV.EventEmitter {
             ].join("");
         this.tile_db = new LV.PouchDB(LC.leaflet_tiles.dbName, {auto_compaction: true});
         this.user_db = new LV.PouchDB("lx-user", {auto_compaction: true});
+        this._map_clicked = 0; // used to distinguish between click and double-click
         this.render();
     }
 
@@ -43,6 +45,22 @@ class Atlas extends LV.EventEmitter {
         this.map.on("zoomend", (e) => {
             this.calculateZoomClass();
             this.cacheCenterLocation();
+        });
+
+        this.map.on('click', (e) => {
+            this.emit("map-click-start", e);
+            this._map_clicked+=1;
+            setTimeout(() => {
+                if (this._map_clicked == 1) {
+                    this._map_clicked = 0;
+                    this.emit("map-click", e);
+                }
+            }, 300);
+        });
+
+        this.map.on("dblclick", (e) => {
+            this._map_clicked = 0;
+            this.emit("map-double-click", e);
         });
     }
 
@@ -72,8 +90,11 @@ class Atlas extends LV.EventEmitter {
 
     }
 
-    centerMap(e) {
-        this.map.flyTo(e.latlng, Math.limit(this.map.getZoom()+2, 1, LC.leaflet_map.maxZoom), {
+    /**
+    * Fly in while zooming
+    */
+    zoomToPoint(latlng) {
+        this.map.flyTo(latlng, Math.limit(this.map.getZoom()+2, 1, LC.leaflet_map.maxZoom), {
             pan: {
                 animate: true,
                 duration: 1.5
@@ -82,9 +103,17 @@ class Atlas extends LV.EventEmitter {
                 animate: true
             }
         });
+
+
+        this.map.once("moveend", () => {
+            this.removePointer();
+        });
+        
     }
 
-
+    /**
+    * Assign a semantic value we can use for styling similar to mobile breakpoints
+    */
     calculateZoomClass() {
         let distance = "close";
         let zoom = this.map.getZoom();
@@ -118,6 +147,10 @@ class Atlas extends LV.EventEmitter {
 
 
     //------------------------------------------------------------------------
+
+    /**
+    * Preserves user geolocation in-memory for future use
+    */
     cacheUserLocation(e) {
         let new_geo = LX.Location.toGeohash(e.latlng, this.precision.user_max);
         if (new_geo != this.user_location) {
@@ -127,6 +160,9 @@ class Atlas extends LV.EventEmitter {
     }
 
 
+    /**
+    * Preserves center map location with browser-based storage
+    */
     cacheCenterLocation(timeout) {
 
         return new Promise((resolve, reject) => {
@@ -175,6 +211,9 @@ class Atlas extends LV.EventEmitter {
         })
     }
 
+    /**
+    * Use saved per-user location to center map
+    */
     setViewFromCenterLocationCache() {
         this.user_db.get("atlas_view").then((doc) => {
             this.map.setView([doc.lat, doc.lng], doc.zoom-2);
@@ -187,6 +226,9 @@ class Atlas extends LV.EventEmitter {
 
 
     //------------------------------------------------------------------------
+    /**
+    * Add marker to map
+    */
     addToMap(marker) {
         if (this.markers[marker.id]) {
             console.log(`${this.log_prefix} ${marker.id} already added to map. skipping...`);
@@ -201,12 +243,37 @@ class Atlas extends LV.EventEmitter {
         this.emit("marker-add", marker);
     }
 
+    /**
+    * Remove marker from map
+    */
     removeFromMap(marker) {
         marker.layer.remove();
         this.markers[marker.id] = null;
         this.emit("marker-remove", marker);
     }
 
+
+    /**
+    * Add small dot based on cursor or tap position
+    */
+    addPointer(latlng) {
+        if (this.pointer) return;
+        this.pointer = L.circle(latlng, {radius: 1}).addTo(this.map);
+    }
+
+    /**
+    * Remove small dot
+    */
+    removePointer() {
+        if (!this.pointer) return;
+        this.pointer.remove();
+        this.pointer = null;;
+    }
+
+
+    /**
+    * Gets count of total number of markers on the map
+    */
     getMarkerCount() {
         let count = 0;
         Object.keys(this.markers).forEach(id => {
@@ -215,6 +282,9 @@ class Atlas extends LV.EventEmitter {
         return count;
     }
 
+    /**
+    * Looks for all markers on map and adjusts view so all are visible
+    */
     fitMapToAllMarkers() {
         let all_layers = [];
 
@@ -233,8 +303,6 @@ class Atlas extends LV.EventEmitter {
         }
     }
 
-
-   
 };
 
 LX.Atlas = new Atlas();

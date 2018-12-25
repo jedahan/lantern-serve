@@ -3,7 +3,7 @@ tmp
 node_modules
 certs/*
 logs/*
-apps/*
+apps
 *.json/*
 tmp/*
 db/*
