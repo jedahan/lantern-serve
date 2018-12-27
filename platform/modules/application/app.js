@@ -140,7 +140,7 @@ LX.App = class App extends LV.EventEmitter {
             .then((html) => {
                 // rewrite src attribute to point to proper web directory
                 let image_re = /(<img[\S\s]*?src=")([\S\s]*?)("[\S\s]*?>)/ig;
-                return html.replace(image_re, "$1"+ `/apps/${this.name}/` + "$2$3");
+                return html.replace(image_re, "$1"+ `/-/${this.name}/` + "$2$3");
             })
             .then((body) => {
                 return this.createPageComponent(page_id, body, logic);
@@ -155,7 +155,7 @@ LX.App = class App extends LV.EventEmitter {
         this.children.forEach((child) => {
             // only load html pages
             if (child.extension != ".html") return;
-            let filename = ["/apps", this.name, child.name].join("/");
+            let filename = ["/-", this.name, child.name].join("/");
             let page_id = child.name.split(".")[0];
             this.loadOnePage(filename, page_id, logic);
         });    
@@ -175,7 +175,7 @@ LX.App = class App extends LV.EventEmitter {
             
             if (!exists) return resolve();
 
-            let filename = ["/apps", this.name,  name].join("/");  
+            let filename = ["/-", this.name,  name].join("/");  
             return fetch(filename)
                 .then((result) => {
                     if (result.status == 200) {

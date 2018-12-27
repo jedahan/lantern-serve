@@ -47,7 +47,7 @@ route_files.forEach((file) => {
 
 // layers for custom app functionality
 const apps_path = path.resolve(__dirname, "..", "apps")
-server.use("/apps/", express.static(apps_path))
+server.use("/-/", express.static(apps_path))
 
 // modules
 const modules_path = path.resolve(__dirname, "../node_modules/");
