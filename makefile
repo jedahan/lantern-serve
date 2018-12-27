@@ -4,6 +4,13 @@ TAG?=latest
 
 .PHONY: build
 
+
+build:
+	docker-compose -f dc-dev.yml build
+
+run:
+	docker-compose -f dc-dev.yml up
+	
 pack:
 	browserify platform/vendor/core.js \
 		platform/config/leaflet.js \
@@ -38,17 +45,11 @@ install:
 start:
 	npm start	
 
-build:
-	docker-compose -f dc-dev.yml build
-
-run:
-	docker-compose -f dc-dev.yml up
-
 stage:
 	docker-compose -f dc-stage.yml build
 	docker-compuse -f dc-stage.yml up -d
 
 deploy:
 	triton profile set-current lantern
-	triton-compose -f dc-stage.yml build
+	triton-compose -f dc-prod.yml build
 	triton-compose -f dc-prod.yml up -d

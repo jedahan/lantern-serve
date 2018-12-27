@@ -12,6 +12,6 @@ services:
           - 8765:8765
       environment:
           - CLOUD=false
-          - DB=db/docker
+          - DB=db/stage
           - SSL_PRIVATE_KEY=/opt/server/certs/privkey.pem
           - SSL_CERTIFICATE=/opt/server/certs/fullchain.pem
