@@ -55,6 +55,9 @@ server.use("/_/", express.static(modules_path));
 
 // final routes are for any static pages and binary files
 const static_path = path.resolve(__dirname, "./public/");
+server.get("/@/", (req, res) => {
+	res.sendFile(static_path + "/captive.html")
+});
 server.use("/", express.static(static_path));
 
 

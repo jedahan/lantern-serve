@@ -362,3 +362,22 @@ ul.menu .inline-btn, .button.is-secondary {
 	text-transform: uppercase;
 }
 
+/*----------------------------------------------------------------------------*/
+#hotspot #app-container {
+	text-align: center;
+	background: #EEE;
+}
+
+#hotspot .app-frame {
+	margin: auto;
+	max-width: 450px;
+	min-width: 320px;
+}
+
+#hotspot img {
+	max-width: 70px;
+	margin: 1em;
+}
+#hotspot .button {
+	margin: 1em;
+}
