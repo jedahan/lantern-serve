@@ -17,11 +17,8 @@ RUN mkdir -p ./db
 COPY bin ./bin
 COPY web ./web
 COPY certs ./certs
-RUN echo "Installed Server Directory:"
-RUN ls -al
-RUN echo "Installed Apps:"
-RUN ls -al /opt/server/certs
-RUN if [ $APPS_URI ]; then git clone "${APPS_URI}" ./apps; fi
+RUN git clone https://github.com/lantern-works/lantern-apps ./apps
+COPY tiles ./tiles
 
 # Run Web & Database Server
 EXPOSE 80
