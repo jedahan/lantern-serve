@@ -80,9 +80,21 @@ module.exports = (serv) => {
 			res.send(buffer);
 			if (do_cache) {
 				// also save to cache
-				fs.writeFile(local_path, buffer);
-			    //log.debug(`Cache tile: ${req.url}`);
+				// @todo this could be turned into a proper queue in the future
+				let delay = 500+7000*Math.random();
+				setTimeout(() => {
+					// use timeout to help prioritize immediate network requests over saving to disk
+			    	log.debug(`Cache tile: ${req.url}`);
+					fs.writeFile(local_path, buffer);
+				}, delay)
 		    }
+		})
+		.catch((e) => {
+			log.warn(`Map tile request failed: ${url}`);
+			return sendEmptyTile(req.hostname, util.getHttpsPort())
+					.then((res) => {
+						return res.buffer();
+					});
 		});
 	});
 }
