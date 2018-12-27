@@ -1,6 +1,7 @@
 "use strict"
 
 const fs = require("fs-extra");
+const exec = require('child_process').exec;
 const directoryTree = require("directory-tree");
 const path = require("path");
 const bodyParser = require("body-parser");
@@ -12,11 +13,12 @@ const log = util.Logger;
 //----------------------------------------------------------------------
 module.exports = (serv) => {
 
-    /*
+    let apps_dir = path.join(__dirname, "..", "..", "apps");
+
+    /**
     *  Retrieves available applications from this server
     */
     serv.get("/api/apps", (req,res) => {
-        let apps_dir = path.join(__dirname, "..", "..", "apps");
 
         if (!fs.existsSync(apps_dir)) {
             return res.status(412).json({
@@ -41,10 +43,24 @@ module.exports = (serv) => {
            
     })
 
-
+    /**
+    * Update to latest version of apps from git repository
+    */
     serv.post("/api/apps", (req, res) => {
-        require("../../bin/load-apps")(() => {
-            res.status(201).json({"ok": true});
+        exec("cd " + apps_dir + "; git pull;", (err, stdout, stderr) => {
+            let ok = false;
+            if (err) {
+                log.error("git pull for apps: ", err);
+                res.status(500).json({"ok": false});
+            }
+            else if (stderr) {
+                log.error("git pull for apps: ", stderr);
+                res.status(500).json({"ok": false});
+            }
+            else {
+                res.status(201).json({"ok": true});
+                log.info("git pull for apps: ", stdout);
+            }
         });
     });
 };
