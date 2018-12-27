@@ -16,6 +16,7 @@ const fs = require("fs-extra");
 const path = require("path");
 fs.ensureDirSync(path.resolve(__dirname, "../logs"));
 fs.ensureDirSync(path.resolve(__dirname, "../db"));
+fs.ensureDirSync(path.resolve(__dirname, "../tiles"));
 
 
 
@@ -23,7 +24,6 @@ fs.ensureDirSync(path.resolve(__dirname, "../db"));
 const http = require("http");
 const https = require("https");
 const GraphDB = require("gun")
-const request = require("request");
 const util = require("./util");
 const app = require("./server")
 const log = util.Logger;

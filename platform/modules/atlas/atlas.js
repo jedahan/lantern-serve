@@ -16,9 +16,13 @@ class Atlas extends LV.EventEmitter {
             user_max: 4,
             center_max: 10
         };
-        this.tile_uri = ["https://maps.tilehosting.com/c/" , LC.maptiler.id, "/styles/", 
+
+        this.tile_host = window.location.href.split('/').slice(0, 3).join('/');
+
+        this.tile_uri = [this.tile_host +"/c/", LC.maptiler.id, "/styles/", 
                 LC.maptiler.map, "/{z}/{x}/{y}.png?key=", LC.maptiler.key
             ].join("");
+
         this.tile_db = new LV.PouchDB(LC.leaflet_tiles.dbName, {auto_compaction: true});
         this.user_db = new LV.PouchDB("lx-user", {auto_compaction: true});
         this._map_clicked = 0; // used to distinguish between click and double-click

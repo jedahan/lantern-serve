@@ -8,3 +8,4 @@ apps
 tmp/*
 db/*
 logs
+tiles
