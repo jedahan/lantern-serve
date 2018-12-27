@@ -48,6 +48,15 @@ self.getHttpsPort = () => {
     return (process.env.TERM_PROGRAM ? 9443 : 443);
 }
 
+
+/**
+* Intended / common domain used even while offline
+*/
+self.getDomain = () => {
+    return "lantern.link";
+}
+
+
 /**
 * Check for internet access
 */

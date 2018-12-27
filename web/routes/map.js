@@ -60,7 +60,7 @@ module.exports = (serv) => {
 		fetch(url, {
 			cors: true,
 			headers: {
-				"Origin": "lantern.link"
+				"Origin": util.getDomain()
 			}
 		}).then((res) => {
 			if (res.status == 200) {
