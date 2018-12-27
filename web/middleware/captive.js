@@ -76,9 +76,10 @@ module.exports = (req, res, next) => {
     else {
         if (req.url == "/hotspot-detect.html") {
             log.debug("[captive] apple serve sign-in page for captive portal");
-            // automatically sign-in user on page load   
+            // automatically sign-in user on page load
+            // next request (typically from within standard device browser) should pass through fine
             markClientConnected();
-            res.redirect("http://lantern.link/");
+            res.redirect(`https://${req.hostname}/@/`);
         }
         else {
             return next();
