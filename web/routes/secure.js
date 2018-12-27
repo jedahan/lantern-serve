@@ -2,6 +2,11 @@ const util = require("../util");
 
 //----------------------------------------------------------------------
 module.exports = (serv) => {
+
+
+	/**
+	* HTTPS Redirect
+	*/
 	 serv.all("*", (req, res, next) => {
 		if(req.secure){
 		  // OK, continue

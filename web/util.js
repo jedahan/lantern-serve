@@ -49,20 +49,6 @@ self.getHttpsPort = () => {
 }
 
 /**
-* Get HTTP Non-Secure Localhost URL
-*/
-self.getHttpAddress = () => {
-    return "http://localhost:"+self.getHttpPort();
-}
-
-/**
-* Get HTTPS Secure Localhost URL
-*/
-self.getHttpsAddress = () => {
-    return "http://localhost:"+self.getHttpsPort();
-}
-
-/**
 * Check for internet access
 */
 self.checkInternet = () =>{
