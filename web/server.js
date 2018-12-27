@@ -10,7 +10,7 @@
 *
 **/
 const express = require("express");
-const GraphDB = require('gun');
+const GraphDB = require("gun");
 const fs = require("fs-extra");
 const path = require("path");
 const compression = require("compression");
@@ -26,7 +26,7 @@ server.disable("x-powered-by");
 server.use(compression());
 server.use(helmet({
   noCache: true,
-  hsts: false
+  hsts: true
 }));
 server.use(GraphDB.serve);
 
