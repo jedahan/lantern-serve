@@ -66,7 +66,7 @@ let http_server = http.createServer(app);
 
 let std_server = http_server.listen(util.getHttpPort(), () => {
 
-	let db_path = process.env.DB || path.resolve(__dirname, "../db/dev");
+	let db_path = path.resolve(__dirname, "../" + process.env.DB) || path.resolve(__dirname, "../db/dev");
 
 	GraphDB({
 		file: db_path, 
