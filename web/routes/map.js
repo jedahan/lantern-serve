@@ -10,6 +10,13 @@ const log = util.Logger;
 module.exports = (serv) => {
 
 	let tiles_dir = path.resolve(__dirname, "../../tiles");
+	let assume_internet = true;
+
+	// offer these routes a chance to bypass attempts at internet
+	util.checkInternet().then((is_connected) => {
+		assume_internet = is_connected;
+	})
+
 
 
 	/**
@@ -27,13 +34,20 @@ module.exports = (serv) => {
 	/**
 	* Use special empty tile to notify user that a tile request was forbidden or failed
 	*/
-	const sendEmptyTile = (hostname, port) => {
+	const sendEmptyTile = (res, hostname, port) => {
 		// allows for self-signed certificates
 		// may be made more secure in the future
 		process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
 		let empty_tile = `https://${hostname}:${port}/assets/empty-tile.png`;
 		console.log(empty_tile);
-		return fetch(empty_tile);
+		return fetch(empty_tile)
+				.then((res) => {
+					return res.buffer();
+				})
+				.then((buffer) => {
+					res.type("png");
+					res.send(buffer);
+				});
 	}
 
 	
@@ -55,7 +69,15 @@ module.exports = (serv) => {
 		}
 
 		let url = "https://maps.tilehosting.com" + req.url;
-		//log.debug("Map tile proxy target is:", url);
+
+
+		if (!assume_internet) {
+			log.warn(`Skip offline attempt for: ${url}`);
+			return sendEmptyTile(res, req.hostname, util.getHttpsPort());
+		}
+
+
+		log.debug("Map tile proxy target is:", url);
 		let do_cache = false;
 		fetch(url, {
 			cors: true,
@@ -69,10 +91,7 @@ module.exports = (serv) => {
 			}
 			else {
 				log.warn(`Map tile request failed: ${res.statusText} (${res.status})`);
-				return sendEmptyTile(req.hostname, util.getHttpsPort())
-					.then((res) => {
-						return res.buffer();
-					});
+				return sendEmptyTile(res, req.hostname, util.getHttpsPort())
 			}
 		})
 		.then((buffer) => {
@@ -91,10 +110,7 @@ module.exports = (serv) => {
 		})
 		.catch((e) => {
 			log.warn(`Map tile request failed: ${url}`);
-			return sendEmptyTile(req.hostname, util.getHttpsPort())
-					.then((res) => {
-						return res.buffer();
-					});
+			return sendEmptyTile(res, req.hostname, util.getHttpsPort());
 		});
 	});
 }

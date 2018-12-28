@@ -62,10 +62,15 @@ self.getDomain = () => {
 */
 self.checkInternet = () =>{
     return new Promise((resolve, reject) => {
-        require('dns').lookup('google.com',(err) => {
+        require('dns').lookup('google.com',(err, res) => {
             if (err && err.code == "ENOTFOUND") {
                 resolve(false);
-            } else {
+            } 
+            else if (res.substr(0,4) == "192.") {
+                // local IP from router
+                resolve(false);
+            }
+            else {
                 resolve(true);
             }
         });
