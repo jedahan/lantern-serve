@@ -26898,7 +26898,7 @@ class Atlas extends LV.EventEmitter {
     * Fly in while zooming
     */
     zoomToPoint(latlng) {
-        this.map.flyTo(latlng, Math.limit(this.map.getZoom()+2, 1, LC.leaflet_map.maxZoom), {
+        this.map.flyTo(latlng, Math.limit(this.map.getZoom()+1, 1, LC.leaflet_map.maxZoom), {
             pan: {
                 animate: true,
                 duration: 1.5
@@ -27020,7 +27020,7 @@ class Atlas extends LV.EventEmitter {
     */
     setViewFromCenterLocationCache() {
         this.user_db.get("atlas_view").then((doc) => {
-            this.map.setView([doc.lat, doc.lng], doc.zoom-2);
+            this.map.setView([doc.lat, doc.lng], doc.zoom);
         }).catch((e) => {
             this.map.setView([38.42, -12.79], 3);
             // fine if we don't have context or can't retrieve...
