@@ -40,12 +40,10 @@ LX.Director = class Director extends LV.EventEmitter {
 
 
         this.db = new LX.SharedDatabase(document.baseURI + "gun");
+        this.user = new LX.User(this.db);
 
         // require database be ready before apps start
         this.db.on("load", () => {
-            // get or create a unique profile for this user / device
-            this.user = new LX.User(this.db);
-
             this.user.on("auth", function() {
                 this.view.data.user.username = this.user.username;
                 this.emit("auth");
@@ -62,7 +60,7 @@ LX.Director = class Director extends LV.EventEmitter {
 
 
     withUser(fn) {
-        if (this.user) {
+        if (this.user && this.user.username) {
             fn(this.user);
         }
         else {

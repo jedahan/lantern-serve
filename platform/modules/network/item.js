@@ -5,6 +5,7 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
     constructor(id, data, defaults) {
         super();
         this.id = id || LV.ShortID.generate();
+
         this._mode = "draft";
 
         // create data space for data we allow to be exported to shared database
@@ -212,12 +213,12 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
         return new Promise((resolve, reject) => {
 
             if (!LT.db) {
-                console.log(`${this.log_prefix} Requires database to publish to`);
+                console.log(`${this.log_prefix} requires database to publish to`);
                 return reject("db_required");
             }
 
             if (!package_name) {
-                console.log(`${this.log_prefix} Requires package to publish to`);
+                console.log(`${this.log_prefix} requires package to publish to`);
                 return reject("name_required");
             }
 
@@ -249,22 +250,27 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
             let package_node = LT.db.get("pkg")
                 .get(package_name);
 
-            const completeSave = (version) => {
-                this.node = package_node.get("data")
-                    .get(version)
-                    .get(this.id);
 
-                this.node.put(data, (ack) => {
-                    if (ack.err) {
-                        console.log(`${this.log_prefix} bad save`, ack.err);
-                        reject(ack.err);
-                    }
-                    else {
-                        this.mode = "shared"; // shared mode
-                        this.emit("save");
-                        return resolve();
-                    }
-                });
+
+            const completeSave = (version) => {
+
+                if (!version) {            
+                    console.err(`${this.log_prefix} expected version to save item`);
+                    reject("missing_version");
+                }
+
+                package_node.get("data").get(version).get(this.id)
+                    .put(data, (ack) => {
+                        if (ack.err) {
+                            reject(ack.err);
+                        }
+                        else {
+                            this.mode = "shared"; // shared mode
+                            console.info(`${this.log_prefix} good save:`, data);
+                            this.emit("save");
+                            return resolve();                        
+                        }
+                    });
             }
 
 
@@ -308,7 +314,7 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
                     })
                     .put(null)
                     .once(() => {
-                        console.log(`${this.log_prefix} Dropped`);
+                        console.log(`${this.log_prefix} dropped from database`);
                         this.mode = "dropped";
                         this.emit("drop");
                         resolve();
