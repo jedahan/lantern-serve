@@ -1020,12 +1020,11 @@ LX.User = class User extends LV.EventEmitter {
         this.pair = null;
         this.feed = new LX.Feed(this);
 
-        this.on("auth", () => {
+        this.once("auth", () => {
             this.listPackages().then((packages) => {
                 this.feed.addManyPackages(packages);
             });
         });
-
     }
 
     get log_prefix() {
@@ -1035,6 +1034,12 @@ LX.User = class User extends LV.EventEmitter {
 
     //-------------------------------------------------------------------------
 
+    clearCredentials(creds) {
+        console.warn(`${this.log_prefix}  removing invalid creds from storage`);
+        this.local_db.remove(creds).then(() => { 
+            console.warn(`${this.log_prefix}  waiting for valid sign in or registration...`);
+        });
+    }
 
     authOrRegister(skip_check) {
         if (skip_check) {
@@ -1045,28 +1050,25 @@ LX.User = class User extends LV.EventEmitter {
             // check browser for known credentials for this user
             this.local_db.get("creds")
                 .then((creds) => {
+
                     let requirements = ["username", "password"];
                     let is_valid = true;
+
                     requirements.forEach((key) =>  {
                         if (!creds.hasOwnProperty(key)) {
                             is_valid = false;
                             console.log(`${this.log_prefix} existing saved credentials missing required key: ${key}`);
                         }
                     });
+
                     if (is_valid) {
                         this.authenticate(creds.username, creds.password)
                             .catch(err => {
-                                console.log(`${this.log_prefix}  removing invalid creds from storage`);
-                                this.local_db.remove(creds).then(() => { 
-                                    this.register();
-                                });
+                                this.clearCredentials(creds);
                             });
                     }
                     else {
-                        console.log(`${this.log_prefix}  removing invalid creds from storage`);
-                        this.local_db.remove(creds).then(() => { 
-                            this.register();
-                        });
+                        this.clearCredentials(creds);
                     }
                 })
                 .catch((e) => {
@@ -1087,7 +1089,7 @@ LX.User = class User extends LV.EventEmitter {
         return new Promise((resolve, reject) => {
             this.node.auth(username, password, (ack) => {
                 if (ack.err) {
-                    console.log(`${this.log_prefix} bad auth`, ack.err);
+                    console.warn(`${this.log_prefix} bad auth`, ack.err);
                     reject(ack.err);
                 }
                 else {
