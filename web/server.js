@@ -25,7 +25,6 @@ const server = express();
 server.disable("x-powered-by");
 server.use(compression());
 server.use(helmet({
-  noCache: true,
   hsts: true
 }));
 server.use(GraphDB.serve);

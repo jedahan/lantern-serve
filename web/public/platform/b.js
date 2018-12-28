@@ -16720,7 +16720,11 @@ LX.App = class App extends LV.EventEmitter {
     * Load a single HTML page into DOM using Vue
     */
     loadOnePage(filename, page_id, logic) {
-        fetch(filename)
+        fetch(filename, {
+                headers: {
+                    "Content-Type": "text/html"
+                }
+            })
             .then((result) => {
                 return result.text();
             })
@@ -16846,40 +16850,60 @@ LX.Director = class Director extends LV.EventEmitter {
     }
 
     start() {
+
+        // load in dynamic apps
+        fetch("/api/apps", {
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+            .then((result) => {
+                if (result.status == 200) {
+                    return result.json()
+                }
+                else {
+                    reject(result);
+                }
+            })
+            .then((json) => {
+                json.forEach(this.createApp.bind(this));
+            })
+            .catch((err) => {
+                console.warn("[Direct] No available apps to work with");
+            });
+
+
         this.db = new LX.SharedDatabase(document.baseURI + "gun");
 
         // require database be ready before apps start
         this.db.on("load", () => {
-            
             // get or create a unique profile for this user / device
             this.user = new LX.User(this.db);
 
             this.user.on("auth", function() {
                 this.view.data.user.username = this.user.username;
-                // load in dynamic apps
-                fetch("/api/apps")
-                    .then((result) => {
-                        if (result.status == 200) {
-                            return result.json()
-                        }
-                        else {
-                            reject(result);
-                        }
-                    })
-                    .then((json) => {
-                        json.forEach(this.createApp.bind(this));
-                    })
-                    .catch((err) => {
-                        console.warn("[Direct] No available apps to work with");
-                    });
-                this.emit("start");
-
+                this.emit("auth");
              }.bind(this));
 
             this.user.authOrRegister();
         });        
 
+        this.db.load();
 
+        this.emit("start");
+
+    }
+
+
+    withUser(fn) {
+        if (this.user) {
+            fn(this.user);
+        }
+        else {
+            this.once("auth", () => {
+                fn(this.user);
+            });
+        }
     }
 
 
@@ -17075,7 +17099,9 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
             "org": {}
         } // template for creating a root node
         this.stor = LV.GraphDB(uri); // database instance
+    }
 
+    load() {
         this.check(this.namespace)
             .then((root) => {
                 if (!root) {

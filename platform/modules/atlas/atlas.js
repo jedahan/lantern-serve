@@ -26,16 +26,20 @@ class Atlas extends LV.EventEmitter {
         this.user_db = new LV.PouchDB("lx-user", {auto_compaction: true});
         this._map_clicked = 0; // used to distinguish between click and double-click
         this.render();
+
+        
+        // find current map cache size...
+        this.tile_db.info().then((result) => {
+            console.log(`${this.log_prefix} cached tiles: ${result.doc_count}`);
+        });
+
     }
 
     render() {
         this.setupMap();
 
-        // find current map cache size...
-        this.tile_db.info().then((result) => {
-            console.log(`${this.log_prefix} cached tiles: ${result.doc_count}`);
-        });
         this.setViewFromCenterLocationCache();
+
         // map event for when location is found...
         this.map.on("locationfound", this.cacheUserLocation.bind(this));
 

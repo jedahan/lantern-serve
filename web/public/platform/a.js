@@ -26771,7 +26771,8 @@ LC.leaflet_tiles = {
     useCache:  localStorage.hasOwnProperty("lx-map-cache"),
     useOnlyCache: localStorage.hasOwnProperty("lx-map-cache-only"),
     cacheMaxAge: 365*24*3600*1000,
-    crossOrigin: true
+    crossOrigin: true,
+    detectRetina: true
 };
 
 /**
@@ -26809,23 +26810,27 @@ class Atlas extends LV.EventEmitter {
         this.tile_host = window.location.href.split('/').slice(0, 3).join('/');
 
         this.tile_uri = [this.tile_host +"/c/", LC.maptiler.id, "/styles/", 
-                LC.maptiler.map, "/{z}/{x}/{y}.png?key=", LC.maptiler.key
+                LC.maptiler.map, "/{z}/{x}/{y}{r}.png?key=", LC.maptiler.key
             ].join("");
 
         this.tile_db = new LV.PouchDB(LC.leaflet_tiles.dbName, {auto_compaction: true});
         this.user_db = new LV.PouchDB("lx-user", {auto_compaction: true});
         this._map_clicked = 0; // used to distinguish between click and double-click
         this.render();
+
+        
+        // find current map cache size...
+        this.tile_db.info().then((result) => {
+            console.log(`${this.log_prefix} cached tiles: ${result.doc_count}`);
+        });
+
     }
 
     render() {
         this.setupMap();
 
-        // find current map cache size...
-        this.tile_db.info().then((result) => {
-            console.log(`${this.log_prefix} cached tiles: ${result.doc_count}`);
-        });
         this.setViewFromCenterLocationCache();
+
         // map event for when location is found...
         this.map.on("locationfound", this.cacheUserLocation.bind(this));
 

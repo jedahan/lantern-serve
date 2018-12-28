@@ -4,12 +4,12 @@
 
 /*----------------------------------------------------------------------------*/
 
-body {
+body .app {
     font-family: "montserrat",sans-serif;
     letter-spacing: 0.06em;
 }
 
-h1 { 
+.app h1 { 
 	font-weight: bold;
 	text-align: center;
 	text-transform: uppercase;
@@ -311,7 +311,7 @@ h1 {
 /*----------------------------------------------------------------------------*/
 
 
-.button {
+.app .button {
 	font-weight: 500;
 	padding: 1.75em 1em;
 }
