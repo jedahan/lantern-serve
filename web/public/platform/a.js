@@ -26789,7 +26789,6 @@ LC.leaflet_locatecontrol = {
 
 },{}],18:[function(require,module,exports){
 "use strict";
-
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 
 class Atlas extends LV.EventEmitter {
@@ -27102,7 +27101,6 @@ class Atlas extends LV.EventEmitter {
 LX.Atlas = new Atlas();
 },{}],19:[function(require,module,exports){
 "use strict";
-
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 
 

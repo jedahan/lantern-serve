@@ -16587,7 +16587,6 @@ var colorpalette = {
 
 },{}],15:[function(require,module,exports){
 "use strict";
-
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 
 LX.App = class App extends LV.EventEmitter {
@@ -16830,7 +16829,6 @@ LX.App = class App extends LV.EventEmitter {
 
 },{}],16:[function(require,module,exports){
 "use strict";
-
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 
 
@@ -17038,6 +17036,9 @@ LX.PieMenu = class PieMenu extends LV.EventEmitter {
 }
 
 },{}],18:[function(require,module,exports){
+"use strict";
+const LX = window.LX || {}; if (!window.LX) window.LX = LX;
+
 LX.View = class View extends LV.EventEmitter {
 
     constructor() {
@@ -17060,7 +17061,6 @@ LX.View = class View extends LV.EventEmitter {
 }
 },{}],19:[function(require,module,exports){
 "use strict";
-
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 
 LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {

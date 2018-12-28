@@ -39,7 +39,6 @@ String.prototype.truncate = function (strLen, separator) {
 };
 },{}],4:[function(require,module,exports){
 "use strict";
-
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 
 
@@ -222,7 +221,6 @@ LX.MarkerItem = class MarkerItem extends LX.SharedItem {
 }
 },{}],5:[function(require,module,exports){
 "use strict";
-
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 
 LX.SharedItem = class SharedItem extends LV.EventEmitter {
@@ -547,7 +545,6 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
 
 },{}],6:[function(require,module,exports){
 "use strict";
-
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 
 LX.Organization = class Organization extends LV.EventEmitter {
@@ -670,7 +667,6 @@ LX.Organization = class Organization extends LV.EventEmitter {
 }
 },{}],7:[function(require,module,exports){
 "use strict";
-
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 
 LX.Package =  class Package extends LV.EventEmitter {
@@ -841,7 +837,6 @@ LX.Package =  class Package extends LV.EventEmitter {
 }
 },{}],8:[function(require,module,exports){
 "use strict";
-
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 
 
@@ -1003,7 +998,6 @@ LX.Feed = class Feed extends LV.EventEmitter {
 }
 },{}],9:[function(require,module,exports){
 "use strict";
-
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 
 LX.User = class User extends LV.EventEmitter {
