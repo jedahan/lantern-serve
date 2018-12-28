@@ -66,11 +66,15 @@ let http_server = http.createServer(app);
 
 let std_server = http_server.listen(util.getHttpPort(), () => {
 
+	let db_path = process.env.DB || path.resolve(__dirname, "../db/dev");
+
 	GraphDB({
-		file: process.env.DB || path.resolve(__dirname, "../db/dev"), 
+		file: db_path, 
 		web: secure_server || std_server
 	});
 
+	log.info(`database path = ${db_path}`);
+	
 	if (secure_server) {
 		let secure_web = secure_server.listen(util.getHttpsPort());
 		log.info(`secure port = ${util.getHttpsPort()}`);
