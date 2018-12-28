@@ -64,6 +64,12 @@ LX.Feed = class Feed extends LV.EventEmitter {
             let package_node = this.db.get("pkg").get(name)
             package_node.get("data")
                 .get(version).once((v,k) => {
+
+                    if (!v) {
+                        console.log(`${this.log_prefix} skip refresh since package data is missing`, id);
+                        return;
+                    }
+
                     Object.keys(v).forEach((item) => {
                         if (item == "_") return;
                         package_node.get("data").get(version).get(item)
@@ -100,7 +106,7 @@ LX.Feed = class Feed extends LV.EventEmitter {
             return;
         }
 
-    	console.log(`${this.log_prefix} watching changes for package:`, id)
+    	console.log(`${this.log_prefix} watch package:`, id)
 
 
         if (!this.packages.hasOwnProperty(id)) {
