@@ -5,7 +5,6 @@ const util = require("../util");
 const log = util.Logger;
 
 
-
 //----------------------------------------------------------------------
 module.exports = (serv) => {
 
@@ -31,24 +30,19 @@ module.exports = (serv) => {
 		return file_path;
 	}
 
+
 	/**
 	* Use special empty tile to notify user that a tile request was forbidden or failed
 	*/
-	const sendEmptyTile = (res, hostname, port) => {
-		// allows for self-signed certificates
-		// may be made more secure in the future
-		process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
-		let empty_tile = `https://${hostname}:${port}/assets/empty-tile.png`;
-		console.log(empty_tile);
-		return fetch(empty_tile)
-				.then((res) => {
-					return res.buffer();
-				})
-				.then((buffer) => {
-					res.type("png");
-					res.send(buffer);
-				});
+	const sendEmptyTile = (res) => {
+		let assets_dir = path.resolve(__dirname, "../public/assets/");
+		let file_path = assets_dir + "/empty-tile.png";
+		fs.readFile(file_path, (err, buffer) => {
+			res.type("png");
+			res.send(buffer);
+		});
 	}
+
 
 	
 	/**
@@ -73,7 +67,7 @@ module.exports = (serv) => {
 
 		if (!assume_internet) {
 			log.warn(`Skip offline attempt for: ${url}`);
-			return sendEmptyTile(res, req.hostname, util.getHttpsPort());
+			return sendEmptyTile(res);
 		}
 
 
@@ -91,7 +85,7 @@ module.exports = (serv) => {
 			}
 			else {
 				log.warn(`Map tile request failed: ${res.statusText} (${res.status})`);
-				return sendEmptyTile(res, req.hostname, util.getHttpsPort())
+				return sendEmptyTile(res)
 			}
 		})
 		.then((buffer) => {
@@ -110,7 +104,7 @@ module.exports = (serv) => {
 		})
 		.catch((e) => {
 			log.warn(`Map tile request failed: ${url}`);
-			return sendEmptyTile(res, req.hostname, util.getHttpsPort());
+			return sendEmptyTile(res);
 		});
 	});
 }
