@@ -254,12 +254,17 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
                     .get(version)
                     .get(this.id);
 
-                this.node.put(data)
-                    .once((v,k) => {
+                this.node.put(data, (ack) => {
+                    if (ack.err) {
+                        console.log(`${this.log_prefix} bad save`, ack.err);
+                        reject(ack.err);
+                    }
+                    else {
                         this.mode = "shared"; // shared mode
                         this.emit("save");
                         return resolve();
-                    });
+                    }
+                });
             }
 
 

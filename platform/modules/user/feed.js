@@ -51,6 +51,7 @@ LX.Feed = class Feed extends LV.EventEmitter {
     * Allows for manual refresh of data from the feed
     */
     refreshData() {
+            
         Object.keys(this.packages).forEach(id => {
             if (this.packages[id] == false) {
                 return;
@@ -64,6 +65,7 @@ LX.Feed = class Feed extends LV.EventEmitter {
             package_node.get("data")
                 .get(version).once((v,k) => {
                     Object.keys(v).forEach((item) => {
+                        if (item == "_") return;
                         package_node.get("data").get(version).get(item)
                         .once((v,k) => {
                             this.onDataUpdate(v,k, id);
@@ -108,6 +110,9 @@ LX.Feed = class Feed extends LV.EventEmitter {
             package_node.get("data")
                 .get(version).map()
                 .on((v,k) => {
+                    // known issue with GunDB prevents new items from triggering this event
+                    // @todo replace work-around that polls for refreshData once fix is available
+                    // https://github.com/amark/gun/issues/663
                     this.onDataUpdate(v,k,id);
                 });
    
