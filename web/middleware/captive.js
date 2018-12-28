@@ -79,7 +79,7 @@ module.exports = (req, res, next) => {
             // automatically sign-in user on page load
             // next request (typically from within standard device browser) should pass through fine
             markClientConnected();
-            res.redirect(`https://${req.hostname}/@/`);
+            res.redirect(`https://${util.getDomain()}/@/`);
         }
         else {
             return next();
