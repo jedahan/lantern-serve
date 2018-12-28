@@ -35,7 +35,8 @@ LC.leaflet_tiles = {
     useCache:  localStorage.hasOwnProperty("lx-map-cache"),
     useOnlyCache: localStorage.hasOwnProperty("lx-map-cache-only"),
     cacheMaxAge: 365*24*3600*1000,
-    crossOrigin: true
+    crossOrigin: true,
+    detectRetina: true
 };
 
 /**

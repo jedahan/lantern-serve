@@ -132,7 +132,11 @@ LX.App = class App extends LV.EventEmitter {
     * Load a single HTML page into DOM using Vue
     */
     loadOnePage(filename, page_id, logic) {
-        fetch(filename)
+        fetch(filename, {
+                headers: {
+                    "Content-Type": "text/html"
+                }
+            })
             .then((result) => {
                 return result.text();
             })

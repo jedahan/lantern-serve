@@ -1,6 +1,6 @@
 const fs = require("fs-extra");
 const path = require("path");
-const fetch = require("node-fetch");
+const fetch = require("fetch-timeout");
 const util = require("../util");
 const log = util.Logger;
 
@@ -71,21 +71,21 @@ module.exports = (serv) => {
 		}
 
 
-		log.debug("Map tile proxy target is:", url);
+		//log.debug("Map tile proxy target is:", url);
 		let do_cache = false;
 		fetch(url, {
 			cors: true,
 			headers: {
 				"Origin": util.getDomain()
 			}
-		}).then((res) => {
-			if (res.status == 200) {
+		}, 1000, "Unable to access map tile in time").then((body) => {
+			if (body.status == 200) {
 				do_cache = true;
-				return res.buffer();
+				return body.buffer();
 			}
 			else {
-				log.warn(`Map tile request failed: ${res.statusText} (${res.status})`);
-				return sendEmptyTile(res)
+				log.warn(`Map tile request failed: ${body.statusText} (${body.status})`);
+				throw new Error("Map tile request failed");
 			}
 		})
 		.then((buffer) => {
@@ -97,7 +97,7 @@ module.exports = (serv) => {
 				let delay = 500+7000*Math.random();
 				setTimeout(() => {
 					// use timeout to help prioritize immediate network requests over saving to disk
-			    	log.debug(`Cache tile: ${req.url}`);
+			    	//log.debug(`Cache tile: ${req.url}`);
 					fs.writeFile(local_path, buffer);
 				}, delay)
 		    }

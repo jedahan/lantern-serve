@@ -40,16 +40,18 @@
     <!-- platform setup -->
     <script>
 
-        head.load(["/platform/a.js", "/platform/b.js"], function() {
-            window.LT = new LX.Director();
-            head.load(["/platform/c.js", "/_/bulma/css/bulma.min.css"], function() {
+        head.load(["/platform/a.js","/platform/b.js"], function() {
+            head.load([ "/platform/c.js", "./styles/global.css", 
+                        "/_/leaflet.locatecontrol/dist/L.Control.Locate.min.css"], function() {
+                window.LT = new LX.Director();
+                LT.on("start", () => {
+                    head.load(
+                        "/_/bulma/css/bulma.min.css",
+                        "/_/@fortawesome/fontawesome-free/css/all.min.css", 
+                        "./scripts/raphael.min.js"
+                    );
+                });
                 LT.start();
-                head.load(
-                    "./styles/global.css",
-                    "/_/leaflet.locatecontrol/dist/L.Control.Locate.min.css",
-                    "/_/@fortawesome/fontawesome-free/css/all.min.css", 
-                    "./scripts/raphael.min.js"
-                );
             });
         });
     </script>

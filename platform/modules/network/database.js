@@ -13,7 +13,9 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
             "org": {}
         } // template for creating a root node
         this.stor = LV.GraphDB(uri); // database instance
+    }
 
+    load() {
         this.check(this.namespace)
             .then((root) => {
                 if (!root) {
