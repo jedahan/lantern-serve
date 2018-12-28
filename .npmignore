@@ -1,10 +1,9 @@
 tmp
 makefile
-public
 db/*
 apps
 logs
 Dockerfile
-docker-compose.yml
-triton-compose.yml
+dc-*.yml
 tiles
+certs
