@@ -1,5 +1,4 @@
 "use strict";
-
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 
 LX.Package =  class Package extends LV.EventEmitter {
