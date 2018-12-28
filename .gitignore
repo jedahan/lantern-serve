@@ -2,6 +2,7 @@
 tmp
 node_modules
 certs/*
+!certs/.gitkeep
 logs/*
 apps
 *.json/*
