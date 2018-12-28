@@ -2,7 +2,7 @@ FROM node:carbon
 
 # Build Arguments
 ARG DEBIAN_FRONTEND=noninteractive
-ARG APPS_URI
+ARG APPS_URI=https://github.com/lantern-works/lantern-apps 
 
 # Files & Repositories
 RUN apt-get update && apt-get install -y apt-utils \
@@ -17,7 +17,7 @@ RUN mkdir -p ./db
 COPY bin ./bin
 COPY web ./web
 COPY certs ./certs
-RUN git clone https://github.com/lantern-works/lantern-apps ./apps
+RUN git clone "${APPS_URI}" ./apps;
 COPY tiles ./tiles
 
 # Run Web & Database Server
