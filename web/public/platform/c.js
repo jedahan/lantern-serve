@@ -900,7 +900,7 @@ LX.Feed = class Feed extends LV.EventEmitter {
                 return;
             }
 
-            console.log(`${this.log_prefix} refreshing data for:`, id)
+            //console.log(`${this.log_prefix} refreshing data for:`, id)
             let parts = id.split("@");
             let name = parts[0];
             let version = parts[1];

@@ -16,7 +16,13 @@ class Atlas extends LV.EventEmitter {
             center_max: 10
         };
 
-        this.tile_host = window.location.href.split('/').slice(0, 3).join('/');
+        this.tile_host = window.location.href.split('/').slice(0, 3);
+
+        if (this.tile_host[2] == "lantern.link") {
+            this.tile_host[2] = "{s}.tile.lantern.link";
+        }
+
+        this.tile_host = this.tile_host.join('/');
 
         this.tile_uri = [this.tile_host +"/c/", LC.maptiler.id, "/styles/", 
                 LC.maptiler.map, "/{z}/{x}/{y}.png?key=", LC.maptiler.key
