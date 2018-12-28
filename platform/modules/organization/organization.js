@@ -15,8 +15,8 @@ LX.Organization = class Organization extends LV.EventEmitter {
         this.name = null;
 
         this.db = db;
-        
-        this.node = db.get("org").get(id);
+        this.node = db.get("org")
+            .get(id);
 
         //console.log(`${this.log_prefix} id = ${this.id}`)
 
@@ -53,17 +53,18 @@ LX.Organization = class Organization extends LV.EventEmitter {
                     return resolve(v);
                 }
 
-                let data = {
-                    "name": name,
-                    "members": {},
-                    "packages": {}
-                };
-                console.log(`${this.log_prefix} registering organization ${name}`, data, this.node);
-                
-                this.db.get("org").get(this.id).put(data)
-                    .once((v,k) => {
-                        this.emit("register");
-                        resolve(v);
+                this.node.put({
+                        "name": name,
+                        "members": {},
+                        "packages": {}
+                    }, (ack) => {
+                        if (ack.err) {
+                            reject(ack.err);
+                        }
+                        else {
+                            this.emit("register");
+                            return resolve(this.node);
+                        }
                     });
             });
 
@@ -86,14 +87,8 @@ LX.Organization = class Organization extends LV.EventEmitter {
     getOrRegister(name) {
         return new Promise((resolve, reject) => {
             this.node.once((v,k) => {
-                if (v) {
-                    console.log(`${this.log_prefix} known org:`, v.name);
-                    return resolve(v);
-                }
-                return this.register(name).then((output) => {
-                    console.log(output);
-                    resolve(output);
-                });
+                if (v) return resolve(v);
+                return this.register(name).then(resolve);
             })
         });
     }
