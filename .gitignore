@@ -8,4 +8,5 @@ apps
 tmp/*
 db/*
 logs
-tiles
+tiles/*
+!tiles/.gitkeep

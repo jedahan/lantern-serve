@@ -14,7 +14,6 @@ WORKDIR /opt/server/
 COPY package.json .
 RUN npm install
 RUN mkdir -p ./db
-COPY bin ./bin
 COPY web ./web
 COPY certs ./certs
 RUN git clone "${APPS_URI}" ./apps;
