@@ -227,7 +227,6 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
     constructor(id, data, defaults) {
         super();
         this.id = id || LV.ShortID.generate();
-
         this._mode = "draft";
 
         // create data space for data we allow to be exported to shared database
@@ -435,12 +434,12 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
         return new Promise((resolve, reject) => {
 
             if (!LT.db) {
-                console.log(`${this.log_prefix} requires database to publish to`);
+                console.log(`${this.log_prefix} Requires database to publish to`);
                 return reject("db_required");
             }
 
             if (!package_name) {
-                console.log(`${this.log_prefix} requires package to publish to`);
+                console.log(`${this.log_prefix} Requires package to publish to`);
                 return reject("name_required");
             }
 
@@ -472,27 +471,22 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
             let package_node = LT.db.get("pkg")
                 .get(package_name);
 
-
-
             const completeSave = (version) => {
+                this.node = package_node.get("data")
+                    .get(version)
+                    .get(this.id);
 
-                if (!version) {            
-                    console.err(`${this.log_prefix} expected version to save item`);
-                    reject("missing_version");
-                }
-
-                package_node.get("data").get(version).get(this.id)
-                    .put(data, (ack) => {
-                        if (ack.err) {
-                            reject(ack.err);
-                        }
-                        else {
-                            this.mode = "shared"; // shared mode
-                            console.info(`${this.log_prefix} good save:`, data);
-                            this.emit("save");
-                            return resolve();                        
-                        }
-                    });
+                this.node.put(data, (ack) => {
+                    if (ack.err) {
+                        console.log(`${this.log_prefix} bad save`, ack.err);
+                        reject(ack.err);
+                    }
+                    else {
+                        this.mode = "shared"; // shared mode
+                        this.emit("save");
+                        return resolve();
+                    }
+                });
             }
 
 
@@ -536,7 +530,7 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
                     })
                     .put(null)
                     .once(() => {
-                        console.log(`${this.log_prefix} dropped from database`);
+                        console.log(`${this.log_prefix} Dropped`);
                         this.mode = "dropped";
                         this.emit("drop");
                         resolve();
@@ -572,8 +566,8 @@ LX.Organization = class Organization extends LV.EventEmitter {
         this.name = null;
 
         this.db = db;
-        
-        this.node = db.get("org").get(id);
+        this.node = db.get("org")
+            .get(id);
 
         //console.log(`${this.log_prefix} id = ${this.id}`)
 
@@ -610,17 +604,18 @@ LX.Organization = class Organization extends LV.EventEmitter {
                     return resolve(v);
                 }
 
-                let data = {
-                    "name": name,
-                    "members": {},
-                    "packages": {}
-                };
-                console.log(`${this.log_prefix} registering organization ${name}`, data, this.node);
-                
-                this.db.get("org").get(this.id).put(data)
-                    .once((v,k) => {
-                        this.emit("register");
-                        resolve(v);
+                this.node.put({
+                        "name": name,
+                        "members": {},
+                        "packages": {}
+                    }, (ack) => {
+                        if (ack.err) {
+                            reject(ack.err);
+                        }
+                        else {
+                            this.emit("register");
+                            return resolve(this.node);
+                        }
                     });
             });
 
@@ -643,14 +638,8 @@ LX.Organization = class Organization extends LV.EventEmitter {
     getOrRegister(name) {
         return new Promise((resolve, reject) => {
             this.node.once((v,k) => {
-                if (v) {
-                    console.log(`${this.log_prefix} known org:`, v.name);
-                    return resolve(v);
-                }
-                return this.register(name).then((output) => {
-                    console.log(output);
-                    resolve(output);
-                });
+                if (v) return resolve(v);
+                return this.register(name).then(resolve);
             })
         });
     }
@@ -760,14 +749,13 @@ LX.Package =  class Package extends LV.EventEmitter {
 	    		else {
 	    			console.log(`${this.log_prefix} creating node`, this._data);
 	    			this.node.put(this._data, (ack) => {
-                        if (ack.err) {
-                            reject(ack.er)
-                        }
-                        else {
-                            resolve(this.node);
-                        }
-
-                    });
+	    				if (ack.err) {
+	    					reject(ack.err)
+	    				}
+	    				else {
+	    					resolve(this.node)
+	    				}
+	    			});
 	    		}
 	    	})
     	});
@@ -797,14 +785,19 @@ LX.Package =  class Package extends LV.EventEmitter {
 	    	version_node.once((v,k) => {
 	    		// do not over-write pre-existing version
 	    		if (v && !force) {
-	                console.log(`${this.log_prefix} known version: ${version}`);
+	                console.log(`${this.log_prefix} version ${version} already published`);
 	                resolve(version_node)
 	    		}
 	    		else {
-			    	version_node.put(data).once((v,k) => {
-	                    console.log(`${this.log_prefix} published version ${version}`);
-	                    this.emit("publish", name);
-	                    resolve(version_node);
+			    	version_node.put(data, (ack) => {
+		    		    if (ack.err) {
+		                    reject(ack.err);
+		                }
+		                else {
+		                    console.log(`${this.log_prefix} published version ${version}`);
+		                    this.emit("publish", name);
+		                    resolve(version_node);
+		                }
 			    	});
 			    }
 			});
@@ -914,12 +907,6 @@ LX.Feed = class Feed extends LV.EventEmitter {
             let package_node = this.db.get("pkg").get(name)
             package_node.get("data")
                 .get(version).once((v,k) => {
-
-                    if (!v) {
-                        console.log(`${this.log_prefix} skip refresh since package data is missing`, id);
-                        return;
-                    }
-
                     Object.keys(v).forEach((item) => {
                         if (item == "_") return;
                         package_node.get("data").get(version).get(item)
@@ -956,7 +943,7 @@ LX.Feed = class Feed extends LV.EventEmitter {
             return;
         }
 
-    	console.log(`${this.log_prefix} watch package:`, id)
+    	console.log(`${this.log_prefix} watching changes for package:`, id)
 
 
         if (!this.packages.hasOwnProperty(id)) {
@@ -1063,7 +1050,7 @@ LX.User = class User extends LV.EventEmitter {
                     requirements.forEach((key) =>  {
                         if (!creds.hasOwnProperty(key)) {
                             is_valid = false;
-                            console.log(`${this.log_prefix} known credentials missing required key: ${key}`);
+                            console.log(`${this.log_prefix} existing saved credentials missing required key: ${key}`);
                         }
                     });
                     if (is_valid) {
@@ -1105,18 +1092,11 @@ LX.User = class User extends LV.EventEmitter {
                 }
                 else {
                     this.username = username;
-                    console.log(`${this.log_prefix} verified user`);
+                    console.log(`${this.log_prefix} good auth`);
                     SEA.pair().then((pair) => {
-                        // check for and make sure we have a packages node
-                        this.node.get("packages").once((v,k) => {
-                            if (!v) {
-                                this.node.get("packages").put({});
-                            }
-
-                            this.pair = pair;
-                            this.emit("auth", this.pair);
-                            resolve(this.pair);
-                        });
+                        this.pair = pair;
+                        this.emit("auth", this.pair);
+                        resolve(this.pair);
                     });
                 }
             });
@@ -1179,7 +1159,7 @@ LX.User = class User extends LV.EventEmitter {
                 Object.keys(v).forEach((pkg) => {
                     if (pkg == "_"  || pkg == "#" || v[pkg] == null) return;
                     if (typeof(v[pkg]) != "string") {
-                        console.warn(`${this.log_prefix} nullifying non-string value for ${pkg} package:`, v[pkg]);
+                        console.warn(`${this.log_prefix} Nullifying non-string value for ${pkg} package:`, v[pkg]);
                         node.get(pkg).put(null);
                     }
                     else {
@@ -1200,24 +1180,22 @@ LX.User = class User extends LV.EventEmitter {
 
             node_to_install.once((v, k) => {
                     if (v) {
-                        console.log(`${this.log_prefix} known install: ${pkg.id} package`);
+                        console.log(`${this.log_prefix} ${pkg.name}@${pkg.version} package already installed`);
                         resolve(pkg);
                     }
                     else {
-                        let pointer = this.node.get("packages").get(pkg.name);
-                        console.log(`${this.log_prefix} new install: ${pkg.id}`);
+                        console.log("package not yet installed", this.node.get("packages"), pkg.name);
 
                         // does not erase other key/value pairs here
-                        pointer.put(pkg.version, (ack) => {
-
+                        this.node.get("packages").get(pkg.name).put(pkg.version, (ack) => {
                             if (ack.err) {
-                                reject(err);
+                                reject(ack.err)
                             }
                             else {
                                 // id is name@version combined
-                                console.log(`${this.log_prefix} completed install: ${pkg.id}`);
+                                console.log(`${this.log_prefix} ${pkg.id} installed`);
                                 this.feed.addOnePackage(pkg.id);
-                                this.emit("install", pkg.id);                           
+                                this.emit("install", pkg.id);                            
                                 resolve(pkg);
                             }
                         });

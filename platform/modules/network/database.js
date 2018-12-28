@@ -15,29 +15,11 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
         this.stor = LV.GraphDB(uri); // database instance
     }
 
-    
-
-    //-------------------------------------------------------------------------
-    get log_prefix() {
-        return `[db:${this.namespace}]`.padEnd(20, " ")
-    }
-    
-
-
-    //-------------------------------------------------------------------------
-    /**
-    * Ensures a valid database exists and is ready to work with
-    */
     load() {
         this.check(this.namespace)
             .then((root) => {
                 if (!root) {
-                    this.initialize(this.namespace, {force: true}).then(() => {
-                        this.emit("load");
-                    })
-                }
-                else {
-                    this.emit("load");
+                    this.initialize(this.namespace, {force: true});
                 }
             })
             .catch((err) => {
@@ -49,11 +31,12 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
     * Check for integrity of database to make sure we have expected data
     */
     check(namespace) {  
+        let self = this;
         return new Promise((resolve, reject) => {
             // do we have good structure in the database?
-            let top_level_node = this.stor.get(namespace);
+            let top_level_node = self.stor.get(namespace);
             top_level_node
-                .once((v,k) => {
+                .once(function(v,k) {
                     let invalid_keys = [];
 
                     if (typeof(v) != "object") {
@@ -63,30 +46,31 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
 
                     // compare to our template for the node to make sure nodes are expected
                     Object.keys(v).forEach(key => {
-                        if (key != "_" && !this.template.hasOwnProperty(key)) {
+                        if (key != "_" && !self.template.hasOwnProperty(key)) {
                             if ( v[key] === null) {
                                 // already nullified
                                 return;
                             }
                             // nullify bad value
                             top_level_node.get(key).put(null);
-                            console.log(`${this.log_prefix} Nullify bad value for key: ${key}`);
+                            console.log("[DB] Nullify bad value for key: " + key);
                             invalid_keys.push(key);
                         }
-                        else if (this.template.hasOwnProperty(key) && v[key] === null) {
-                            console.log(`${this.log_prefix} Value ${key} is null but should not be. Resetting...`);
-                            top_level_node.get(key).put(this.template[key]);
+                        else if (self.template.hasOwnProperty(key) && v[key] === null) {
+                            console.log(`[DB] Value ${key} is null but should not be`);
+                            top_level_node.get(key).put(self.template[key]);
                         }
                     });
                             
                     if (invalid_keys.length > 0) {
-                        reject(`${this.log_prefix}  Cleared unexpected keys at root of node ${namespace}: ${invalid_keys.join(", ")}`);
+                        reject(`[DB] Cleared unexpected keys at root of node ${namespace}: ${invalid_keys.join(", ")}`);
                     }
                     // expected all nodes. good to go!
-                    this.root_node = top_level_node;
-                    //console.log(`${this.log_prefix} verified basic database integrity`);
-                    this.emit("check");
-                    resolve(this.root_node);
+                    self.root_node = top_level_node;
+                    //console.log("[DB] Check completed successfully for namespace: " + namespace);
+                    self.emit("check");
+                    self.emit("load");
+                    resolve(self.root_node);
                 });
         });
     }
@@ -95,39 +79,35 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
     * Create entirely new database at our selected root
     */
     initialize(namespace, opts) {
-        console.log(`${this.log_prefix} initializing database...`);
+        console.log(`[DB] Initializing at namespace: ${namespace}`);
+        let self = this;
         opts = opts || {};
         return new Promise((resolve, reject) => {
-            let root = this.stor.get(namespace);
-            root.once((v,k) => {
+            let root = self.stor.get(namespace);
+            root.once(function(v,k) {
                 // caution: forced initialization is possible here but will reset entire database
                 if (v == undefined || opts.force) {
 
-                    console.log(this.template);
-
-                    this.stor.get(namespace)
-                        .put(this.template)
+                    self.stor.get(namespace)
+                        .put(self.template)
                         .once((v,k) => {
-
-                            if (!v) {
-                                return reject("initializing_failed");
-                            }
-                            console.log(`${this.log_prefix}  created root node`);
-                            this.root_node = root;
-                            this.emit("initialize");
+                            console.log(`[DB] Created root node: ${namespace}`);
+                            self.root_node = root;
+                            self.emit("initialize");
+                            self.emit("load");
                             resolve(namespace);
                         });
                 }
                 else {
-                    console.log(`${this.log_prefix} existing root node found`);                       
-                    this.root_node = root;
+                    console.log(`[DB] Existing root node found: ${namespace}`);                       
+                    self.root_node = root;
+                    self.emit("load");
                     resolve(namespace);
                 }
 
             });
         });
     }
-
 
 
     //-------------------------------------------------------------------------
@@ -165,7 +145,7 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
             }
             else {
                 // we reached the target node here
-                console.log(`${this.log_prefix}  ${path} = `, v);
+                console.log(`[DB] ${path} = `, v);
             }
         });
         return split.length;
@@ -176,7 +156,7 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
     * Output basic node on .once or .map
     */
     log(v,k) {
-        console.log(`${this.log_prefix}  Key ${k} =`, v);
+        console.log(`[db] Key ${k} =`, v);
     }
 
 

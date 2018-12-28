@@ -41,7 +41,7 @@ LX.User = class User extends LV.EventEmitter {
                     requirements.forEach((key) =>  {
                         if (!creds.hasOwnProperty(key)) {
                             is_valid = false;
-                            console.log(`${this.log_prefix} known credentials missing required key: ${key}`);
+                            console.log(`${this.log_prefix} existing saved credentials missing required key: ${key}`);
                         }
                     });
                     if (is_valid) {
@@ -83,18 +83,11 @@ LX.User = class User extends LV.EventEmitter {
                 }
                 else {
                     this.username = username;
-                    console.log(`${this.log_prefix} verified user`);
+                    console.log(`${this.log_prefix} good auth`);
                     SEA.pair().then((pair) => {
-                        // check for and make sure we have a packages node
-                        this.node.get("packages").once((v,k) => {
-                            if (!v) {
-                                this.node.get("packages").put({});
-                            }
-
-                            this.pair = pair;
-                            this.emit("auth", this.pair);
-                            resolve(this.pair);
-                        });
+                        this.pair = pair;
+                        this.emit("auth", this.pair);
+                        resolve(this.pair);
                     });
                 }
             });
@@ -157,7 +150,7 @@ LX.User = class User extends LV.EventEmitter {
                 Object.keys(v).forEach((pkg) => {
                     if (pkg == "_"  || pkg == "#" || v[pkg] == null) return;
                     if (typeof(v[pkg]) != "string") {
-                        console.warn(`${this.log_prefix} nullifying non-string value for ${pkg} package:`, v[pkg]);
+                        console.warn(`${this.log_prefix} Nullifying non-string value for ${pkg} package:`, v[pkg]);
                         node.get(pkg).put(null);
                     }
                     else {
@@ -178,24 +171,22 @@ LX.User = class User extends LV.EventEmitter {
 
             node_to_install.once((v, k) => {
                     if (v) {
-                        console.log(`${this.log_prefix} known install: ${pkg.id} package`);
+                        console.log(`${this.log_prefix} ${pkg.name}@${pkg.version} package already installed`);
                         resolve(pkg);
                     }
                     else {
-                        let pointer = this.node.get("packages").get(pkg.name);
-                        console.log(`${this.log_prefix} new install: ${pkg.id}`);
+                        console.log("package not yet installed", this.node.get("packages"), pkg.name);
 
                         // does not erase other key/value pairs here
-                        pointer.put(pkg.version, (ack) => {
-
+                        this.node.get("packages").get(pkg.name).put(pkg.version, (ack) => {
                             if (ack.err) {
-                                reject(err);
+                                reject(ack.err)
                             }
                             else {
                                 // id is name@version combined
-                                console.log(`${this.log_prefix} completed install: ${pkg.id}`);
+                                console.log(`${this.log_prefix} ${pkg.id} installed`);
                                 this.feed.addOnePackage(pkg.id);
-                                this.emit("install", pkg.id);                           
+                                this.emit("install", pkg.id);                            
                                 resolve(pkg);
                             }
                         });

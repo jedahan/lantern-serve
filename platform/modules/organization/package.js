@@ -76,14 +76,13 @@ LX.Package =  class Package extends LV.EventEmitter {
 	    		else {
 	    			console.log(`${this.log_prefix} creating node`, this._data);
 	    			this.node.put(this._data, (ack) => {
-                        if (ack.err) {
-                            reject(ack.er)
-                        }
-                        else {
-                            resolve(this.node);
-                        }
-
-                    });
+	    				if (ack.err) {
+	    					reject(ack.err)
+	    				}
+	    				else {
+	    					resolve(this.node)
+	    				}
+	    			});
 	    		}
 	    	})
     	});
@@ -113,14 +112,19 @@ LX.Package =  class Package extends LV.EventEmitter {
 	    	version_node.once((v,k) => {
 	    		// do not over-write pre-existing version
 	    		if (v && !force) {
-	                console.log(`${this.log_prefix} known version: ${version}`);
+	                console.log(`${this.log_prefix} version ${version} already published`);
 	                resolve(version_node)
 	    		}
 	    		else {
-			    	version_node.put(data).once((v,k) => {
-	                    console.log(`${this.log_prefix} published version ${version}`);
-	                    this.emit("publish", name);
-	                    resolve(version_node);
+			    	version_node.put(data, (ack) => {
+		    		    if (ack.err) {
+		                    reject(ack.err);
+		                }
+		                else {
+		                    console.log(`${this.log_prefix} published version ${version}`);
+		                    this.emit("publish", name);
+		                    resolve(version_node);
+		                }
 			    	});
 			    }
 			});
