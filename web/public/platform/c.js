@@ -408,18 +408,28 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
         // only access approved data keys from our map
         for (var idx in new_data) {
             if (JSON.stringify(this[idx]) != JSON.stringify(new_data[idx])) {
+                
+                let do_update_field = false;
+
                 if (this[idx]) {
-                    /*if (typeof(this[idx]) == "object") {
-                        console.log(`${this.log_prefix} updating ${idx} object to ${new_data[idx]}`);
+                    if (typeof(this[idx]) == "object") {
+                        if (this[idx].length) {
+                            do_update_field = true;
+                            console.log(`${this.log_prefix} updating ${idx} object to ${new_data[idx]}`);
+                        }
                     }
-                    else {
+                    else if (this[idx]) {
                         console.log(`${this.log_prefix} updating ${idx} from ${this[idx]} to ${new_data[idx]}`);
-                    }*/
+                        do_update_field = true;
+                    }
                 }
+
                 this[idx] = new_data[idx];
+                if (do_update_field) {
+                    this.emit("update", new_data);                    
+                }
             }
         }
-        this.emit("update");
     }
 
 
@@ -1182,11 +1192,11 @@ LX.User = class User extends LV.EventEmitter {
 
             node_to_install.once((v, k) => {
                     if (v) {
-                        console.log(`${this.log_prefix} ${pkg.name}@${pkg.version} package already installed`);
+                        console.log(`${this.log_prefix} installed: ${pkg.id}`);
                         resolve(pkg);
                     }
                     else {
-                        console.log("package not yet installed", this.node.get("packages"), pkg.name);
+                        console.log(`${this.log_prefix} will install: ${pkg.id}`);
 
                         // does not erase other key/value pairs here
                         this.node.get("packages").get(pkg.name).put(pkg.version, (ack) => {
@@ -1195,7 +1205,7 @@ LX.User = class User extends LV.EventEmitter {
                             }
                             else {
                                 // id is name@version combined
-                                console.log(`${this.log_prefix} ${pkg.id} installed`);
+                                console.log(`${this.log_prefix} did install: ${pkg.id}`);
                                 this.feed.addOnePackage(pkg.id);
                                 this.emit("install", pkg.id);                            
                                 resolve(pkg);

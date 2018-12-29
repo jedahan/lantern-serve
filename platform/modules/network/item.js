@@ -186,18 +186,28 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
         // only access approved data keys from our map
         for (var idx in new_data) {
             if (JSON.stringify(this[idx]) != JSON.stringify(new_data[idx])) {
+                
+                let do_update_field = false;
+
                 if (this[idx]) {
-                    /*if (typeof(this[idx]) == "object") {
-                        console.log(`${this.log_prefix} updating ${idx} object to ${new_data[idx]}`);
+                    if (typeof(this[idx]) == "object") {
+                        if (this[idx].length) {
+                            do_update_field = true;
+                            console.log(`${this.log_prefix} updating ${idx} object to ${new_data[idx]}`);
+                        }
                     }
-                    else {
+                    else if (this[idx]) {
                         console.log(`${this.log_prefix} updating ${idx} from ${this[idx]} to ${new_data[idx]}`);
-                    }*/
+                        do_update_field = true;
+                    }
                 }
+
                 this[idx] = new_data[idx];
+                if (do_update_field) {
+                    this.emit("update", new_data);                    
+                }
             }
         }
-        this.emit("update");
     }
 
 

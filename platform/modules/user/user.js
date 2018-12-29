@@ -173,11 +173,11 @@ LX.User = class User extends LV.EventEmitter {
 
             node_to_install.once((v, k) => {
                     if (v) {
-                        console.log(`${this.log_prefix} ${pkg.name}@${pkg.version} package already installed`);
+                        console.log(`${this.log_prefix} installed: ${pkg.id}`);
                         resolve(pkg);
                     }
                     else {
-                        console.log("package not yet installed", this.node.get("packages"), pkg.name);
+                        console.log(`${this.log_prefix} will install: ${pkg.id}`);
 
                         // does not erase other key/value pairs here
                         this.node.get("packages").get(pkg.name).put(pkg.version, (ack) => {
@@ -186,7 +186,7 @@ LX.User = class User extends LV.EventEmitter {
                             }
                             else {
                                 // id is name@version combined
-                                console.log(`${this.log_prefix} ${pkg.id} installed`);
+                                console.log(`${this.log_prefix} did install: ${pkg.id}`);
                                 this.feed.addOnePackage(pkg.id);
                                 this.emit("install", pkg.id);                            
                                 resolve(pkg);
