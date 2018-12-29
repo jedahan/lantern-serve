@@ -16600,7 +16600,7 @@ LX.App = class App extends LV.EventEmitter {
         this.pages = [];
         this.data = {};
         this.load();
-        this._opened = false;
+        this._component_opened = {};
     }
 
 
@@ -16669,11 +16669,11 @@ LX.App = class App extends LV.EventEmitter {
     * Displays Vue component on the screen
     */
     open(component_id) {
-        if (this._opened) {
+        if (this._component_opened[component_id]) {
             // skip already opened app
             return;
         }
-        this._opened = true;
+        this._component_opened[component_id] = true;
         //console.log(`${this.log_prefix} open`);
         this.emit("open", component_id);
     }
@@ -16682,7 +16682,7 @@ LX.App = class App extends LV.EventEmitter {
     * Hides Vue component but keeps style injection for other open components
     */
     close(component_id) {
-        this._opened = false;
+        this._component_opened[component_id] = false;
         //console.log(`${this.log_prefix} close`);
         this.emit("close", component_id);
     }
@@ -16845,7 +16845,6 @@ LX.Director = class Director extends LV.EventEmitter {
         this.db = null;
         this.view = new LX.View();
         this.atlas = LX.Atlas;
-        this.menu = null;
         this.user = null;
     }
 
@@ -16914,22 +16913,24 @@ LX.Director = class Director extends LV.EventEmitter {
             console.warn("[Direct] Ignoring app directory with no children:", app_files.name);
             return;
         }
-        let obj = new LX.App(app_files);
 
-        this.apps[obj.name] = obj;
-        obj.on("load", (page) => {
-            //console.log("[Direct] App loads page: ", page.component_id );
-        });
+        if (!this.apps.hasOwnProperty(app_files.name)) {
+            let obj = this.apps[app_files.name] = new LX.App(app_files);
 
-        obj.on("open", (component_id) => {
-            //console.log("[Direct] App opens component:", component_id);
-            this.view.data.app_components.push(component_id);
-        });
+            obj.on("load", (page) => {
+                console.log("[Direct] App loads page: ", page.component_id );
+            });
 
-        obj.on("close", (component_id) => {
-            //console.log("[Direct] App closes component:", component_id);
-            this.view.data.app_components.remove(component_id);
-        });
+            obj.on("open", (component_id) => {
+                console.log("[Direct] App opens component:", component_id);
+                this.view.data.app_components.push(component_id);
+            });
+
+            obj.on("close", (component_id) => {
+                console.log("[Direct] App closes component:", component_id);
+                this.view.data.app_components.remove(component_id);
+            });
+        }
     }
 
 

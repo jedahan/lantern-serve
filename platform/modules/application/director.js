@@ -11,7 +11,6 @@ LX.Director = class Director extends LV.EventEmitter {
         this.db = null;
         this.view = new LX.View();
         this.atlas = LX.Atlas;
-        this.menu = null;
         this.user = null;
     }
 
@@ -80,22 +79,24 @@ LX.Director = class Director extends LV.EventEmitter {
             console.warn("[Direct] Ignoring app directory with no children:", app_files.name);
             return;
         }
-        let obj = new LX.App(app_files);
 
-        this.apps[obj.name] = obj;
-        obj.on("load", (page) => {
-            //console.log("[Direct] App loads page: ", page.component_id );
-        });
+        if (!this.apps.hasOwnProperty(app_files.name)) {
+            let obj = this.apps[app_files.name] = new LX.App(app_files);
 
-        obj.on("open", (component_id) => {
-            //console.log("[Direct] App opens component:", component_id);
-            this.view.data.app_components.push(component_id);
-        });
+            obj.on("load", (page) => {
+                console.log("[Direct] App loads page: ", page.component_id );
+            });
 
-        obj.on("close", (component_id) => {
-            //console.log("[Direct] App closes component:", component_id);
-            this.view.data.app_components.remove(component_id);
-        });
+            obj.on("open", (component_id) => {
+                console.log("[Direct] App opens component:", component_id);
+                this.view.data.app_components.push(component_id);
+            });
+
+            obj.on("close", (component_id) => {
+                console.log("[Direct] App closes component:", component_id);
+                this.view.data.app_components.remove(component_id);
+            });
+        }
     }
 
 
@@ -110,6 +111,7 @@ LX.Director = class Director extends LV.EventEmitter {
     openOneApp(app_id) {
         if (this.apps.hasOwnProperty(app_id)) {
             this.apps[app_id].pages.forEach((page) => {
+                console.log(app_id, page);
                 this.apps[app_id].open(`lx-app-${app_id}-${page.id}`);
             });
         }
