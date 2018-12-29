@@ -191,7 +191,7 @@ body .app {
 }
 
 .app-mask {	
-	background: rgba(255,255,255,0.85);
+	background: rgba(255,255,255,0.95);
     pointer-events: auto;
 }
 
@@ -294,7 +294,7 @@ body .app {
 }
 
 
-[class|=wheelnav-pie-menu-slice-selected] { fill: #3273dc; 
+[class|=wheelnav-pie-menu-slice-selected] { fill: #FAFAFA; 
 	stroke: #DDD; }
 [class|=wheelnav-pie-menu-slice-hover] { fill: #FFF; 
 	stroke: #DDD;  fill-opacity: 1; cursor: pointer; }

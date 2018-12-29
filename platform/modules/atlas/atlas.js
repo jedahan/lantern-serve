@@ -68,13 +68,14 @@ class Atlas extends LV.EventEmitter {
                     this._map_clicked = 0;
                     this.emit("map-click", e);
                 }
-            }, 300);
+            }, 250);
         });
 
         this.map.on("dblclick", (e) => {
             this._map_clicked = 0;
             this.emit("map-double-click", e);
         });
+
     }
 
 
@@ -107,7 +108,7 @@ class Atlas extends LV.EventEmitter {
     * Fly in while zooming
     */
     zoomToPoint(latlng) {
-        this.map.flyTo(latlng, Math.limit(this.map.getZoom()+1, 1, LC.leaflet_map.maxZoom), {
+        this.map.flyTo(latlng, Math.limit(this.map.getZoom()+2, 1, LC.leaflet_map.maxZoom), {
             pan: {
                 animate: true,
                 duration: 1.5
@@ -272,6 +273,7 @@ class Atlas extends LV.EventEmitter {
     addPointer(latlng) {
         if (this.pointer) return;
         this.pointer = L.circle(latlng, {radius: 1}).addTo(this.map);
+        this.emit("pointer-add", {"latlng":latlng});
     }
 
     /**
@@ -281,6 +283,7 @@ class Atlas extends LV.EventEmitter {
         if (!this.pointer) return;
         this.pointer.remove();
         this.pointer = null;;
+        this.emit("pointer-remove");
     }
 
 
@@ -315,6 +318,43 @@ class Atlas extends LV.EventEmitter {
             this.map.fitBounds(group.getBounds());
         }
     }
+
+    /**
+    * Ensures map target is not too close to edge of screen
+    */
+    moveFromEdge(latlng) {
+        let map = this.map;
+        let margin = 90;
+
+        return new Promise((resolve, reject) => {
+            // are we too close to the edge for our menu?
+            let pos = map.latLngToContainerPoint(latlng);
+            let dimensions = document.getElementById("map").getBoundingClientRect()
+            let center_point = map.getSize().divideBy(2);
+
+            if (pos.x < margin || pos.x > dimensions.width-margin) {
+                let direction = (pos.x < margin ? "subtract" : "add");
+                let target_point = center_point[direction]([margin, 0]);
+                let target_latlng = map.containerPointToLatLng(target_point);
+                map.panTo(target_latlng);
+                map.once("moveend", () => {
+                    resolve(latlng);
+                });
+            } 
+            else if (pos.y < margin || pos.y > dimensions.height-margin) {
+                let direction = (pos.y < margin ? "subtract" : "add");
+                let target_point = center_point[direction]([0,margin]);
+                let target_latlng = map.containerPointToLatLng(target_point);
+                map.panTo(target_latlng);
+                map.once("moveend", () => {
+                    resolve(latlng);
+                });
+            } 
+            else {
+                resolve(latlng);
+            }
+        });
+    }    
 
 };
 
