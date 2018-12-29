@@ -16918,16 +16918,16 @@ LX.Director = class Director extends LV.EventEmitter {
             let obj = this.apps[app_files.name] = new LX.App(app_files);
 
             obj.on("load", (page) => {
-                console.log("[Direct] App loads page: ", page.component_id );
+                //console.log("[Direct] App loads page: ", page.component_id );
             });
 
             obj.on("open", (component_id) => {
-                console.log("[Direct] App opens component:", component_id);
+                //console.log("[Direct] App opens component:", component_id);
                 this.view.data.app_components.push(component_id);
             });
 
             obj.on("close", (component_id) => {
-                console.log("[Direct] App closes component:", component_id);
+                //console.log("[Direct] App closes component:", component_id);
                 this.view.data.app_components.remove(component_id);
             });
         }
@@ -16960,11 +16960,13 @@ LX.PieMenu = class PieMenu extends LV.EventEmitter {
     constructor() {
         super();
         this._locked = false;
+        this._open = false;
         this.wheel = null;
         this.element = document.getElementById("pie-menu");
         this.mask_element = document.getElementById("pie-menu-mask");
         this.mask_element.onclick = () => {
             this.close();
+            this.unlock();
         };
     }    
 
@@ -16978,6 +16980,9 @@ LX.PieMenu = class PieMenu extends LV.EventEmitter {
 
         if (this._locked) {
             return console.log("[PieMenu] Refusing to open while menu is in locked state");
+        }
+        else {
+            //console.log("[PieMenu] Open");
         }
 
 
@@ -17002,20 +17007,23 @@ LX.PieMenu = class PieMenu extends LV.EventEmitter {
         this.wheel.selectedNavItemIndex = null;;
         this.wheel.createWheel(final_items);
 
+        let fired_events = {};
+
         // define custom methods to handle menu selection
         this.wheel.navItems.forEach((item) => {
-        
+
             item.navigateFunction = () => {
                 let matched_item = items[item.itemIndex];
-
                 let event_data = null;
                 if(matched_item.method) {
                     event_data = matched_item.method();
                 }
-                if (matched_item.event) {
+                this.close.call(this);  
+
+                if (matched_item.event && !fired_events.hasOwnProperty(matched_item.event)) {
                     this.emit(matched_item.event, event_data);
+                    fired_events[matched_item.event] = true;
                 }
-                this.close.call(this);
             }
         });
 
@@ -17032,6 +17040,7 @@ LX.PieMenu = class PieMenu extends LV.EventEmitter {
         }
 
         this.element.classList = "active";
+        this._open = true;
         this.emit("open");
     }
     
@@ -17039,20 +17048,32 @@ LX.PieMenu = class PieMenu extends LV.EventEmitter {
     * Hide menu from canvas and remove mask
     */
     close() {
+        //console.log("[PieMenu] Close");
         this.element.classList.remove("active")
         this.mask_element.classList.remove("active");
+        this._open = false;
         this.emit("close");
+    }
+
+    isOpen() {
+        return this._open;
     }
 
 
     lock() {
         this._locked = true;
+        //console.log("[PieMenu] Lock");
         this.emit("lock");
     }
 
     unlock() {
         this._locked = false;
-        this.emit("unlock");
+
+        //console.log("[PieMenu] Unlock");
+        // handle mobile double-activate bug
+        setTimeout(() => {
+            this.emit("unlock");
+        }, 400);
     }
 
     isLocked() {

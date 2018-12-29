@@ -84,16 +84,16 @@ LX.Director = class Director extends LV.EventEmitter {
             let obj = this.apps[app_files.name] = new LX.App(app_files);
 
             obj.on("load", (page) => {
-                console.log("[Direct] App loads page: ", page.component_id );
+                //console.log("[Direct] App loads page: ", page.component_id );
             });
 
             obj.on("open", (component_id) => {
-                console.log("[Direct] App opens component:", component_id);
+                //console.log("[Direct] App opens component:", component_id);
                 this.view.data.app_components.push(component_id);
             });
 
             obj.on("close", (component_id) => {
-                console.log("[Direct] App closes component:", component_id);
+                //console.log("[Direct] App closes component:", component_id);
                 this.view.data.app_components.remove(component_id);
             });
         }
@@ -111,7 +111,6 @@ LX.Director = class Director extends LV.EventEmitter {
     openOneApp(app_id) {
         if (this.apps.hasOwnProperty(app_id)) {
             this.apps[app_id].pages.forEach((page) => {
-                console.log(app_id, page);
                 this.apps[app_id].open(`lx-app-${app_id}-${page.id}`);
             });
         }
