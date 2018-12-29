@@ -12,7 +12,7 @@ LX.App = class App extends LV.EventEmitter {
         this.pages = [];
         this.data = {};
         this.load();
-        this._opened = false;
+        this._component_opened = {};
     }
 
 
@@ -81,11 +81,11 @@ LX.App = class App extends LV.EventEmitter {
     * Displays Vue component on the screen
     */
     open(component_id) {
-        if (this._opened) {
+        if (this._component_opened[component_id]) {
             // skip already opened app
             return;
         }
-        this._opened = true;
+        this._component_opened[component_id] = true;
         //console.log(`${this.log_prefix} open`);
         this.emit("open", component_id);
     }
@@ -94,7 +94,7 @@ LX.App = class App extends LV.EventEmitter {
     * Hides Vue component but keeps style injection for other open components
     */
     close(component_id) {
-        this._opened = false;
+        this._component_opened[component_id] = false;
         //console.log(`${this.log_prefix} close`);
         this.emit("close", component_id);
     }
