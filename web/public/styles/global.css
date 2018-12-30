@@ -362,6 +362,22 @@ ul.menu .inline-btn, .button.is-secondary {
 	text-transform: uppercase;
 }
 
+
+ul.menu .tag-icon {
+	margin-right: 1em;
+	padding-top: 3px;
+	margin-top: -2px;
+	border-radius: 3px;
+	float: left;
+	text-align: center;
+	width: 2em;
+}
+
+ul.menu li .tag-icon {
+	color: #FFF;
+}
+
+
 /*----------------------------------------------------------------------------*/
 #hotspot #app-container {
 	text-align: center;
