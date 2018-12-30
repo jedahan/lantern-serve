@@ -297,13 +297,12 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
     }
 
 
-
-
     //-------------------------------------------------------------------------
     /**
     * Add tag for data filtering and user interface display
     */
     tag(tag) {
+        if (!tag) return;
         tag = this.sanitizeTag(tag);
 
         this._data.tags = this._data.tags || [];
@@ -323,6 +322,7 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
     * Remove tag
     */
     untag(tag) {
+        if (!tag) return;
         tag = this.sanitizeTag(tag);
         this._data.tags.remove(tag);
         this.emit("untag", tag);

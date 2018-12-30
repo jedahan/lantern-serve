@@ -234,6 +234,10 @@ class Atlas extends LV.EventEmitter {
         }).catch((e) => {
             this.map.setView([38.42, -12.79], 3);
             // fine if we don't have context or can't retrieve...
+            // if we have markers, let's now zoom in on these...
+            if (this.markers.length) {
+                this.fitMapToAllMarkers();
+            }
         });
     }
 
