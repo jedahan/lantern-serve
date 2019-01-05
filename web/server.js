@@ -14,7 +14,6 @@ const GraphDB = require("gun");
 const fs = require("fs-extra");
 const path = require("path");
 const compression = require("compression");
-const helmet = require("helmet");
 const util = require("./util");
 const log = util.Logger;
 const server = express();
@@ -24,9 +23,6 @@ const server = express();
 //----------------------------------------------------------------------------
 server.disable("x-powered-by");
 server.use(compression());
-server.use(helmet({
-  hsts: true
-}));
 server.use(GraphDB.serve);
 
 
