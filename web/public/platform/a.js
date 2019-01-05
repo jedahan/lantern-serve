@@ -2158,6 +2158,7 @@ LX.Feed = class Feed extends LV.EventEmitter {
 
 
     onDataUpdate(val, id, pkg_id) {
+
         var data;
 
         if (val !== null && typeof(val) == "object") {
@@ -2227,16 +2228,16 @@ LX.Feed = class Feed extends LV.EventEmitter {
             version = parts[1];            
         }
         catch(e) {
-            console.error(`${this.log_prefix} invalid identifier provided to add package:`, id);
+            console.error(`${this.log_prefix} invalid identifier provided to add package: ${id}`);
             return;
         }
 
     	if (this.packages[id]) {
-            console.log(`${this.log_prefix} already watching package:`, id);
+            console.log(`${this.log_prefix} already watching: ${id}`);
             return;
         }
 
-    	console.log(`${this.log_prefix} watching changes for package:`, id)
+    	console.log(`${this.log_prefix} watching changes: ${id}`)
 
 
         if (!this.packages.hasOwnProperty(id)) {
@@ -2546,18 +2547,43 @@ LX.Item = class Item extends LV.EventEmitter {
                     .get("data")
                     .get(version)
                     .get(this.id);
-                
-                console.log(`${this.log_prefix} ready to save`, this.id, data, package_name, version);
 
+                node.once((v,k) => {
+                    if (v) {
+                        // update existing node
+                        Object.keys(data).forEach((key) => {
+                            let val = data[key];
+                            node.get(key).put(val, (ack) => {
+                                console.log(`${this.log_prefix} saved`, key, val);
+                            });
+                        });
+                        this.emit("save");
+                        return resolve();
+                    }
+                    else {
+                        node.put(null).put(data, (ack) => {
+                            if (ack.err) {
+                                reject(ack.err);
+                            }
+                            else {
+                                // now register the node for our package
+                                LT.db.get("pkg")
+                                    .get(package_name)
+                                    .get("items")
+                                    .set(this.id)
+                                    .once((v,k) => {
 
-                Object.keys(data).forEach((key) => {
-                    let val = data[key];
-                    node.get(key).put(val);
+                                        console.log(`${this.log_prefix} saved`, data);
+                                        this.mode = "shared"; // shared mode
+                                        this.emit("save");
+                                        return resolve();
+                                    });
+                            }
+                        });
+                    }
+
                 });
 
-                this.mode = "shared"; // shared mode
-                this.emit("save");
-                return resolve();
             }
 
 
@@ -2598,9 +2624,6 @@ LX.Item = class Item extends LV.EventEmitter {
         });
     }
 
-    saveField(package_name, field, version) {
-
-    }
 
     /**
     * Clears the value of the item and nullifies in database (full delete not possible)
@@ -2637,7 +2660,15 @@ LX.Item = class Item extends LV.EventEmitter {
                         console.log(`${this.log_prefix} Dropped`);
                         this.mode = "dropped";
                         this.emit("drop");
-                        resolve();
+
+                        LT.db.get("pkg")
+                            .get(package_name)
+                            .get("items")
+                            .unset(this.id)
+                            .once((v,k) => {
+                                this.emit("drop");
+                                return resolve();
+                            });
                     });
             }
 
@@ -2844,29 +2875,7 @@ LX.Package =  class Package extends LV.EventEmitter {
     	return this.node.get("data").get(version);
     }
 
-    /**
-    * Ensures we have a valid package node to work with
-    */
-    ensureNode() {
-    	return new Promise((resolve, reject) => {
-	    	this.node.get("name").once((v,k) => {
-	    		if (v) {
-	    			resolve(this.node);
-	    		}
-	    		else {
-	    			console.log(`${this.log_prefix} creating node`, this._data);
-	    			this.node.put(this._data, (ack) => {
-	    				if (ack.err) {
-	    					reject(ack.err)
-	    				}
-	    				else {
-	    					resolve(this.node)
-	    				}
-	    			});
-	    		}
-	    	})
-    	});
-    }
+   
 
     /**
     * Defines the owning organization for this package
@@ -2892,7 +2901,7 @@ LX.Package =  class Package extends LV.EventEmitter {
 	    	version_node.once((v,k) => {
 	    		// do not over-write pre-existing version
 	    		if (v && !force) {
-	                console.log(`${this.log_prefix} version ${version} already published`);
+	                console.log(`${this.log_prefix} already published: ${this.id}`);
 	                resolve(version_node)
 	    		}
 	    		else {
@@ -2901,7 +2910,7 @@ LX.Package =  class Package extends LV.EventEmitter {
 		                    reject(ack.err);
 		                }
 		                else {
-		                    console.log(`${this.log_prefix} published version ${version}`);
+		                    console.log(`${this.log_prefix} new published version: ${this.id}`);
 		                    this.emit("publish", name);
 		                    resolve(version_node);
 		                }
@@ -2918,10 +2927,8 @@ LX.Package =  class Package extends LV.EventEmitter {
     publish(version, data) {
     	version = version || this._data.version; // allow default version
 		// make sure we have a package node to work with
-		return this.ensureNode().then((node) => {
-			this.linkOrganization(this.organization.node);
-			return this.saveVersionData(version, data || {});
-		});
+		this.linkOrganization(this.organization.node);
+		return this.saveVersionData(version, data || {});
 	}
 
     /*
@@ -3119,31 +3126,30 @@ LX.User = class User extends LV.EventEmitter {
     */
     install(pkg) {
         return new Promise((resolve, reject) => {
-            let node_to_install = this.node.get("packages").get(pkg.name)
+            this.node.get("packages")
+                .get(pkg.name)
+                .once((v, k) => {
+                        if (v) {
+                            console.log(`${this.log_prefix} already installed: ${pkg.id}`);
+                            resolve(pkg);
+                        }
+                        else {
+                            console.log(`${this.log_prefix} new install: ${pkg.id}`);
 
-            node_to_install.once((v, k) => {
-                    if (v) {
-                        console.log(`${this.log_prefix} installed: ${pkg.id}`);
-                        resolve(pkg);
-                    }
-                    else {
-                        console.log(`${this.log_prefix} will install: ${pkg.id}`);
-
-                        // does not erase other key/value pairs here
-                        this.node.get("packages").get(pkg.name).put(pkg.version, (ack) => {
-                            if (ack.err) {
-                                reject(ack.err)
-                            }
-                            else {
-                                // id is name@version combined
-                                console.log(`${this.log_prefix} did install: ${pkg.id}`);
-                                this.feed.addOnePackage(pkg.id);
-                                this.emit("install", pkg.id);                            
-                                resolve(pkg);
-                            }
-                        });
-                    }
-                });
+                            // does not erase other key/value pairs here
+                            this.node.get("packages")
+                                .get(pkg.name)
+                                .put(pkg.version)
+                                .once( (v,k) => {
+                                    console.log(v,k);
+                                    // id is name@version combined
+                                    console.log(`${this.log_prefix} install done: ${pkg.id}`);
+                                    this.emit("install", pkg.id);                            
+                                    this.feed.addOnePackage(pkg.id);
+                                    resolve(pkg);
+                                });
+                        }
+                    });
         });
     }
 

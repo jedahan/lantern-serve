@@ -244,18 +244,43 @@ LX.Item = class Item extends LV.EventEmitter {
                     .get("data")
                     .get(version)
                     .get(this.id);
-                
-                console.log(`${this.log_prefix} ready to save`, this.id, data, package_name, version);
 
+                node.once((v,k) => {
+                    if (v) {
+                        // update existing node
+                        Object.keys(data).forEach((key) => {
+                            let val = data[key];
+                            node.get(key).put(val, (ack) => {
+                                console.log(`${this.log_prefix} saved`, key, val);
+                            });
+                        });
+                        this.emit("save");
+                        return resolve();
+                    }
+                    else {
+                        node.put(null).put(data, (ack) => {
+                            if (ack.err) {
+                                reject(ack.err);
+                            }
+                            else {
+                                // now register the node for our package
+                                LT.db.get("pkg")
+                                    .get(package_name)
+                                    .get("items")
+                                    .set(this.id)
+                                    .once((v,k) => {
 
-                Object.keys(data).forEach((key) => {
-                    let val = data[key];
-                    node.get(key).put(val);
+                                        console.log(`${this.log_prefix} saved`, data);
+                                        this.mode = "shared"; // shared mode
+                                        this.emit("save");
+                                        return resolve();
+                                    });
+                            }
+                        });
+                    }
+
                 });
 
-                this.mode = "shared"; // shared mode
-                this.emit("save");
-                return resolve();
             }
 
 
@@ -296,9 +321,6 @@ LX.Item = class Item extends LV.EventEmitter {
         });
     }
 
-    saveField(package_name, field, version) {
-
-    }
 
     /**
     * Clears the value of the item and nullifies in database (full delete not possible)
@@ -335,7 +357,15 @@ LX.Item = class Item extends LV.EventEmitter {
                         console.log(`${this.log_prefix} Dropped`);
                         this.mode = "dropped";
                         this.emit("drop");
-                        resolve();
+
+                        LT.db.get("pkg")
+                            .get(package_name)
+                            .get("items")
+                            .unset(this.id)
+                            .once((v,k) => {
+                                this.emit("drop");
+                                return resolve();
+                            });
                     });
             }
 
