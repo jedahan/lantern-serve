@@ -64,29 +64,7 @@ LX.Package =  class Package extends LV.EventEmitter {
     	return this.node.get("data").get(version);
     }
 
-    /**
-    * Ensures we have a valid package node to work with
-    */
-    ensureNode() {
-    	return new Promise((resolve, reject) => {
-	    	this.node.get("name").once((v,k) => {
-	    		if (v) {
-	    			resolve(this.node);
-	    		}
-	    		else {
-	    			console.log(`${this.log_prefix} creating node`, this._data);
-	    			this.node.put(this._data, (ack) => {
-	    				if (ack.err) {
-	    					reject(ack.err)
-	    				}
-	    				else {
-	    					resolve(this.node)
-	    				}
-	    			});
-	    		}
-	    	})
-    	});
-    }
+   
 
     /**
     * Defines the owning organization for this package
@@ -112,7 +90,7 @@ LX.Package =  class Package extends LV.EventEmitter {
 	    	version_node.once((v,k) => {
 	    		// do not over-write pre-existing version
 	    		if (v && !force) {
-	                console.log(`${this.log_prefix} version ${version} already published`);
+	                console.log(`${this.log_prefix} already published: ${this.id}`);
 	                resolve(version_node)
 	    		}
 	    		else {
@@ -121,7 +99,7 @@ LX.Package =  class Package extends LV.EventEmitter {
 		                    reject(ack.err);
 		                }
 		                else {
-		                    console.log(`${this.log_prefix} published version ${version}`);
+		                    console.log(`${this.log_prefix} new published version: ${this.id}`);
 		                    this.emit("publish", name);
 		                    resolve(version_node);
 		                }
@@ -138,10 +116,8 @@ LX.Package =  class Package extends LV.EventEmitter {
     publish(version, data) {
     	version = version || this._data.version; // allow default version
 		// make sure we have a package node to work with
-		return this.ensureNode().then((node) => {
-			this.linkOrganization(this.organization.node);
-			return this.saveVersionData(version, data || {});
-		});
+		this.linkOrganization(this.organization.node);
+		return this.saveVersionData(version, data || {});
 	}
 
     /*

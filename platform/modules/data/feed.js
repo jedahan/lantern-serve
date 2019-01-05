@@ -22,6 +22,7 @@ LX.Feed = class Feed extends LV.EventEmitter {
 
 
     onDataUpdate(val, id, pkg_id) {
+
         var data;
 
         if (val !== null && typeof(val) == "object") {
@@ -91,16 +92,16 @@ LX.Feed = class Feed extends LV.EventEmitter {
             version = parts[1];            
         }
         catch(e) {
-            console.error(`${this.log_prefix} invalid identifier provided to add package:`, id);
+            console.error(`${this.log_prefix} invalid identifier provided to add package: ${id}`);
             return;
         }
 
     	if (this.packages[id]) {
-            console.log(`${this.log_prefix} already watching package:`, id);
+            console.log(`${this.log_prefix} already watching: ${id}`);
             return;
         }
 
-    	console.log(`${this.log_prefix} watching changes for package:`, id)
+    	console.log(`${this.log_prefix} watching changes: ${id}`)
 
 
         if (!this.packages.hasOwnProperty(id)) {
