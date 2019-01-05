@@ -35,9 +35,9 @@ class Atlas extends LV.EventEmitter {
 
         
         // find current map cache size...
-        this.tile_db.info().then((result) => {
-            console.log(`${this.log_prefix} cached tiles: ${result.doc_count}`);
-        });
+        // this.tile_db.info().then((result) => {
+        //     console.log(`${this.log_prefix} cached tiles: ${result.doc_count}`);
+        // });
 
     }
 
@@ -208,7 +208,7 @@ class Atlas extends LV.EventEmitter {
                         else {
                             this.user_db.remove(old_doc).then(() => {
                                 this.user_db.put(doc).then(() => {
-                                    console.log(`${this.log_prefix} re-saved center for user`, this.center);
+                                    //console.log(`${this.log_prefix} re-saved center for user`, this.center);
                                     resolve();
                                 });
                             });   
@@ -216,7 +216,7 @@ class Atlas extends LV.EventEmitter {
                     })
                     .catch((e) => {
                         this.user_db.put(doc).then(() => {
-                            console.log(`${this.log_prefix} saved center for user`, this.center);
+                            //console.log(`${this.log_prefix} saved center for user`, this.center);
                             resolve();
                         });
                     });

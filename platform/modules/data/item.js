@@ -1,7 +1,7 @@
 "use strict";
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 
-LX.SharedItem = class SharedItem extends LV.EventEmitter {
+LX.Item = class Item extends LV.EventEmitter {
     constructor(id, data, defaults) {
         super();
         this.id = id || LV.ShortID.generate();
@@ -193,11 +193,11 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
                     if (typeof(this[idx]) == "object") {
                         if (this[idx].length) {
                             do_update_field = true;
-                            console.log(`${this.log_prefix} updating ${idx} object to ${new_data[idx]}`);
+                            console.log(`${this.log_prefix} changing ${idx} object to ${new_data[idx]}`);
                         }
                     }
                     else if (this[idx]) {
-                        console.log(`${this.log_prefix} updating ${idx} from ${this[idx]} to ${new_data[idx]}`);
+                        console.log(`${this.log_prefix} changing ${idx} from ${this[idx]} to ${new_data[idx]}`);
                         do_update_field = true;
                     }
                 }
@@ -219,6 +219,7 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
     */
     save(package_name, field, version) {
 
+
         return new Promise((resolve, reject) => {
 
             if (!LT.db) {
@@ -230,6 +231,33 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
                 console.log(`${this.log_prefix} Requires package to publish to`);
                 return reject("name_required");
             }
+
+
+            // save to our shared database...
+            const completeSave = (version) => {
+
+                let item = {};
+                item[this.id] = data;
+
+                let node = LT.db.get("pkg")
+                    .get(package_name)
+                    .get("data")
+                    .get(version)
+                    .get(this.id);
+                
+                console.log(`${this.log_prefix} ready to save`, this.id, data, package_name, version);
+
+
+                Object.keys(data).forEach((key) => {
+                    let val = data[key];
+                    node.get(key).put(val);
+                });
+
+                this.mode = "shared"; // shared mode
+                this.emit("save");
+                return resolve();
+            }
+
 
             this.mode = "locked"; // lock mode
 
@@ -255,34 +283,22 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
                 data = this.pack(val);
             }
 
-            // save to our shared database...
-            let package_node = LT.db.get("pkg")
-                .get(package_name);
-
-            const completeSave = (version) => {
-                this.node = package_node.get("data")
-                    .get(version)
-                    .get(this.id);
-
-                this.node.put(data, (ack) => {
-                    if (ack.err) {
-                        console.log(`${this.log_prefix} bad save`, ack.err);
-                        reject(ack.err);
-                    }
-                    else {
-                        this.mode = "shared"; // shared mode
-                        this.emit("save");
-                        return resolve();
-                    }
-                });
+            // save to appropriate package version...
+            if (version) {
+                completeSave(version);
             }
-
-
-            package_node.get("version").then(completeSave);
+            else {
+                LT.db.get("pkg")
+                    .get(package_name)
+                    .get("version")
+                    .once(completeSave);
+            }
         });
     }
 
+    saveField(package_name, field, version) {
 
+    }
 
     /**
     * Clears the value of the item and nullifies in database (full delete not possible)
@@ -304,12 +320,10 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
                 return console.error(`${this.log_prefix} requires package to remove from`);
             }
 
-            let package_node = LT.db.get("pkg")
-                .get(package_name);
-
             const completeDrop = (version) => {
                 let original_data = {};
-                package_node
+                    LT.db.get("pkg")
+                    .get(package_name)
                     .get("data")
                     .get(version)
                     .get(this.id)
@@ -329,7 +343,10 @@ LX.SharedItem = class SharedItem extends LV.EventEmitter {
                 completeDrop(version);
             }
             else {
-                package_node.get("version").then(completeDrop); 
+                LT.db.get("pkg")
+                    .get(package_name)
+                    .get("version")
+                    .once(completeDrop); 
             }
 
         });
