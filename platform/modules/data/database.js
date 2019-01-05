@@ -1,112 +1,14 @@
 "use strict";
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 
-LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
+LX.Database = class Database extends LV.EventEmitter {
 
     constructor(uri) {
         super();
-
+        this.uri = uri;
         this.namespace = "__LX__";
-        this.root_node = null; // root node
-        this.template = {
-            "pkg": {},
-            "org": {}
-        } // template for creating a root node
-        this.stor = LV.GraphDB(uri); // database instance
-    }
-
-    load() {
-        this.check(this.namespace)
-            .then((root) => {
-                if (!root) {
-                    this.initialize(this.namespace, {force: true});
-                }
-            })
-            .catch((err) => {
-                console.error(err);
-            });
-    }
-
-    /**
-    * Check for integrity of database to make sure we have expected data
-    */
-    check(namespace) {  
-        let self = this;
-        return new Promise((resolve, reject) => {
-            // do we have good structure in the database?
-            let top_level_node = self.stor.get(namespace);
-            top_level_node
-                .once(function(v,k) {
-                    let invalid_keys = [];
-
-                    if (typeof(v) != "object") {
-                        // database does not exist yet
-                         return resolve();
-                    }
-
-                    // compare to our template for the node to make sure nodes are expected
-                    Object.keys(v).forEach(key => {
-                        if (key != "_" && !self.template.hasOwnProperty(key)) {
-                            if ( v[key] === null) {
-                                // already nullified
-                                return;
-                            }
-                            // nullify bad value
-                            top_level_node.get(key).put(null);
-                            console.log("[DB] Nullify bad value for key: " + key);
-                            invalid_keys.push(key);
-                        }
-                        else if (self.template.hasOwnProperty(key) && v[key] === null) {
-                            console.log(`[DB] Value ${key} is null but should not be`);
-                            top_level_node.get(key).put(self.template[key]);
-                        }
-                    });
-                            
-                    if (invalid_keys.length > 0) {
-                        reject(`[DB] Cleared unexpected keys at root of node ${namespace}: ${invalid_keys.join(", ")}`);
-                    }
-                    // expected all nodes. good to go!
-                    self.root_node = top_level_node;
-                    //console.log("[DB] Check completed successfully for namespace: " + namespace);
-                    self.emit("check");
-                    self.emit("load");
-                    resolve(self.root_node);
-                });
-        });
-    }
-
-    /**
-    * Create entirely new database at our selected root
-    */
-    initialize(namespace, opts) {
-        console.log(`[DB] Initializing at namespace: ${namespace}`);
-        let self = this;
-        opts = opts || {};
-        return new Promise((resolve, reject) => {
-            let root = self.stor.get(namespace);
-            root.once(function(v,k) {
-                // caution: forced initialization is possible here but will reset entire database
-                if (v == undefined || opts.force) {
-
-                    self.stor.get(namespace)
-                        .put(self.template)
-                        .once((v,k) => {
-                            console.log(`[DB] Created root node: ${namespace}`);
-                            self.root_node = root;
-                            self.emit("initialize");
-                            self.emit("load");
-                            resolve(namespace);
-                        });
-                }
-                else {
-                    console.log(`[DB] Existing root node found: ${namespace}`);                       
-                    self.root_node = root;
-                    self.emit("load");
-                    resolve(namespace);
-                }
-
-            });
-        });
+        this.stor = LV.GraphDB(this.uri); // database instance
+        this.root_node = this.stor.get(this.namespace); // root node
     }
 
 
@@ -136,10 +38,10 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
         // recursive attempt to narrow down to target node
         if (!pointer) pointer = path;
         if (!node) node = this.root_node;
-        let split = pointer.split(".");
+        let split = pointer.split("/");
         node.get(split[0]).once((v,k) => {
             if (split.length > 1) {
-                let new_pointer = split.slice(1).join(".");
+                let new_pointer = split.slice(1).join("/");
                 node = node.get(k);
                 this.print(path,new_pointer,node);
             }
@@ -215,6 +117,11 @@ LX.SharedDatabase = class SharedDatabase extends LV.EventEmitter {
         pointer = pointer || tree;
 
         return new Promise((resolve, reject) => {
+
+            if (!node) {
+                return reject("Root node missing");
+            }
+
             node.once((v,k) => {
                 pointer[k] = {};
                 let promises = [];

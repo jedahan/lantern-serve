@@ -2,7 +2,7 @@
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 
 
-LX.MarkerItem = class MarkerItem extends LX.SharedItem {
+LX.MarkerItem = class MarkerItem extends LX.Item {
     
     constructor(id, data) {
 

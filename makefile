@@ -13,31 +13,32 @@ run:
 	
 pack:
 	browserify platform/vendor/core.js \
-		platform/config/leaflet.js \
-		platform/vendor/map.js \
-		platform/modules/atlas/location.js \
-		platform/modules/atlas/atlas.js  \
-		-o web/public/platform/a.js
-
-	browserify platform/vendor/display.js \
 		platform/vendor/storage.js \
-		platform/modules/network/database.js \
-		platform/modules/application/director.js \
-		platform/modules/application/app.js \
-		platform/modules/application/view.js \
-		platform/modules/application/menu.js \
-		-o web/public/platform/b.js
-
-	browserify platform/helpers/array.js \
+		platform/helpers/array.js \
 		platform/helpers/string.js \
 		platform/helpers/math.js \
-		platform/modules/network/item.js \
-		platform/modules/atlas/marker.js \
-		platform/modules/user/feed.js \
-		platform/modules/user/user.js \
-		platform/modules/organization/organization.js \
-		platform/modules/organization/package.js \
+		platform/modules/data/database.js \
+		platform/modules/data/organization.js \
+		platform/modules/data/package.js \
+		platform/modules/data/item.js \
+		platform/modules/data/user.js \
+		platform/modules/data/feed.js \
+		-o web/public/platform/a.js
+
+	browserify platform/config/leaflet.js \
+		platform/vendor/map.js \
+		platform/modules/mapping/location.js \
+		platform/modules/mapping/marker.js \
+		platform/modules/mapping/atlas.js  \
+		-o web/public/platform/b.js
+
+	browserify platform/modules/display/director.js \
+		platform/vendor/display.js \
+		platform/modules/display/app.js \
+		platform/modules/display/view.js \
+		platform/modules/display/menu.js \
 		-o web/public/platform/c.js
+
 		
 install: 
 	npm install
