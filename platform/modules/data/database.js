@@ -9,6 +9,19 @@ LX.Database = class Database extends LV.EventEmitter {
         this.namespace = "__LX__";
         this.stor = LV.GraphDB(this.uri); // database instance
         this.root_node = this.stor.get(this.namespace); // root node
+
+        this.root_node.get("org").once((v,k) => {
+            if (!v) {
+                this.root_node.get("org").put({});
+            }
+        })
+
+
+        this.root_node.get("pkg").once((v,k) => {
+            if (!v) {
+                this.root_node.get("pkg").put({});
+            }
+        })
     }
 
 

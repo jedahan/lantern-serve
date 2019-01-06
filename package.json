@@ -17,7 +17,7 @@
         "latlon-geohash": "*",
         "leaflet": "^1.4.0",
         "leaflet.locatecontrol": "^0.66.0",
-        "node-fetch": "*",
+        "node-fetch": "^1.6.3",
         "pouchdb-browser": "^7.0.0",
         "shortid": "*",
         "simple-node-logger": "^18.12.21",

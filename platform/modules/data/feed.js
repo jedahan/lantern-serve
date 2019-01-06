@@ -65,6 +65,9 @@ LX.Feed = class Feed extends LV.EventEmitter {
             let package_node = this.db.get("pkg").get(name)
             package_node.get("data")
                 .get(version).once((v,k) => {
+
+                    if (!v) return;
+
                     Object.keys(v).forEach((item) => {
                         if (item == "_") return;
                         package_node.get("data").get(version).get(item)

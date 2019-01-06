@@ -27,7 +27,7 @@ LX.User = class User extends LV.EventEmitter {
 
     clearCredentials(creds) {
         console.warn(`${this.log_prefix}  removing invalid creds from storage`);
-        this.local_db.remove(creds).then(() => { 
+        return this.local_db.remove(creds).then(() => { 
             console.warn(`${this.log_prefix}  waiting for valid sign in or registration...`);
         });
     }
@@ -55,11 +55,11 @@ LX.User = class User extends LV.EventEmitter {
                     if (is_valid) {
                         this.authenticate(creds.username, creds.password)
                             .catch(err => {
-                                this.clearCredentials(creds);
+                                this.clearCredentials(creds).then(this.register.bind(this));
                             });
                     }
                     else {
-                        this.clearCredentials(creds);
+                        this.clearCredentials(creds).then(this.register.bind(this));
                     }
                 })
                 .catch((e) => {
@@ -105,13 +105,14 @@ LX.User = class User extends LV.EventEmitter {
 
             let username = LV.ShortID.generate();
             let password = LV.ShortID.generate();
-            this.username = username;
             console.log(`${this.log_prefix} create user with username: ${username}`);
             this.node.create(username, password, (ack) => {
                 if (ack.err) {
                     console.log(`${this.log_prefix} unable to save`, ack.err);
                     return reject(ack.err);
                 }
+
+                this.node.get("packages").put({});
 
                 console.log(`${this.log_prefix} saved to browser`);
 
@@ -184,7 +185,6 @@ LX.User = class User extends LV.EventEmitter {
                                 .get(pkg.name)
                                 .put(pkg.version)
                                 .once( (v,k) => {
-                                    console.log(v,k);
                                     // id is name@version combined
                                     console.log(`${this.log_prefix} install done: ${pkg.id}`);
                                     this.emit("install", pkg.id);                            

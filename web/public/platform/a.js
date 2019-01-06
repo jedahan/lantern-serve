@@ -1970,6 +1970,19 @@ LX.Database = class Database extends LV.EventEmitter {
         this.namespace = "__LX__";
         this.stor = LV.GraphDB(this.uri); // database instance
         this.root_node = this.stor.get(this.namespace); // root node
+
+        this.root_node.get("org").once((v,k) => {
+            if (!v) {
+                this.root_node.get("org").put({});
+            }
+        })
+
+
+        this.root_node.get("pkg").once((v,k) => {
+            if (!v) {
+                this.root_node.get("pkg").put({});
+            }
+        })
     }
 
 
@@ -2201,6 +2214,9 @@ LX.Feed = class Feed extends LV.EventEmitter {
             let package_node = this.db.get("pkg").get(name)
             package_node.get("data")
                 .get(version).once((v,k) => {
+
+                    if (!v) return;
+
                     Object.keys(v).forEach((item) => {
                         if (item == "_") return;
                         package_node.get("data").get(version).get(item)
@@ -2539,6 +2555,10 @@ LX.Item = class Item extends LV.EventEmitter {
             // save to our shared database...
             const completeSave = (version) => {
 
+                if (!version) {
+                    return reject("missing_version");
+                }
+
                 let item = {};
                 item[this.id] = data;
 
@@ -2692,30 +2712,23 @@ const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 
 LX.Organization = class Organization extends LV.EventEmitter {
 
-    constructor(id, db) {
+    constructor(id, name, db) {
         super()
         if (!id) {
             return console.error("[Organization] requires id to construct");
         }
+
+        if (!name) {
+            return console.error(`[Organiation] please name your organization`);
+        }
+
         if (!db) {
             return console.error("[Organization] requires database to construct");
         }
         this.id = id;
-        this.name = null;
-
+        this.name = name;
         this.db = db;
-        this.node = db.get("org")
-            .get(id);
-
-        //console.log(`${this.log_prefix} id = ${this.id}`)
-
-        this.node.on((v,k) => {
-            // always keep object up-to-date as data changes
-            if (v && v.hasOwnProperty("name")) {
-                //console.log(`${this.log_prefix} name --> ${v.name}`);
-                this.name = v.name;
-            }
-        })
+        this.node = this.db.get("org").get(this.id);
     }
     
 
@@ -2729,57 +2742,45 @@ LX.Organization = class Organization extends LV.EventEmitter {
     /**
     * Publish a new data package to the network
     */
-    register(name) {
+    register() {
         return new Promise((resolve, reject) => {
-            if (!name) {
-                console.error(`${this.log_prefix} please name your organization to register`);
-                return reject("name_required");
-            }
-        
+            
             this.node.once((v,k) => {
                 if (v) {
-                    console.warn(`${this.log_prefix} organization already exists`,v);
+                    console.log(`${this.log_prefix} already registered`);
                     return resolve(v);
                 }
-
-                this.node.put({
-                        "name": name,
+                else {
+                    // this node may contain fields for "members" and "packages", too
+                    this.node.put({
+                        "name": this.name,
                         "members": {},
                         "packages": {}
-                    }, (ack) => {
-                        if (ack.err) {
-                            reject(ack.err);
+                    })
+                    .once((v,k) => {
+                        if (!v) {
+                            return reject("org_failed_register");
                         }
-                        else {
-                            this.emit("register");
-                            return resolve(this.node);
-                        }
+                        console.info(`${this.log_prefix} newly registered`,v);
+                        this.emit("register");
+                        resolve(v);
                     });
+                }
             });
-
         });
 
     }
 
     unregister() {
         return new Promise((resolve, reject) => {
-            this.node.put(null)
+            this.node
+                .put(null)
                 .once((v,k) => {
                     console.log(`${this.log_prefix} unregistered ${this.id}`)
                     this.emit("unregister");
-                    return resolve();
+                    return resolve(v);
                 });
             });
-    }
-
-
-    getOrRegister(name) {
-        return new Promise((resolve, reject) => {
-            this.node.once((v,k) => {
-                if (v) return resolve(v);
-                return this.register(name).then(resolve);
-            })
-        });
     }
 
 
@@ -2829,13 +2830,15 @@ LX.Package =  class Package extends LV.EventEmitter {
 
 		this.db = org.db;
 		this.organization = org;
-		this.node = this.db.get("pkg").get(name);
 		this._data = {
 			"name": name,
 			"public": true, // only supporting public packages, for now
 			"version": "0.0.1", // default version number
 			//"organization": org.node // reference link to owning organization
 		}
+
+        this.node = this.db.get("pkg").get(name);
+
 	}
 
 
@@ -2867,68 +2870,50 @@ LX.Package =  class Package extends LV.EventEmitter {
 	}
 
 
-    //-------------------------------------------------------------------------
-    /**
-    * Find latest version of data
-    */
-    getNodeForVersion(version) {
-    	return this.node.get("data").get(version);
-    }
-
    
-
-    /**
-    * Defines the owning organization for this package
-    */
-    linkOrganization(node) {
-    	this.node.get("organization").put(node);
-    	node.get("packages").get(this.name).put(this.node);
-    }
-
-
-    /**
-    * Saves object data directly to a desired version
-    */
-    saveVersionData(version, data, force) {
-    	if (typeof(data) != "object") {
-    		return console.warn(
-    			`${this.log_prefix} data to save for ${version} must have object format`
-    		);
-    	}
-		return new Promise((resolve, reject) => {
-	    	// identify target data node to write to
-		    let version_node = this.getNodeForVersion(version);
-	    	version_node.once((v,k) => {
-	    		// do not over-write pre-existing version
-	    		if (v && !force) {
-	                console.log(`${this.log_prefix} already published: ${this.id}`);
-	                resolve(version_node)
-	    		}
-	    		else {
-			    	version_node.put(data, (ack) => {
-		    		    if (ack.err) {
-		                    reject(ack.err);
-		                }
-		                else {
-		                    console.log(`${this.log_prefix} new published version: ${this.id}`);
-		                    this.emit("publish", name);
-		                    resolve(version_node);
-		                }
-			    	});
-			    }
-			});
-		});
-    }
-
     //-------------------------------------------------------------------------
 	/**
     * Publish a new data package to the network
     */
     publish(version, data) {
-    	version = version || this._data.version; // allow default version
-		// make sure we have a package node to work with
-		this.linkOrganization(this.organization.node);
-		return this.saveVersionData(version, data || {});
+        return new Promise((resolve, reject) => {
+
+            const completePublish = () => {
+
+                let working_node = this.node.get("data").get(version || this._data.version);
+                
+                working_node.once((v,k) => {
+
+                    // do not over-write pre-existing version
+                    if (v) {
+                        console.log(`${this.log_prefix} already published: ${this.id}`);
+                        resolve(v);
+                    }
+                    else {
+                        console.log(`${this.log_prefix} will publish: ${this.id}`);
+
+                        // we know organization exists, so first link that
+                        working_node.put(data || {})
+                            .once((v,k) => {
+
+                                this.node.get("version").put(version || this._data.version);
+
+                                console.log(`${this.log_prefix} new published version: ${this.id}`);
+                                this.emit("publish");
+                                resolve();
+                            });
+                    }
+                });
+
+            }
+
+            this.node.get("organization")
+                .put(this.organization.node)
+                .once(() => {
+                    this.organization.node.get("packages").get(this.name).put(this.node);
+                })
+                .once(completePublish)
+        });
 	}
 
     /*
@@ -2937,20 +2922,16 @@ LX.Package =  class Package extends LV.EventEmitter {
     unpublish(version) {
         return new Promise((resolve, reject) => {
 
-            const cb = (v,k) => {
-                this.emit("unpublish", name);
-                return resolve();
-            }
             if (!version) {
-                // unpublish all versions
-                this.node.put(null, cb);
-            }
-            else {
-            	let version_node = this.getNodeForVersion(version);
-            	version_node.put(null, () => {
-            		node.get("version").put(null);
-            	});
-            } 
+                console.error(`${this.log_prefix} please specify version to unpublish`);
+                return reject("missing_version")
+            }   
+
+        	this.node.get("data").get(version || this.version)
+                .put(null, (v,k) => {
+                this.emit("unpublish");
+                return resolve();
+            });
         });
     }
 }
@@ -2984,7 +2965,7 @@ LX.User = class User extends LV.EventEmitter {
 
     clearCredentials(creds) {
         console.warn(`${this.log_prefix}  removing invalid creds from storage`);
-        this.local_db.remove(creds).then(() => { 
+        return this.local_db.remove(creds).then(() => { 
             console.warn(`${this.log_prefix}  waiting for valid sign in or registration...`);
         });
     }
@@ -3012,11 +2993,11 @@ LX.User = class User extends LV.EventEmitter {
                     if (is_valid) {
                         this.authenticate(creds.username, creds.password)
                             .catch(err => {
-                                this.clearCredentials(creds);
+                                this.clearCredentials(creds).then(this.register.bind(this));
                             });
                     }
                     else {
-                        this.clearCredentials(creds);
+                        this.clearCredentials(creds).then(this.register.bind(this));
                     }
                 })
                 .catch((e) => {
@@ -3062,13 +3043,14 @@ LX.User = class User extends LV.EventEmitter {
 
             let username = LV.ShortID.generate();
             let password = LV.ShortID.generate();
-            this.username = username;
             console.log(`${this.log_prefix} create user with username: ${username}`);
             this.node.create(username, password, (ack) => {
                 if (ack.err) {
                     console.log(`${this.log_prefix} unable to save`, ack.err);
                     return reject(ack.err);
                 }
+
+                this.node.get("packages").put({});
 
                 console.log(`${this.log_prefix} saved to browser`);
 
@@ -3141,7 +3123,6 @@ LX.User = class User extends LV.EventEmitter {
                                 .get(pkg.name)
                                 .put(pkg.version)
                                 .once( (v,k) => {
-                                    console.log(v,k);
                                     // id is name@version combined
                                     console.log(`${this.log_prefix} install done: ${pkg.id}`);
                                     this.emit("install", pkg.id);                            

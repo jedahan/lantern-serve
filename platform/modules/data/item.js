@@ -236,6 +236,10 @@ LX.Item = class Item extends LV.EventEmitter {
             // save to our shared database...
             const completeSave = (version) => {
 
+                if (!version) {
+                    return reject("missing_version");
+                }
+
                 let item = {};
                 item[this.id] = data;
 
