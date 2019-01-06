@@ -18,13 +18,15 @@ LX.Package =  class Package extends LV.EventEmitter {
 
 		this.db = org.db;
 		this.organization = org;
-		this.node = this.db.get("pkg").get(name);
 		this._data = {
 			"name": name,
 			"public": true, // only supporting public packages, for now
 			"version": "0.0.1", // default version number
 			//"organization": org.node // reference link to owning organization
 		}
+
+        this.node = this.db.get("pkg").get(name);
+
 	}
 
 
@@ -56,68 +58,50 @@ LX.Package =  class Package extends LV.EventEmitter {
 	}
 
 
-    //-------------------------------------------------------------------------
-    /**
-    * Find latest version of data
-    */
-    getNodeForVersion(version) {
-    	return this.node.get("data").get(version);
-    }
-
    
-
-    /**
-    * Defines the owning organization for this package
-    */
-    linkOrganization(node) {
-    	this.node.get("organization").put(node);
-    	node.get("packages").get(this.name).put(this.node);
-    }
-
-
-    /**
-    * Saves object data directly to a desired version
-    */
-    saveVersionData(version, data, force) {
-    	if (typeof(data) != "object") {
-    		return console.warn(
-    			`${this.log_prefix} data to save for ${version} must have object format`
-    		);
-    	}
-		return new Promise((resolve, reject) => {
-	    	// identify target data node to write to
-		    let version_node = this.getNodeForVersion(version);
-	    	version_node.once((v,k) => {
-	    		// do not over-write pre-existing version
-	    		if (v && !force) {
-	                console.log(`${this.log_prefix} already published: ${this.id}`);
-	                resolve(version_node)
-	    		}
-	    		else {
-			    	version_node.put(data, (ack) => {
-		    		    if (ack.err) {
-		                    reject(ack.err);
-		                }
-		                else {
-		                    console.log(`${this.log_prefix} new published version: ${this.id}`);
-		                    this.emit("publish", name);
-		                    resolve(version_node);
-		                }
-			    	});
-			    }
-			});
-		});
-    }
-
     //-------------------------------------------------------------------------
 	/**
     * Publish a new data package to the network
     */
     publish(version, data) {
-    	version = version || this._data.version; // allow default version
-		// make sure we have a package node to work with
-		this.linkOrganization(this.organization.node);
-		return this.saveVersionData(version, data || {});
+        return new Promise((resolve, reject) => {
+
+            const completePublish = () => {
+
+                let working_node = this.node.get("data").get(version || this._data.version);
+                
+                working_node.once((v,k) => {
+
+                    // do not over-write pre-existing version
+                    if (v) {
+                        console.log(`${this.log_prefix} already published: ${this.id}`);
+                        resolve(v);
+                    }
+                    else {
+                        console.log(`${this.log_prefix} will publish: ${this.id}`);
+
+                        // we know organization exists, so first link that
+                        working_node.put(data || {})
+                            .once((v,k) => {
+
+                                this.node.get("version").put(version || this._data.version);
+
+                                console.log(`${this.log_prefix} new published version: ${this.id}`);
+                                this.emit("publish");
+                                resolve();
+                            });
+                    }
+                });
+
+            }
+
+            this.node.get("organization")
+                .put(this.organization.node)
+                .once(() => {
+                    this.organization.node.get("packages").get(this.name).put(this.node);
+                })
+                .once(completePublish)
+        });
 	}
 
     /*
@@ -126,20 +110,16 @@ LX.Package =  class Package extends LV.EventEmitter {
     unpublish(version) {
         return new Promise((resolve, reject) => {
 
-            const cb = (v,k) => {
-                this.emit("unpublish", name);
-                return resolve();
-            }
             if (!version) {
-                // unpublish all versions
-                this.node.put(null, cb);
-            }
-            else {
-            	let version_node = this.getNodeForVersion(version);
-            	version_node.put(null, () => {
-            		node.get("version").put(null);
-            	});
-            } 
+                console.error(`${this.log_prefix} please specify version to unpublish`);
+                return reject("missing_version")
+            }   
+
+        	this.node.get("data").get(version || this.version)
+                .put(null, (v,k) => {
+                this.emit("unpublish");
+                return resolve();
+            });
         });
     }
 }

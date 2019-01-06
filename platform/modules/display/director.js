@@ -37,21 +37,11 @@ LX.Director = class Director extends LV.EventEmitter {
                 console.warn("[Direct] No available apps to work with");
             });
 
-
+        // define database and user to work with decentralized network
         this.db = new LX.Database(window.location.origin + "/gun");
-
-        // get or create a unique profile for this user / device
         this.user = new LX.User(this.db);
-        this.user.on("auth", function() {
-            this.view.data.user.username = this.user.username;
-            this.emit("auth");
-         }.bind(this));
-
         this.user.authOrRegister();
-
-
         this.emit("start");
-
     }
 
 
@@ -60,9 +50,9 @@ LX.Director = class Director extends LV.EventEmitter {
             fn(this.user);
         }
         else {
-            this.once("auth", () => {
+            this.user.once("auth", function() {
                 fn(this.user);
-            });
+            }.bind(this));
         }
     }
 

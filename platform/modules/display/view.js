@@ -11,9 +11,6 @@ LX.View = class View extends LV.EventEmitter {
             el: '#app-container',
             data: {
                 app_components: [],
-                user: {
-                    username: null
-                },
                 map: false
             }
         });

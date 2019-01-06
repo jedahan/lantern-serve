@@ -3,30 +3,23 @@ const LX = window.LX || {}; if (!window.LX) window.LX = LX;
 
 LX.Organization = class Organization extends LV.EventEmitter {
 
-    constructor(id, db) {
+    constructor(id, name, db) {
         super()
         if (!id) {
             return console.error("[Organization] requires id to construct");
         }
+
+        if (!name) {
+            return console.error(`[Organiation] please name your organization`);
+        }
+
         if (!db) {
             return console.error("[Organization] requires database to construct");
         }
         this.id = id;
-        this.name = null;
-
+        this.name = name;
         this.db = db;
-        this.node = db.get("org")
-            .get(id);
-
-        //console.log(`${this.log_prefix} id = ${this.id}`)
-
-        this.node.on((v,k) => {
-            // always keep object up-to-date as data changes
-            if (v && v.hasOwnProperty("name")) {
-                //console.log(`${this.log_prefix} name --> ${v.name}`);
-                this.name = v.name;
-            }
-        })
+        this.node = this.db.get("org").get(this.id);
     }
     
 
@@ -40,57 +33,45 @@ LX.Organization = class Organization extends LV.EventEmitter {
     /**
     * Publish a new data package to the network
     */
-    register(name) {
+    register() {
         return new Promise((resolve, reject) => {
-            if (!name) {
-                console.error(`${this.log_prefix} please name your organization to register`);
-                return reject("name_required");
-            }
-        
+            
             this.node.once((v,k) => {
                 if (v) {
-                    console.warn(`${this.log_prefix} organization already exists`,v);
+                    console.log(`${this.log_prefix} already registered`);
                     return resolve(v);
                 }
-
-                this.node.put({
-                        "name": name,
+                else {
+                    // this node may contain fields for "members" and "packages", too
+                    this.node.put({
+                        "name": this.name,
                         "members": {},
                         "packages": {}
-                    }, (ack) => {
-                        if (ack.err) {
-                            reject(ack.err);
+                    })
+                    .once((v,k) => {
+                        if (!v) {
+                            return reject("org_failed_register");
                         }
-                        else {
-                            this.emit("register");
-                            return resolve(this.node);
-                        }
+                        console.info(`${this.log_prefix} newly registered`,v);
+                        this.emit("register");
+                        resolve(v);
                     });
+                }
             });
-
         });
 
     }
 
     unregister() {
         return new Promise((resolve, reject) => {
-            this.node.put(null)
+            this.node
+                .put(null)
                 .once((v,k) => {
                     console.log(`${this.log_prefix} unregistered ${this.id}`)
                     this.emit("unregister");
-                    return resolve();
+                    return resolve(v);
                 });
             });
-    }
-
-
-    getOrRegister(name) {
-        return new Promise((resolve, reject) => {
-            this.node.once((v,k) => {
-                if (v) return resolve(v);
-                return this.register(name).then(resolve);
-            })
-        });
     }
 
 
