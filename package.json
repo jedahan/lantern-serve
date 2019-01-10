@@ -7,7 +7,7 @@
         "bulma": "*",
         "compression": "^1.7.3",
         "directory-tree": "^2.2.1",
-        "event-emitter-es6": "*",
+        "event-emitter-es6": "^1.1.5",
         "express": "^4.16.4",
         "fetch-timeout": "*",
         "fs-extra": "7.x",

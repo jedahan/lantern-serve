@@ -1,17 +1,18 @@
 MAKEFLAGS += --warn-undefined-variables
 SHELL := /bin/bash
 TAG?=latest
+PLATFORM := $(shell echo web/public/platform/{a,b,c}.js)
+CERTS := certs/dev.lantern.link.pem
 
-.PHONY: build
+.PHONY: build certs clean install start run stage deploy
 
-
-build:
+build: $(PLATFORM) $(CERTS)
 	docker-compose -f dc-dev.yml build
 
 run:
 	docker-compose -f dc-dev.yml up
 	
-pack:
+$(word 1, $(PLATFORM)):
 	browserify platform/vendor/core.js \
 		platform/vendor/storage.js \
 		platform/helpers/array.js \
@@ -23,34 +24,41 @@ pack:
 		platform/modules/data/item.js \
 		platform/modules/data/user.js \
 		platform/modules/data/feed.js \
-		-o web/public/platform/a.js
+		-o $@
 
+$(word 2, $(PLATFORM)):
 	browserify platform/config/leaflet.js \
 		platform/vendor/map.js \
 		platform/modules/mapping/location.js \
 		platform/modules/mapping/marker.js \
 		platform/modules/mapping/atlas.js  \
-		-o web/public/platform/b.js
+		-o $@
 
+$(word 3, $(PLATFORM)):
 	browserify platform/modules/display/director.js \
 		platform/vendor/display.js \
 		platform/modules/display/app.js \
 		platform/modules/display/view.js \
 		platform/modules/display/menu.js \
-		-o web/public/platform/c.js
+		-o $@
 
-		
-install: 
+install:
 	npm install
 
-start:
+start: $(PLATFORM) $(CERTS)
 	npm start	
 
 stage:
 	docker-compose -f dc-stage.yml build
-	docker-compuse -f dc-stage.yml up -d
+	docker-compose -f dc-stage.yml up -d
 
 deploy:
 	triton profile set-current lantern
 	triton-compose -f dc-prod.yml build
 	triton-compose -f dc-prod.yml up -d
+
+certs/dev.lantern.link.pem:
+	cd certs && mkcert dev.lantern.link
+
+clean:
+	rm web/public/platform/{a,b,c}.js
