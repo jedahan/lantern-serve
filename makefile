@@ -42,10 +42,10 @@ $(word 3, $(PLATFORM)):
 		platform/modules/display/menu.js \
 		-o $@
 
-install:
+install: $(CERTS)
 	npm install
 
-start: $(PLATFORM) $(CERTS)
+start: $(PLATFORM)
 	npm start	
 
 stage:
