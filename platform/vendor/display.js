@@ -1,6 +1,6 @@
-"use strict";
+'use strict'
 
-const LV = window.LV || {}; if (!window.LV) window.LV = LV;
+const LV = window.LV || {}; if (!window.LV) window.LV = LV
 
-LV.Vue = require("vue");
-LV.Wheelnav = require("wheelnav");
+LV.Vue = require('vue')
+LV.Wheelnav = require('wheelnav')

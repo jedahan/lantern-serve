@@ -1,125 +1,112 @@
-"use strict";
-const LX = window.LX || {}; if (!window.LX) window.LX = LX;
+/* global LV */
+'use strict'
+const LX = window.LX || {}; if (!window.LX) window.LX = LX
 
-LX.Package =  class Package extends LV.EventEmitter {
+LX.Package = class Package extends LV.EventEmitter {
+  constructor (name, org) {
+    super()
 
-	constructor(name, org) {
-		super();
-
-		if (!name) {
-            console.error(`${this.log_prefix} please name your package to publish`);
-            throw new Error("missing_name")
-        }	
-
-        if (!org || !org.db) {
-            console.error(`${this.log_prefix} please identify a valid organization for this package`);
-            throw new Error("missing_org");  	
-        }
-
-		this.db = org.db;
-		this.organization = org;
-		this._data = {
-			"name": name,
-			"public": true, // only supporting public packages, for now
-			"version": "0.0.1", // default version number
-			//"organization": org.node // reference link to owning organization
-		}
-
-        this.node = this.db.get("pkg").get(name);
-
-	}
-
-
-
-    //-------------------------------------------------------------------------
-    get log_prefix() {
-    	return `[p:${this.name || "new package"}@${this.version}]`.padEnd(20, " ");
+    if (!name) {
+      console.error(`${this.logPrefix} please name your package to publish`)
+      throw new Error('missing_name')
     }
 
-	get name() {
-		return this._data.name;
-	}
+    if (!org || !org.db) {
+      console.error(`${this.logPrefix} please identify a valid organization for this package`)
+      throw new Error('missing_org')
+    }
 
-	set name(val) {
-		this._data.name = val;
-	}
+    this.db = org.db
+    this.organization = org
+    this._data = {
+      'name': name,
+      'public': true, // only supporting public packages, for now
+      'version': '0.0.1' // default version number
+      // "organization": org.node // reference link to owning organization
+    }
 
+    this.node = this.db.get('pkg').get(name)
+  }
 
-	get version() {
-		return this._data.version;
-	}
+  // -------------------------------------------------------------------------
+  get logPrefix () {
+    return `[p:${this.name || 'new package'}@${this.version}]`.padEnd(20, ' ')
+  }
 
-	set version(val) {
-		this._data.version = val;
-	}
+  get name () {
+    return this._data.name
+  }
 
-	get id() {
-		return this._data.name +"@"+this._data.version;
-	}
+  set name (val) {
+    this._data.name = val
+  }
 
+  get version () {
+    return this._data.version
+  }
 
-   
-    //-------------------------------------------------------------------------
-	/**
+  set version (val) {
+    this._data.version = val
+  }
+
+  get id () {
+    return this._data.name + '@' + this._data.version
+  }
+
+  // -------------------------------------------------------------------------
+  /**
     * Publish a new data package to the network
     */
-    publish(version, data) {
-        return new Promise((resolve, reject) => {
+  publish (version, data) {
+    return new Promise((resolve, reject) => {
+      const completePublish = () => {
+        let workingNode = this.node.get('data').get(version || this._data.version)
 
-            const completePublish = () => {
+        workingNode.once((v, k) => {
+          // do not over-write pre-existing version
+          if (v) {
+            console.log(`${this.logPrefix} already published: ${this.id}`)
+            resolve(v)
+          } else {
+            console.log(`${this.logPrefix} will publish: ${this.id}`)
 
-                let working_node = this.node.get("data").get(version || this._data.version);
-                
-                working_node.once((v,k) => {
+            // we know organization exists, so first link that
+            workingNode.put(data || {})
+              .once((v, k) => {
+                this.node.get('version').put(version || this._data.version)
 
-                    // do not over-write pre-existing version
-                    if (v) {
-                        console.log(`${this.log_prefix} already published: ${this.id}`);
-                        resolve(v);
-                    }
-                    else {
-                        console.log(`${this.log_prefix} will publish: ${this.id}`);
+                console.log(`${this.logPrefix} new published version: ${this.id}`)
+                this.emit('publish')
+                resolve()
+              })
+          }
+        })
+      }
 
-                        // we know organization exists, so first link that
-                        working_node.put(data || {})
-                            .once((v,k) => {
+      this.node.get('organization')
+        .put(this.organization.node)
+        .once(() => {
+          this.organization.node.get('packages').get(this.name).put(this.node)
+        })
+        .once(completePublish)
+    })
+  }
 
-                                this.node.get("version").put(version || this._data.version);
-
-                                console.log(`${this.log_prefix} new published version: ${this.id}`);
-                                this.emit("publish");
-                                resolve();
-                            });
-                    }
-                });
-
-            }
-
-            this.node.get("organization")
-                .put(this.organization.node)
-                .once(() => {
-                    this.organization.node.get("packages").get(this.name).put(this.node);
-                })
-                .once(completePublish)
-        });
-	}
-
-    /*
+  /*
     * Unpublish removes a data package from the network
     */
-    unpublish(version) {
-        return new Promise((resolve, reject) => {
+  unpublish (version) {
+    return new Promise((resolve, reject) => {
+      if (!version) {
+        console.error(`${this.logPrefix} please specify version to unpublish`)
+        return reject('missing_version')
+      }
 
-            if (!version) {
-                console.error(`${this.log_prefix} please specify version to unpublish`);
-                return reject("missing_version")
-            }   
-
-        	this.node.get("data").get(version || this.version)
-                .put(null, (v,k) => {
-                this.emit("unpublish");
-                return resolve();
-            });
-        });
-    }
+      this.node.get('data').get(version || this.version)
+        .put(null, (v, k) => {
+          this.emit('unpublish')
+          return resolve()
+        })
+    })
+  }
 }

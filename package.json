@@ -21,6 +21,7 @@
         "pouchdb-browser": "^7.0.0",
         "shortid": "*",
         "simple-node-logger": "^18.12.21",
+        "standard": "^12.0.1",
         "typeface-montserrat": "0.0.54",
         "vue": "^2.5.21",
         "wheelnav": "*"
@@ -31,6 +32,13 @@
         "raphael": "wheelnav/js/dist/raphael.min.js"
     },
     "scripts": {
+        "lint": "standard",
+        "fix": "standard --fix",
         "start": "node ./web/index.js"
+    },
+    "standard": {
+      "ignore": [
+        "web/public/scripts/load.js"
+      ]
     }
 }
