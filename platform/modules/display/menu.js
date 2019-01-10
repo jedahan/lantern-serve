@@ -114,11 +114,10 @@ LX.PieMenu = class PieMenu extends LV.EventEmitter {
     }
 
     unlock() {
-        this._locked = false;
-
         //console.log("[PieMenu] Unlock");
         // handle mobile double-activate bug
         setTimeout(() => {
+            this._locked = false;
             this.emit("unlock");
         }, 400);
     }
