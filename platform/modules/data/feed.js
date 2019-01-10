@@ -21,7 +21,7 @@ LX.Feed = class Feed extends LV.EventEmitter {
     }
 
 
-    onDataUpdate(val, id, pkg_id) {
+    onDataChange(val, id, pkg_id) {
 
         var data;
 
@@ -41,7 +41,7 @@ LX.Feed = class Feed extends LV.EventEmitter {
         };
 
         if (this.packages[pkg_id]) {
-            this.emit("update", event);
+            this.emit("change", event);
         }
         else {
             console.log("skipping", event)
@@ -72,7 +72,7 @@ LX.Feed = class Feed extends LV.EventEmitter {
                         if (item == "_") return;
                         package_node.get("data").get(version).get(item)
                         .once((v,k) => {
-                            this.onDataUpdate(v,k, id);
+                            this.onDataChange(v,k, id);
                         });
                     });
 
@@ -117,7 +117,7 @@ LX.Feed = class Feed extends LV.EventEmitter {
                     // known issue with GunDB prevents new items from triggering this event
                     // @todo replace work-around that polls for refreshData once fix is available
                     // https://github.com/amark/gun/issues/663
-                    this.onDataUpdate(v,k,id);
+                    this.onDataChange(v,k,id);
                 });
    
         }
