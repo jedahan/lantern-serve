@@ -15417,7 +15417,9 @@ LX.PieMenu = class PieMenu extends LV.EventEmitter {
         this.mask_element = document.getElementById("pie-menu-mask");
         this.mask_element.onclick = () => {
             this.close();
-            this.unlock();
+            setTimeout(() => {
+                this.unlock();
+            }, 500);
         };
     }    
 
@@ -15518,11 +15520,10 @@ LX.PieMenu = class PieMenu extends LV.EventEmitter {
     }
 
     unlock() {
-        this._locked = false;
-
         //console.log("[PieMenu] Unlock");
         // handle mobile double-activate bug
         setTimeout(() => {
+            this._locked = false;
             this.emit("unlock");
         }, 400);
     }
