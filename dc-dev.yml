@@ -14,8 +14,8 @@ services:
       environment:
           - CLOUD=false
           - DB=db/dev
-          - SSL_PRIVATE_KEY=/opt/server/certs/privkey.pem
-          - SSL_CERTIFICATE=/opt/server/certs/fullchain.pem
+          - SSL_PRIVATE_KEY=/opt/server/certs/dev.lantern.link-key.pem
+          - SSL_CERTIFICATE=/opt/server/certs/dev.lantern.link.pem
 
 volumes:
-  apps: 
+  apps:

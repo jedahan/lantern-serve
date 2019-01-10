@@ -2,10 +2,11 @@ MAKEFLAGS += --warn-undefined-variables
 SHELL := /bin/bash
 TAG?=latest
 PLATFORM := $(shell echo web/public/platform/{a,b,c}.js)
+CERTS := certs/dev.lantern.link.pem
 
-.PHONY: build clean install start run stage deploy
+.PHONY: build certs clean install start run stage deploy
 
-build: $(PLATFORM)
+build: $(PLATFORM) $(CERTS)
 	docker-compose -f dc-dev.yml build
 
 run:
@@ -44,7 +45,7 @@ $(word 3, $(PLATFORM)):
 install:
 	npm install
 
-start: $(PLATFORM)
+start: $(PLATFORM) $(CERTS)
 	npm start	
 
 stage:
@@ -55,6 +56,9 @@ deploy:
 	triton profile set-current lantern
 	triton-compose -f dc-prod.yml build
 	triton-compose -f dc-prod.yml up -d
+
+certs/dev.lantern.link.pem:
+	cd certs && mkcert dev.lantern.link
 
 clean:
 	rm web/public/platform/{a,b,c}.js
