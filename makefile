@@ -11,7 +11,7 @@ build: $(PLATFORM)
 run:
 	docker-compose -f dc-dev.yml up
 	
-web/public/platform/a.js:
+$(word 1, $(PLATFORM)):
 	browserify platform/vendor/core.js \
 		platform/vendor/storage.js \
 		platform/helpers/array.js \
@@ -23,23 +23,23 @@ web/public/platform/a.js:
 		platform/modules/data/item.js \
 		platform/modules/data/user.js \
 		platform/modules/data/feed.js \
-		-o web/public/platform/a.js
+		-o $@
 
-web/public/platform/b.js:
+$(word 2, $(PLATFORM)):
 	browserify platform/config/leaflet.js \
 		platform/vendor/map.js \
 		platform/modules/mapping/location.js \
 		platform/modules/mapping/marker.js \
 		platform/modules/mapping/atlas.js  \
-		-o web/public/platform/b.js
+		-o $@
 
-web/public/platform/c.js:
+$(word 3, $(PLATFORM)):
 	browserify platform/modules/display/director.js \
 		platform/vendor/display.js \
 		platform/modules/display/app.js \
 		platform/modules/display/view.js \
 		platform/modules/display/menu.js \
-		-o web/public/platform/c.js
+		-o $@
 
 install:
 	npm install
