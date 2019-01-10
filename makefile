@@ -4,14 +4,37 @@ TAG?=latest
 PLATFORM := $(shell echo web/public/platform/{a,b,c}.js)
 CERTS := certs/dev.lantern.link.pem
 
-.PHONY: build certs clean install start run stage deploy
+.PHONY: build certs clean install start run stage deploy pack $(PLATFORM)
+
+install:
+	npm install
+	
+start: $(PLATFORM) $(CERTS)
+	npm start	
 
 build: $(PLATFORM) $(CERTS)
 	docker-compose -f dc-dev.yml build
 
 run:
 	docker-compose -f dc-dev.yml up
-	
+
+stage: $(PLATFORM) 
+	docker-compose -f dc-stage.yml build
+	docker-compose -f dc-stage.yml up -d
+
+deploy: $(PLATFORM)
+	triton profile set-current lantern
+	triton-compose -f dc-prod.yml build
+	triton-compose -f dc-prod.yml up -d
+
+pack: $(PLATFORM)
+
+clean:
+	rm web/public/platform/{a,b,c}.js
+
+certs/dev.lantern.link.pem:
+	cd certs && mkcert dev.lantern.link
+
 $(word 1, $(PLATFORM)):
 	browserify platform/vendor/core.js \
 		platform/vendor/storage.js \
@@ -41,24 +64,3 @@ $(word 3, $(PLATFORM)):
 		platform/modules/display/view.js \
 		platform/modules/display/menu.js \
 		-o $@
-
-install: $(CERTS)
-	npm install
-
-start: $(PLATFORM)
-	npm start	
-
-stage:
-	docker-compose -f dc-stage.yml build
-	docker-compose -f dc-stage.yml up -d
-
-deploy:
-	triton profile set-current lantern
-	triton-compose -f dc-prod.yml build
-	triton-compose -f dc-prod.yml up -d
-
-certs/dev.lantern.link.pem:
-	cd certs && mkcert dev.lantern.link
-
-clean:
-	rm web/public/platform/{a,b,c}.js
