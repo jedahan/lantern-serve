@@ -9,6 +9,16 @@ LX.Item = class Item extends LV.EventEmitter {
 
         // create data space for data we allow to be exported to shared database
         this._data = {};
+
+        // always include these defaults
+        let global_defaults = {
+            "owner": ["o"],
+            "editors": ["e", []],
+            "tags": ["t", []]
+        }
+
+        defaults = Object.assign(global_defaults, defaults);
+
         for (var idx in defaults) {
             this._data[idx] = defaults[idx][1] || null;
         }
@@ -32,6 +42,10 @@ LX.Item = class Item extends LV.EventEmitter {
 
 
     //-------------------------------------------------------------------------
+    inspect() {
+        console.log(`${this.log_prefix} data = ${JSON.stringify(this._data)}`);
+    }
+
     get log_prefix() {
         return `[i:${this.id}]`.padEnd(20, " ")
     }
@@ -40,6 +54,78 @@ LX.Item = class Item extends LV.EventEmitter {
         return this._data;
     }
 
+
+    //------------------------------------------------------------------- OWNER
+    /**
+    * User that created this item / has primary control of this item 
+    */
+    get owner() {
+        return this._data.owner;
+    }
+
+    /**
+    * Defines the owner for this item
+    */
+    set owner(val) {
+        this._data.owner = val;
+    }
+
+
+
+
+    //----------------------------------------------------------------- EDITORS
+    /**
+    * Gets a list of all item editors
+    */
+    get editors() {
+        return this._data.editors;
+    }
+
+    /**
+    * Sets the entire list of editors for this item
+    */
+    set editors(val) {
+        if (!val || val.length == 0 ) return;
+
+        if (typeof(val) == "object") {
+            val.forEach(this.editor.bind(this));
+        }
+    }
+
+
+    /**
+    * Adds a new editor to the item
+    */
+    editor(val) {
+        if (this._data.editors.indexOf(val) > -1) {
+            return;
+        }
+        this._data.editors.push(val);
+        this.emit("editor", val);
+    }
+
+    //-------------------------------------------------------------------- MODE
+    get mode() {
+        return this._mode;
+    }
+    set mode(val) {
+        this._mode = val;
+        this.emit("mode", val);
+    }
+
+
+
+    //-------------------------------------------------------------------- TAGS
+    /**
+    * Gets a list of all tags, often used to alter per-app display or logic
+    */
+    get tags() {
+        return this._data.tags || [];
+    }
+
+    /**
+    * Sets the entire list of tags with specified array
+    */
     set tags(val) {
         if (!val || val.length == 0 ) return;
 
@@ -47,35 +133,7 @@ LX.Item = class Item extends LV.EventEmitter {
             val.forEach(this.tag.bind(this));
         }
     }
-
-    get tags() {
-        return this._data.tags || [];
-    }
-
-
-    set mode(val) {
-        this._mode = val;
-        this.emit("mode", val);
-    }
-
-    get mode() {
-        return this._mode;
-    }
-
-
-    set owner(val) {
-        this._data.owner = val;
-    }
-
-
-
-    //-------------------------------------------------------------------------
-    inspect() {
-        console.log(`${this.log_prefix} data = ${JSON.stringify(this._data)}`);
-    }
-
-
-    //-------------------------------------------------------------------------
+    
     /**
     * Add tag for data filtering and user interface display
     */
@@ -184,6 +242,7 @@ LX.Item = class Item extends LV.EventEmitter {
         let new_data = this.unpack(data);
         
         // only access approved data keys from our map
+        // only listen for changes when we have a getter/setter pair 
         for (var idx in new_data) {
             if (JSON.stringify(this[idx]) != JSON.stringify(new_data[idx])) {
                 
@@ -217,7 +276,7 @@ LX.Item = class Item extends LV.EventEmitter {
     /**
     * Stores the composed item into a decentralized database
     */
-    save(package_name, field, version) {
+    save(package_name, fields, version) {
 
 
         return new Promise((resolve, reject) => {
@@ -297,20 +356,24 @@ LX.Item = class Item extends LV.EventEmitter {
 
 
             // are we trying to change just a partial?
-            let val = (field ? this._data[field] : this._data);
             let data = {};
+            if (fields) {
 
-            if (field) {
-                if (!val) {
-                    return console.error(`${this.log_prefix} unable to save missing field`, field);
-                }
                 let obj = {};
-                obj[field] = val;
+                if (fields.constructor === Array) {
+                    fields.forEach((field) => {
+                        obj[field] = this._data[field]
+                    });
+                }
+                else if (typeof(fields) == "string") {
+                    obj[fields] = this._data[fields];
+                }
                 data = this.pack(obj);
             }
-            else if (val) {
-                data = this.pack(val);
+            else {
+                data = this.pack(this._data);
             }
+
 
             // save to appropriate package version...
             if (version) {

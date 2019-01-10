@@ -10,9 +10,7 @@ LX.MarkerItem = class MarkerItem extends LX.Item {
 
         // now set defaults for key compression
         super(id, data, {
-           "geohash": ["g"],
-            "tags": ["t", []],
-            "owner": ["o"]
+            "geohash": ["g"]
         });
 
         this._icon = null;
