@@ -1,10 +1,11 @@
 MAKEFLAGS += --warn-undefined-variables
 SHELL := /bin/bash
 TAG?=latest
+PLATFORM := $(shell echo web/public/platform/{a,b,c}.js)
 
 .PHONY: build clean install start run stage deploy
 
-build: $(shell echo web/public/platform/{a,b,c}.js)
+build: $(PLATFORM)
 	docker-compose -f dc-dev.yml build
 
 run:
@@ -43,7 +44,7 @@ web/public/platform/c.js:
 install:
 	npm install
 
-start:
+start: $(PLATFORM)
 	npm start	
 
 stage:
