@@ -2,7 +2,7 @@ MAKEFLAGS += --warn-undefined-variables
 SHELL := /bin/bash
 TAG?=latest
 
-.PHONY: clean install start
+.PHONY: build clean install start run stage deploy
 
 build: $(shell echo web/public/platform/{a,b,c}.js)
 	docker-compose -f dc-dev.yml build
