@@ -33,7 +33,11 @@ LX.Item = class Item extends LV.EventEmitter {
 
         if (data) {
             this.mode = "shared";
-            this.update(data);
+            let unpacked_data = this.unpack(data);
+            Object.keys(unpacked_data).forEach((key) => {
+                let val = unpacked_data[key];
+                this._data[key] = val;  
+            });
         }
 
         return this;
@@ -67,6 +71,7 @@ LX.Item = class Item extends LV.EventEmitter {
     * Defines the owner for this item
     */
     set owner(val) {
+        if (!val) return;
         this._data.owner = val;
     }
 
@@ -97,6 +102,7 @@ LX.Item = class Item extends LV.EventEmitter {
     * Adds a new editor to the item
     */
     editor(val) {
+        if (!val) return;
         if (this._data.editors.indexOf(val) > -1) {
             return;
         }
@@ -109,6 +115,7 @@ LX.Item = class Item extends LV.EventEmitter {
         return this._mode;
     }
     set mode(val) {
+        if (!val) return;
         this._mode = val;
         this.emit("mode", val);
     }
@@ -238,32 +245,34 @@ LX.Item = class Item extends LV.EventEmitter {
     /*
     * Updates the local item with packed data
     */
-    update(data) {
+    refresh(data) {
         let new_data = this.unpack(data);
         
         // only access approved data keys from our map
         // only listen for changes when we have a getter/setter pair 
         for (var idx in new_data) {
-            if (JSON.stringify(this[idx]) != JSON.stringify(new_data[idx])) {
-                
-                let do_update_field = false;
 
-                if (this[idx]) {
-                    if (typeof(this[idx]) == "object") {
-                        if (this[idx].length) {
-                            do_update_field = true;
+            let pointer = this[idx] || this._data[idx]; // try to use a getter if available
+
+            if (JSON.stringify(pointer) != JSON.stringify(new_data[idx])) {
+                
+                if (pointer) {
+                    if (typeof(pointer) == "object") {
+                        if (pointer.length) {
                             console.log(`${this.log_prefix} changing ${idx} object to ${new_data[idx]}`);
                         }
                     }
-                    else if (this[idx]) {
+                    else if (pointer) {
                         console.log(`${this.log_prefix} changing ${idx} from ${this[idx]} to ${new_data[idx]}`);
-                        do_update_field = true;
                     }
                 }
 
-                this[idx] = new_data[idx];
-                if (do_update_field) {
-                    this.emit("update", new_data);                    
+                // default to use setter if available
+                if (this[idx]) {
+                    this[idx] = new_data[idx];
+                }
+                else {
+                    this._data[idx] = new_data[idx];
                 }
             }
         }
@@ -311,14 +320,16 @@ LX.Item = class Item extends LV.EventEmitter {
                 node.once((v,k) => {
                     if (v) {
                         // update existing node
-                        Object.keys(data).forEach((key) => {
-                            let val = data[key];
-                            node.get(key).put(val, (ack) => {
+                        node.put(data, (ack) => {
+                            this.emit("save");
+
+                            Object.keys(data).forEach((key) => {
+                                let val = data[key];
                                 console.log(`${this.log_prefix} saved`, key, val);
                             });
+                            return resolve();
+
                         });
-                        this.emit("save");
-                        return resolve();
                     }
                     else {
                         node.put(null).put(data, (ack) => {
