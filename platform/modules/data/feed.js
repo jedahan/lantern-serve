@@ -52,7 +52,6 @@ LX.Feed = class Feed extends LV.EventEmitter {
     * Allows for manual refresh of data from the feed
     */
     refreshData() {
-            
         Object.keys(this.packages).forEach(id => {
             if (this.packages[id] == false) {
                 return;
@@ -71,8 +70,8 @@ LX.Feed = class Feed extends LV.EventEmitter {
                     Object.keys(v).forEach((item) => {
                         if (item == "_") return;
                         package_node.get("data").get(version).get(item)
-                        .once((v,k) => {
-                            this.onDataChange(v,k, id);
+                        .once((value,key) => {
+                            this.onDataChange(value, key, id);
                         });
                     });
 
