@@ -13,7 +13,7 @@ install:
 	npm install
 	
 start: $(PLATFORM) $(CERTS)
-	HOOK_REMOVE="./test-hook" HOOK_ADD="./test-hook" HOOK_UPDATE="./test-hook" npm start	
+	HOOK_ADD="./test-hook" HOOK_DROP="./test-hook" HOOK_UPDATE="./test-hook" npm start	
 
 run:
 	docker-compose -f dc-dev.yml up

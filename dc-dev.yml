@@ -17,7 +17,7 @@ services:
           - SSL_CERTIFICATE=./certs/dev.lantern.link.pem
           - HOOK_ADD=./test-hook
           - HOOK_UPDATE=./test-hook
-          - HOOK_REMOVE=./test-hook
+          - HOOK_DROP=./test-hook
 
 volumes:
   apps:

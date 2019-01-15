@@ -14,7 +14,7 @@ module.exports = (db) => {
     let change_hooks = {
         "add": null,
         "update": null,
-        "remove": null
+        "drop": null
     };
     let loaded = false;
 
@@ -47,7 +47,7 @@ module.exports = (db) => {
     const watchPackage = (v,package_name) => {
 
         if (v === null) {
-            logger.warn("package removed: " + package_name);
+            logger.warn("package dropped: " + package_name);
             return;
         }
 
@@ -79,7 +79,7 @@ module.exports = (db) => {
 
                 let msg = `${package_id} - ${item_id}`;
                 logger.debug(msg);
-                runChangeHook("remove", msg);
+                runChangeHook("drop", msg);
             }
             return;
         }
