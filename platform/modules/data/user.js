@@ -55,7 +55,9 @@ LX.User = class User extends LV.EventEmitter {
                     if (is_valid) {
                         this.authenticate(creds.username, creds.password)
                             .catch(err => {
-                                this.clearCredentials(creds).then(this.register.bind(this));
+                                // this database may not know about our user yet, so create it...
+                                // we assume local storage is a better indicator of truth than database peer
+                                this.register(creds.username, creds.password);
                             });
                     }
                     else {
@@ -115,11 +117,11 @@ LX.User = class User extends LV.EventEmitter {
     /**
     * Registers first-time user into the decentralized database
     */
-    register() {
+    register(username, password) {
         return new Promise((resolve, reject) => {
 
-            let username = LV.ShortID.generate();
-            let password = LV.ShortID.generate();
+            username = username || LV.ShortID.generate();
+            password = password || LV.ShortID.generate();
             console.log(`${this.log_prefix} create user with username: ${username}`);
             this.node.create(username, password, (ack) => {
                 if (ack.err) {
