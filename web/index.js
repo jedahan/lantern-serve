@@ -96,6 +96,9 @@ let std_server = http_server.listen(util.getHttpPort(), () => {
 	// track inbox messags
 	app.locals.inbox = {};
 
+	// track outbox messages
+	app.locals.outbox = [];
+
 	// watch for database updates
 	watch(app);
 });

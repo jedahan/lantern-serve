@@ -4,11 +4,10 @@ const should = require("should");
 const fetch = require("node-fetch");
 const conf = require("./testConf");
 
-describe("inbox", () => {
-
+describe("outbox", () => {
 
     const putMessage = (data) => {
-        return fetch(conf.URI + "/api/inbox", {
+        return fetch(conf.URI + "/api/outbox", {
                 method: "PUT",  
                 headers: {
                     "Content-Type": "application/json"
@@ -17,7 +16,7 @@ describe("inbox", () => {
             }) 
     }
 
-    it("should ignore empty message", (done) => {
+   it("should ignore empty message", (done) => {
             putMessage({"no": "message"})
             .then(response => response.json())
             .then((json) => {
@@ -35,7 +34,7 @@ describe("inbox", () => {
             });
     });
 
-    it("should process a well-formed add message", (done) => {
+    it("should queue a well-formed add message", (done) => {
             putMessage({"message": `1|${conf.PKG}+test`})
             .then(response => response.json())
             .then((json) => {
@@ -45,7 +44,7 @@ describe("inbox", () => {
             });
     });
 
-    it("should process a well-formed update message", (done) => {
+    it("should queue a well-formed update message", (done) => {
             putMessage({"message": `2|${conf.PKG}^test.me=yes`})
             .then(response => response.json())
             .then((json) => {
@@ -55,34 +54,44 @@ describe("inbox", () => {
     });
 
 
-    it("should reject a key for unknown item", (done) => {
-            putMessage({"message": `3|${conf.PKG}^should.not=exist`})
+    it("should queue a well-formed drop message", (done) => {
+        putMessage({"message": `3|${conf.PKG}-test`})
+        .then(response => response.json())
+        .then((json) => {
+            json.ok.should.equal(true);
+            done();
+        });
+    });
+
+
+    it("should list outbox", (done) => {
+        fetch(conf.URI + "/api/outbox", {
+                method: "GET",  
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
             .then(response => response.json())
             .then((json) => {
-                json.ok.should.equal(false);
+                console.log(json.messages);
                 done();
             });
     });
 
     after((done) => {
-        // clean up the existing node we created
-        putMessage({"message": `4|${conf.PKG}-test`})
+      fetch(conf.URI + "/api/outbox", {
+            method: "POST",  
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
         .then(response => response.json())
         .then((json) => {
-            json.ok.should.equal(true);
-            // lists past messages from inbox
-            fetch(conf.URI + "/api/inbox", {
-                    method: "GET",  
-                    headers: {
-                        "Content-Type": "application/json"
-                    }
-                })
-                .then(response => response.json())
-                .then((json) => {
-                    json.messages.length.should.be.aboveOrEqual(3);
-                    console.log(json.messages);
-                    done();
-                });
+            console.log("got item from outbox queue:", json);
+            should.exist(json.message);
+            json.rows.should.be.aboveOrEqual(2);
+            done();
         });
-    });
+    })
+
 });
