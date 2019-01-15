@@ -2,13 +2,13 @@
 * Lantern Database Watcher
 *
 */
-const logger = require("./util").Logger;
+const log = require("./util").Logger;
 const path = require("path");
 const spawnSync = require('child_process').spawnSync;
 
-module.exports = (db) => {
+module.exports = (app) => {
 
-    let node = db.get("__LX__").get("pkg");
+    let node = app.locals.db.get("__LX__").get("pkg");
     let packages = {};
     let items = {};
     let change_hooks = {
@@ -34,9 +34,15 @@ module.exports = (db) => {
     */
     const runChangeHook = (key,msg) => {
         if (change_hooks.hasOwnProperty(key) && typeof(change_hooks[key]) == "string") {
-            let compressed_msg = msg.replace(/\s/g, "");
-            let result = spawnSync(change_hooks[key], [compressed_msg]);
-            // console.log("change hook result = ", String(result.stdout));            
+
+
+            if (app.locals.inbox.hasOwnProperty(msg)) {
+                log.debug("watcher > skipping echo from inbox");
+            }
+            else {
+                let result = spawnSync(change_hooks[key], [msg]);
+                log.debug("watcher > change hook result = ", String(result.stdout));                            
+            }
         }
     }
 
@@ -47,12 +53,12 @@ module.exports = (db) => {
     const watchPackage = (v,package_name) => {
 
         if (v === null) {
-            logger.warn("package dropped: " + package_name);
+            log.warn("watcher > package dropped: " + package_name);
             return;
         }
 
         if (packages[package_name]) {
-            logger.warn("already watching: " + package_name);
+            log.warn("watcher > already watching: " + package_name);
             return;
         }
 
@@ -72,50 +78,53 @@ module.exports = (db) => {
     */
     const watchItem = (item_id, item_data, package_id) => {
 
+        // detected drop
         if (item_data === null) {
             // this can be triggered when an item is first created due to the way we use put(null)
             // therefore, only indicate deletions if we already know about a valid item
             if (loaded && items[item_id]) {
 
-                let msg = `${package_id} - ${item_id}`;
-                logger.debug(msg);
+                let msg = `${package_id}-${item_id}`;
+                log.debug("watcher > " + msg);
                 runChangeHook("drop", msg);
             }
             return;
         }
-        
+            
+        // detected add
         if (items[item_id]) return;
 
         items[item_id] = true;
         if (loaded) {
-            let msg = `${package_id} + ${item_id}`;
-            logger.debug(msg);
+            let msg = `${package_id}+${item_id}`;
+            log.debug("watcher > " + msg);
             runChangeHook("add", msg);
         }
         let package_name = package_id.split("@")[0];
         let version = package_id.split("@")[1];
 
-        node.get(package_name).get("data").get(version).get(item_id).map().on((v,field_id) => {
-            watchField(v, field_id, item_id, package_id)
-        });
+        // watch for field changes
+        node.get(package_name)
+            .get("data")
+            .get(version)
+            .get(item_id)
+            .map().on((v,field_id) => {
+                // @todo identify issue where inbox can trigger this code
+                // to run twice for the same database update
+                if (loaded) {
+                    let msg = `${package_id}^${item_id}.${field_id}=${v}`;
+                    log.debug("watcher > " + msg);
+                    runChangeHook("update", msg);
+                }
+            });
     }
 
-    /**
-    * Announce changes to given field
-    */
-    const watchField = (v, field_id, item_id, package_id) => {
-        if (loaded) {
-            let msg = `${package_id} ^ ${item_id}.${field_id} = ${v}`;
-            logger.debug(msg);
-            runChangeHook("update", msg);
-        }
-    }
 
     // listen for updates
     node.once(() => {
         // don't output initial data load
         setTimeout(() => {
-            logger.debug("watching for changes...");
+            log.debug("watcher > waiting for changes...");
             loaded = true;
         }, 300);
     }).map().on(watchPackage);

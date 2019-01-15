@@ -90,12 +90,12 @@ let std_server = http_server.listen(util.getHttpPort(), () => {
 		log.info(`standard port = ${util.getHttpPort()}`);
 	}
 
-	watch(db);
-
 	// attach database instance as a local app variable for express routes
 	app.locals.db = db;
 
 	// track inbox messags
 	app.locals.inbox = {};
 
+	// watch for database updates
+	watch(app);
 });

@@ -3,9 +3,11 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 const should = require("should");
 const fetch = require("node-fetch");
 
-describe("message", () => {
+describe("inbox", () => {
 
     let uri = "https://localhost:9443";
+    let package_name = "umbriel";
+    let package_version = "0.0.1";
 
     const postMessage = (data) => {
         return fetch(uri + "/api/inbox", {
@@ -36,7 +38,7 @@ describe("message", () => {
     });
 
     it("should process a well-formed add message", (done) => {
-            postMessage({"message": "test@0.0.1+test"})
+            postMessage({"message": `${package_name}@${package_version}+test`})
             .then(response => response.json())
             .then((json) => {
                 // could be true or false depending if we added this already
@@ -46,7 +48,7 @@ describe("message", () => {
     });
 
     it("should process a well-formed update message", (done) => {
-            postMessage({"message": "test@0.0.1^test.me=yes"})
+            postMessage({"message": `${package_name}@${package_version}^test.me=yes`})
             .then(response => response.json())
             .then((json) => {
                 json.ok.should.equal(true);
@@ -54,9 +56,19 @@ describe("message", () => {
             });
     });
 
+
+    it("should reject a key for unknown item", (done) => {
+            postMessage({"message": `${package_name}@${package_version}^should.not=exist`})
+            .then(response => response.json())
+            .then((json) => {
+                json.ok.should.equal(false);
+                done();
+            });
+    });
+
     after((done) => {
         // clean up the existing node we created
-        postMessage({"message": "test@0.0.1-test"})
+        postMessage({"message": `${package_name}@${package_version}-test`})
         .then(response => response.json())
         .then((json) => {
             json.ok.should.equal(true);

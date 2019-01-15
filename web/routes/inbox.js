@@ -16,12 +16,10 @@ module.exports = (serv) => {
             let node = getNode(data, db);
             node.once((v,k) => {
                 if (v) {
-                    log.debug("Exists: ", data);
                     // item already exists, do not try adding again...
                     return resolve(false);
                 }
                 node.put({}, (ack) => {
-                    log.debug("Addded: ", data);
                     if (ack.err) {
                         return reject("inbox_add_failed");
                     }
@@ -37,13 +35,22 @@ module.exports = (serv) => {
     msg_apply.update = (data, db) => {
         return new Promise((resolve, reject) => {
             let node = getNode(data, db);
-            node.get(data.field_key).put(data.field_value, (ack) => {
-                if (ack.err) {
-                    return reject("inbox_update_failed");
+
+            node.once((v,k) => {
+                if (v == undefined) {
+                    reject("inbox_update_failed_missing_item");
                 }
-                log.debug("Updated: ", data);
-                resolve(true);
-            });
+                else {
+                    node
+                        .get(data.field_key)
+                        .put(data.field_value, (ack) => {
+                            if (ack.err) {
+                                return reject("inbox_update_failed");
+                            }
+                            resolve(true);
+                        });
+                }
+            })
         });
     }
 
@@ -57,7 +64,6 @@ module.exports = (serv) => {
                 if (ack.err) {
                     return reject("inbox_drop_failed");
                 }                   
-                log.debug("Dropped: ", data);
                 resolve(true);
             });
         });
@@ -147,16 +153,20 @@ module.exports = (serv) => {
                 let exp = msg_regex[k];
 
                 if (exp.test(msg)) {
-                    msg_apply[k](getObject(msg.match(exp)), req.app.locals.db)
-                        .then((success) => {
-                            res.status(200).json({"ok": success});
-                        });
 
 
                     // log the received messaged for future output
                     // also allows us to prevent infinite loops (don't trigger change hooks on incoming messages)
                     res.app.locals.inbox[msg] =  res.app.locals.inbox[msg]  || {};
                     res.app.locals.inbox[msg][new Date().getTime()] = req.ip;
+
+                    msg_apply[k](getObject(msg.match(exp)), req.app.locals.db)
+                        .then((success) => {
+                            res.status(200).json({"ok": success});
+                        })
+                        .catch((e) => {
+                            res.status(200).json({"ok": false, "err": e}) 
+                        });
                     matched = true;
                 }
             });
