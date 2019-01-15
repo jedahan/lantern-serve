@@ -2,15 +2,13 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const should = require("should");
 const fetch = require("node-fetch");
+const conf = require("./testConf");
 
 describe("inbox", () => {
 
-    let uri = "https://localhost:9443";
-    let package_name = "umbriel";
-    let package_version = "0.0.1";
 
     const postMessage = (data) => {
-        return fetch(uri + "/api/inbox", {
+        return fetch(conf.URI + "/api/inbox", {
                 method: "POST",  
                 headers: {
                     "Content-Type": "application/json"
@@ -38,7 +36,7 @@ describe("inbox", () => {
     });
 
     it("should process a well-formed add message", (done) => {
-            postMessage({"message": `1|${package_name}@${package_version}+test`})
+            postMessage({"message": `1|${conf.PKG}+test`})
             .then(response => response.json())
             .then((json) => {
                 // could be true or false depending if we added this already
@@ -48,7 +46,7 @@ describe("inbox", () => {
     });
 
     it("should process a well-formed update message", (done) => {
-            postMessage({"message": `2|${package_name}@${package_version}^test.me=yes`})
+            postMessage({"message": `2|${conf.PKG}^test.me=yes`})
             .then(response => response.json())
             .then((json) => {
                 json.ok.should.equal(true);
@@ -58,7 +56,7 @@ describe("inbox", () => {
 
 
     it("should reject a key for unknown item", (done) => {
-            postMessage({"message": `3|${package_name}@${package_version}^should.not=exist`})
+            postMessage({"message": `3|${conf.PKG}^should.not=exist`})
             .then(response => response.json())
             .then((json) => {
                 json.ok.should.equal(false);
@@ -68,12 +66,12 @@ describe("inbox", () => {
 
     after((done) => {
         // clean up the existing node we created
-        postMessage({"message": `4|${package_name}@${package_version}-test`})
+        postMessage({"message": `4|${conf.PKG}-test`})
         .then(response => response.json())
         .then((json) => {
             json.ok.should.equal(true);
             // lists past messages from inbox
-            fetch(uri + "/api/inbox", {
+            fetch(conf.URI + "/api/inbox", {
                     method: "GET",  
                     headers: {
                         "Content-Type": "application/json"
