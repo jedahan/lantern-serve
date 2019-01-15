@@ -1,3 +1,5 @@
+"use strict"
+
 const fs = require("fs-extra");
 const path = require("path");
 const fetch = require("fetch-timeout");
@@ -14,10 +16,8 @@ module.exports = (serv) => {
 	// offer these routes a chance to bypass attempts at internet
 	util.checkInternet().then((is_connected) => {
 		assume_internet = is_connected;
-	})
-
-
-
+	});
+	
 	/**
 	* Convert URL to local file path for cached tile
 	*/
@@ -44,7 +44,8 @@ module.exports = (serv) => {
 	}
 
 
-	
+
+	//---------------------------------------------------------------------- 
 	/**
 	* MapTiler Proxy
 	*/

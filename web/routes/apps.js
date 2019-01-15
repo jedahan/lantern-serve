@@ -4,28 +4,17 @@ const fs = require("fs-extra");
 const exec = require('child_process').exec;
 const directoryTree = require("directory-tree");
 const path = require("path");
-const bodyParser = require("body-parser");
 const util = require("../util");
 const log = util.Logger;
 
 
-
-//----------------------------------------------------------------------
 module.exports = (serv) => {
 
-    let apps_dir = path.join(__dirname, "..", "..", "apps");
+    const apps_dir = path.join(__dirname, "..", "..", "apps");
+    
 
-    /**
-    * Delivers basic server information
-    */
-    serv.get("/api/info", (req,res) => {
-        util.checkInternet().then(status => {
-            return res.status(200).json({
-                "online": status
-            });
-        });
-    });
-
+    
+    //---------------------------------------------------------------------- 
     /**
     *  Retrieves available applications from this server
     */
@@ -52,7 +41,7 @@ module.exports = (serv) => {
         });
         res.status(200).json(final_result);
            
-    })
+    });
 
     /**
     * Update to latest version of apps from git repository
@@ -74,4 +63,5 @@ module.exports = (serv) => {
             }
         });
     });
+
 };
