@@ -73,9 +73,9 @@ module.exports = (serv) => {
     * Regular expressions to identify intent of message
     */
     const msg_regex = {
-        add: /([a-z]+)@([0-9\.]+)\+([a-zA-Z0-9]+)/,
-        update: /([a-z]+)@([0-9\.]+)\^([a-zA-Z0-9]+)\.([a-z]*)\=(\w+)/,
-        drop: /([a-z]+)@([0-9\.]+)\-([a-zA-Z0-9]+)/
+        add: /([0-9]+)\|([a-z]+)@([0-9\.]+)\+([a-zA-Z0-9]+)/,
+        update: /([0-9]+)\|([a-z]+)@([0-9\.]+)\^([a-zA-Z0-9]+)\.([a-z]*)\=(\w+)/,
+        drop: /([0-9]+)\|([a-z]+)@([0-9\.]+)\-([a-zA-Z0-9]+)/
     }
 
     /**
@@ -85,11 +85,12 @@ module.exports = (serv) => {
         let obj = {};
         let keys = {
             0: "message",
-            1: "package_name",
-            2: "package_version",
-            3: "item_id",
-            4: "field_key",
-            5: "field_value"
+            1: "seq",
+            2: "package_name",
+            3: "package_version",
+            4: "item_id",
+            5: "field_key",
+            6: "field_value"
         }
         for (var idx in matches) {
             if (keys[idx]) {
@@ -157,8 +158,11 @@ module.exports = (serv) => {
 
                     // log the received messaged for future output
                     // also allows us to prevent infinite loops (don't trigger change hooks on incoming messages)
-                    res.app.locals.inbox[msg] =  res.app.locals.inbox[msg]  || {};
-                    res.app.locals.inbox[msg][new Date().getTime()] = req.ip;
+                    let msg_key = util.getSimpleMessage(msg);
+                    res.app.locals.inbox[msg_key] =  res.app.locals.inbox[msg_key]  || {};
+                    res.app.locals.inbox[msg_key][new Date().getTime()] = req.ip;
+
+                    log.debug("  inbox -- " + (msg[1] == "|" ? " " : "") + msg);
 
                     msg_apply[k](getObject(msg.match(exp)), req.app.locals.db)
                         .then((success) => {

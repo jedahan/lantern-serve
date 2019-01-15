@@ -38,7 +38,7 @@ describe("inbox", () => {
     });
 
     it("should process a well-formed add message", (done) => {
-            postMessage({"message": `${package_name}@${package_version}+test`})
+            postMessage({"message": `1|${package_name}@${package_version}+test`})
             .then(response => response.json())
             .then((json) => {
                 // could be true or false depending if we added this already
@@ -48,7 +48,7 @@ describe("inbox", () => {
     });
 
     it("should process a well-formed update message", (done) => {
-            postMessage({"message": `${package_name}@${package_version}^test.me=yes`})
+            postMessage({"message": `2|${package_name}@${package_version}^test.me=yes`})
             .then(response => response.json())
             .then((json) => {
                 json.ok.should.equal(true);
@@ -58,7 +58,7 @@ describe("inbox", () => {
 
 
     it("should reject a key for unknown item", (done) => {
-            postMessage({"message": `${package_name}@${package_version}^should.not=exist`})
+            postMessage({"message": `3|${package_name}@${package_version}^should.not=exist`})
             .then(response => response.json())
             .then((json) => {
                 json.ok.should.equal(false);
@@ -68,7 +68,7 @@ describe("inbox", () => {
 
     after((done) => {
         // clean up the existing node we created
-        postMessage({"message": `${package_name}@${package_version}-test`})
+        postMessage({"message": `4|${package_name}@${package_version}-test`})
         .then(response => response.json())
         .then((json) => {
             json.ok.should.equal(true);

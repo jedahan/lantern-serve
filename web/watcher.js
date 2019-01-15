@@ -2,7 +2,8 @@
 * Lantern Database Watcher
 *
 */
-const log = require("./util").Logger;
+const util = require("./util");
+const log = util.Logger;
 const path = require("path");
 const spawnSync = require('child_process').spawnSync;
 
@@ -30,18 +31,24 @@ module.exports = (app) => {
     });
 
     /**
+    * Get sequence number from database to help track intended priorities
+    */
+    const getSeq = () => {
+        return app.locals.db._.root.once;
+    }
+
+    /**
     * Run an executable to process a change on external system
     */
     const runChangeHook = (key,msg) => {
         if (change_hooks.hasOwnProperty(key) && typeof(change_hooks[key]) == "string") {
-
-
-            if (app.locals.inbox.hasOwnProperty(msg)) {
-                log.debug("watcher > skipping echo from inbox");
+            let msg_key = util.getSimpleMessage(msg);
+            if (app.locals.inbox.hasOwnProperty(msg_key)) {
+                log.debug(`watcher -- ${(msg[1] == "|" ? " " : "")}${msg}`);
             }
             else {
-                let result = spawnSync(change_hooks[key], [msg]);
-                log.debug("watcher > change hook result = ", String(result.stdout));                            
+                log.debug(`watcher -- ${(msg[1] == "|" ? " " : "")}${msg} --> ${key} hook`);
+                let result = spawnSync(change_hooks[key], [msg]);                          
             }
         }
     }
@@ -53,12 +60,12 @@ module.exports = (app) => {
     const watchPackage = (v,package_name) => {
 
         if (v === null) {
-            log.warn("watcher > package dropped: " + package_name);
+            log.warn("watcher -- package dropped: " + package_name);
             return;
         }
 
         if (packages[package_name]) {
-            log.warn("watcher > already watching: " + package_name);
+            log.warn("watcher -- already watching: " + package_name);
             return;
         }
 
@@ -84,8 +91,7 @@ module.exports = (app) => {
             // therefore, only indicate deletions if we already know about a valid item
             if (loaded && items[item_id]) {
 
-                let msg = `${package_id}-${item_id}`;
-                log.debug("watcher > " + msg);
+                let msg = `${getSeq()}|${package_id}-${item_id}`;
                 runChangeHook("drop", msg);
             }
             return;
@@ -96,8 +102,7 @@ module.exports = (app) => {
 
         items[item_id] = true;
         if (loaded) {
-            let msg = `${package_id}+${item_id}`;
-            log.debug("watcher > " + msg);
+            let msg = `${getSeq()}|${package_id}+${item_id}`;
             runChangeHook("add", msg);
         }
         let package_name = package_id.split("@")[0];
@@ -112,8 +117,7 @@ module.exports = (app) => {
                 // @todo identify issue where inbox can trigger this code
                 // to run twice for the same database update
                 if (loaded) {
-                    let msg = `${package_id}^${item_id}.${field_id}=${v}`;
-                    log.debug("watcher > " + msg);
+                    let msg = `${getSeq()}|${package_id}^${item_id}.${field_id}=${v}`;
                     runChangeHook("update", msg);
                 }
             });
@@ -124,7 +128,7 @@ module.exports = (app) => {
     node.once(() => {
         // don't output initial data load
         setTimeout(() => {
-            log.debug("watcher > waiting for changes...");
+            log.debug("watcher -- waiting for changes...");
             loaded = true;
         }, 300);
     }).map().on(watchPackage);

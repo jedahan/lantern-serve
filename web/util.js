@@ -96,6 +96,16 @@ self.isRemoteClient = (req) => {
 
 //----------------------------------------------------------------------  
 /**
+* Simplifies message by removing sequence, useful for comparisons
+*/
+self.getSimpleMessage = (msg) => {
+    return msg.replace(/^([0-9]+)\|/, "");
+}
+    
+
+
+//----------------------------------------------------------------------  
+/**
 * Display memory usage over time
 */
 self.watchMemory = () => {
