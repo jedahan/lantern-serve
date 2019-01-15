@@ -42,6 +42,13 @@ make stage
 After starting your container, the server will be available here: https://dev.lantern.link
 
 
+### Testing
+After starting your server as a developer: 
+```bash
+npm install -g mocha
+mocha
+```
+
 ### Requirements
 
 A local [Docker](https://www.docker.com/community-edition) environment is required to begin.
