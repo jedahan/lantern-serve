@@ -55,11 +55,24 @@ describe("message", () => {
     });
 
     after((done) => {
+        // clean up the existing node we created
         postMessage({"message": "test@0.0.1-test"})
         .then(response => response.json())
         .then((json) => {
             json.ok.should.equal(true);
-            done();
+            // lists past messages from inbox
+            fetch(uri + "/api/inbox", {
+                    method: "GET",  
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                })
+                .then(response => response.json())
+                .then((json) => {
+                    json.messages.length.should.be.aboveOrEqual(3);
+                    console.log(json.messages);
+                    done();
+                });
         });
-    })
+    });
 });

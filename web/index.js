@@ -95,5 +95,7 @@ let std_server = http_server.listen(util.getHttpPort(), () => {
 	// attach database instance as a local app variable for express routes
 	app.locals.db = db;
 
+	// track inbox messags
+	app.locals.inbox = {};
 
 });

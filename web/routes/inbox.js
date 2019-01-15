@@ -13,7 +13,6 @@ module.exports = (serv) => {
     */
     msg_apply.add = (data, db) => {
         return new Promise((resolve, reject) => {
-            log.debug("Attempt add:", data);
             let node = getNode(data, db);
             node.once((v,k) => {
                 if (v) {
@@ -37,12 +36,12 @@ module.exports = (serv) => {
     */
     msg_apply.update = (data, db) => {
         return new Promise((resolve, reject) => {
-            log.debug("Attempt update:", data);
             let node = getNode(data, db);
             node.get(data.field_key).put(data.field_value, (ack) => {
                 if (ack.err) {
                     return reject("inbox_update_failed");
                 }
+                log.debug("Updated: ", data);
                 resolve(true);
             });
         });
@@ -53,12 +52,12 @@ module.exports = (serv) => {
     */
     msg_apply.drop = (data, db) => {
         return new Promise((resolve, reject) => {
-            log.debug("Attempt drop:", data);
             let node = getNode(data, db);
             node.put(null, (ack) => {
                 if (ack.err) {
                     return reject("inbox_drop_failed");
-                }   
+                }                   
+                log.debug("Dropped: ", data);
                 resolve(true);
             });
         });
@@ -111,6 +110,21 @@ module.exports = (serv) => {
     
 
     //---------------------------------------------------------------------- 
+
+    /**
+    * List inbox messages received
+    */
+    serv.get("/api/inbox", (req, res) => {
+
+        let messages = [];
+        Object.keys(res.app.locals.inbox).forEach(key => {
+            messages.push(key);
+        });
+        res.status(200).json({
+            "messages": messages
+        });
+    })
+
     /**
     * Accept messages to convert into database updates
     */
@@ -137,6 +151,12 @@ module.exports = (serv) => {
                         .then((success) => {
                             res.status(200).json({"ok": success});
                         });
+
+
+                    // log the received messaged for future output
+                    // also allows us to prevent infinite loops (don't trigger change hooks on incoming messages)
+                    res.app.locals.inbox[msg] =  res.app.locals.inbox[msg]  || {};
+                    res.app.locals.inbox[msg][new Date().getTime()] = req.ip;
                     matched = true;
                 }
             });
