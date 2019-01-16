@@ -5,7 +5,6 @@ LX.User = class User extends LV.EventEmitter {
 
     constructor(db) {
         super();
-        this.local_db = new LV.PouchDB("lx-user");
         this.db = db;
         this.node = this.db.stor.user();
         this.pair = null;
@@ -25,11 +24,10 @@ LX.User = class User extends LV.EventEmitter {
 
     //-------------------------------------------------------------------------
 
-    clearCredentials(creds) {
+    clearCredentials() {
         console.warn(`${this.log_prefix}  removing invalid creds from storage`);
-        return this.local_db.remove(creds).then(() => { 
-            console.warn(`${this.log_prefix}  waiting for valid sign in or registration...`);
-        });
+        localStorage.removeItem("lx-auth");
+        console.warn(`${this.log_prefix}  waiting for valid sign in or registration...`);
     }
 
     authOrRegister(skip_check) {
@@ -39,39 +37,26 @@ LX.User = class User extends LV.EventEmitter {
         }
         else {
             // check browser for known credentials for this user
-            this.local_db.get("creds")
-                .then((creds) => {
-
-                    let requirements = ["username", "password"];
-                    let is_valid = true;
-
-                    requirements.forEach((key) =>  {
-                        if (!creds.hasOwnProperty(key)) {
-                            is_valid = false;
-                            console.log(`${this.log_prefix} existing saved credentials missing required key: ${key}`);
-                        }
-                    });
-
-                    if (is_valid) {
-                        this.authenticate(creds.username, creds.password)
-                            .catch(err => {
-                                // this database may not know about our user yet, so create it...
-                                // we assume local storage is a better indicator of truth than database peer
-                                this.register(creds.username, creds.password);
-                            });
-                    }
-                    else {
-                        this.clearCredentials(creds).then(this.register.bind(this));
-                    }
-                })
-                .catch((e) => {
-                    if (e.name == "not_found") {
-                        this.register()
-                    }
-                    else {
-                        console.log(`${this.log_prefix} error getting creds`, e);
-                    }
-                });
+            let creds = localStorage.getItem("lx-auth");
+            if (!creds) {
+                this.register()
+            }
+            else {
+                try {
+                    let u = creds.split(":")[0];
+                    let p = creds.split(":")[1];
+                    this.authenticate(u, p)
+                        .catch(err => {
+                            // this database may not know about our user yet, so create it...
+                            // we assume local storage is a better indicator of truth than database peer
+                            this.register(u, p);
+                        });
+                }
+                catch(e) {
+                    this.clearCredentials();
+                    this.register();
+                }
+            }
         }
     }
     
@@ -128,24 +113,9 @@ LX.User = class User extends LV.EventEmitter {
                     console.log(`${this.log_prefix} unable to save`, ack.err);
                     return reject("user_register_failed");
                 }
-
-
                 console.log(`${this.log_prefix} saved to browser`);
-
-                let doc = {
-                    "_id" : "creds",
-                    "username": username,
-                    "password": password
-                }
-                this.local_db.put(doc)
-                    .then(() => {
-                        this.authenticate(username, password);
-                    })
-                    .catch((e) => {
-                        console.log(`${this.log_prefix}unable to save`, e);
-                    });
-
-
+                let creds = localStorage.setItem("lx-auth", [username, password].join(":"));
+                this.authenticate(username, password);
                 this.node.get("packages").put({});
                 this.emit("registered");
                 resolve();

@@ -26,15 +26,8 @@ class Atlas extends LV.EventEmitter {
             }
         });
 
-        this.tile_db = new LV.PouchDB(LC.leaflet_tiles.dbName, {auto_compaction: true});
-        this.user_db = new LV.PouchDB("lx-user", {auto_compaction: true});
         this._map_clicked = 0; // used to distinguish between click and double-click
         this.render();
-        
-        // find current map cache size...
-        // this.tile_db.info().then((result) => {
-        //     console.log(`${this.log_prefix} cached tiles: ${result.doc_count}`);
-        // });
 
     }
 
@@ -80,7 +73,7 @@ class Atlas extends LV.EventEmitter {
             this._map_clicked = 0;
             this.emit("map-double-click", e);
         });
-
+        this.calculateZoomClass();
     }
 
 
@@ -179,52 +172,29 @@ class Atlas extends LV.EventEmitter {
     }
 
 
+    getCenterAsString() {
+        return [this.map.getCenter().lat, this.map.getCenter().lng, this.map.getZoom()].join("/");
+    }
+
+
     /**
     * Preserves center map location with browser-based storage
     */
     cacheCenterLocation(timeout) {
 
         return new Promise((resolve, reject) => {
-            let doc = {
-                "_id": "atlas_view",
-                "lat": this.map.getCenter().lat,
-                "lng": this.map.getCenter().lng,
-                "zoom": this.map.getZoom()
-            }
 
+            let orig_ctr = this.getCenterAsString();
             // http://www.bigfastblog.com/geohash-intro
-            let precision = Math.round(this.precision.center_max * (doc.zoom/20))
-            let gh = LX.Location.toGeohash(doc, precision);
+            let precision = Math.round(this.precision.center_max * (this.map.getZoom()/20))
+            let gh = LX.Location.toGeohash(this.map.getCenter(), precision);
             //console.log(`${this.log_prefix} center geohash: ${gh}`);
             this.center = gh;
-
             // only save to database if user has paused on this map for a few seconds
             setTimeout(() => {
-                if (this.map.getZoom() == doc.zoom 
-                    && this.map.getCenter().lat == doc.lat
-                    && this.map.getCenter().lng == doc.lng
-                    ) {   
-                    this.user_db.get("atlas_view").then((old_doc) => {
-
-                        if (JSON.stringify(doc) == JSON.stringify(old_doc)) {
-                            // skip save for same location
-                            resolve();
-                        }
-                        else {
-                            this.user_db.remove(old_doc).then(() => {
-                                this.user_db.put(doc).then(() => {
-                                    //console.log(`${this.log_prefix} re-saved center for user`, this.center);
-                                    resolve();
-                                });
-                            });   
-                        }
-                    })
-                    .catch((e) => {
-                        this.user_db.put(doc).then(() => {
-                            //console.log(`${this.log_prefix} saved center for user`, this.center);
-                            resolve();
-                        });
-                    });
+                let new_ctr = this.getCenterAsString();
+                if (orig_ctr == new_ctr) {
+                    localStorage.setItem("lx-ctr", new_ctr);
                 }
             }, timeout || 7000);
         })
@@ -234,16 +204,19 @@ class Atlas extends LV.EventEmitter {
     * Use saved per-user location to center map
     */
     setViewFromCenterLocationCache() {
-        this.user_db.get("atlas_view").then((doc) => {
-            this.map.setView([doc.lat, doc.lng], doc.zoom);
-        }).catch((e) => {
+        let ctr = localStorage.getItem("lx-ctr");
+        try {
+            let parts = ctr.split("/");
+            this.map.setView([parts[0], parts[1]], parts[2]);
+        }
+        catch(e) {
             this.map.setView([38.42, -12.79], 3);
             // fine if we don't have context or can't retrieve...
             // if we have markers, let's now zoom in on these...
             if (this.markers.length) {
                 this.fitMapToAllMarkers();
             }
-        });
+        }
     }
 
 
