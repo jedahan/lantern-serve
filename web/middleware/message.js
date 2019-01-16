@@ -9,6 +9,7 @@ module.exports = (req, res, next) => {
     /**
     * Regular expressions to identify intent of message
     */
+    // @todo  allow match for multi-message separated by ;
     const msg_regex = {
         add: /([0-9]+)\|([a-z]+)@([0-9\.]+)\+([a-zA-Z0-9]+)/,
         update: /([0-9]+)\|([a-z]+)@([0-9\.]+)\^([a-zA-Z0-9]+)\.([a-z]*)\=(\w+)/,

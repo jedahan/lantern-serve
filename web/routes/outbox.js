@@ -25,26 +25,28 @@ module.exports = (serv) => {
         // to control order even when we have duplicate 1s, 2s, 3s...
         let msg = res.locals.message.text;
         res.app.locals.outbox.push(msg);
-        res.status(200).json({"ok": true});
+        res.status(201).json({"ok": true});
     }); 
 
     /**
     * Pull one item off the outbox queue
     */
+    // @todo allow multi-message queue output 
+    // (e.g.fit as many messages as possible in 100 chars)
     serv.post("/api/outbox", (req, res) => {
+
+        let msg = res.app.locals.outbox.shift() || null;
         let data = {
-            "message": res.app.locals.outbox.shift(),
+            "message": msg,
             "rows": res.app.locals.outbox.length
         }
-
-        let msg = data.message;
 
         if (msg) {
             log.debug(" outbox << " + (msg[1] == "|" ? " " : "") + msg);
             res.status(201).json(data);
         }
         else {
-            res.status(404).json(data);
+            res.status(200).json(data);
         }
     });
 

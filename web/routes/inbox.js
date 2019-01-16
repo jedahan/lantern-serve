@@ -104,6 +104,7 @@ module.exports = (serv) => {
     /**
     * Accept messages to convert into database updates
     */
+    // @todo support multi-message inbox inputs
     serv.put("/api/inbox", message, (req, res) => {
         let msg = req.body.message;
         // @todo can make this persistent if needed using a queue
@@ -119,10 +120,10 @@ module.exports = (serv) => {
         let inboxfn = msg_apply[res.locals.message.type]
         inboxfn(res.locals.message, req.app.locals.db)
             .then((success) => {
-                res.status(200).json({"ok": success});
+                res.status(201).json({"ok": success});
             })
             .catch((e) => {
-                res.status(200).json({"ok": false, "err": e}) 
+                res.status(500).json({"ok": false, "err": e}) 
             });
     }); 
 };
