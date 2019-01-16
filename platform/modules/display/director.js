@@ -1,5 +1,6 @@
 "use strict";
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
+const LV = window.LV || {}; if (!window.LV) window.LV = LV;
 
 
 LX.Director = class Director extends LV.EventEmitter {
@@ -10,12 +11,33 @@ LX.Director = class Director extends LV.EventEmitter {
         this.apps = {};
         this.db = null;
         this.view = new LX.View();
-        this.atlas = LX.Atlas;
+        this.atlas = new LX.Atlas();
         this.user = null;
     }
 
     start() {
+        // define database and user to work with decentralized network
+        this.db = new LX.Database(window.location.origin + "/gun");
+        this.user = new LX.User(this.db);
+        this.user.authOrRegister().then(() => {
+            this.loadApps();
+            this.emit("start");
+        });
+    }
 
+
+    withUser(fn) {
+        if (this.user && this.user.username) {
+            fn(this.user);
+        }
+        else {
+            this.user.once("auth", function() {
+                fn(this.user);
+            }.bind(this));
+        }
+    }
+
+    loadApps() {
         // load in dynamic apps
         fetch("/api/apps", {
                 headers: {
@@ -36,24 +58,6 @@ LX.Director = class Director extends LV.EventEmitter {
             .catch((err) => {
                 console.warn("[Direct] No available apps to work with");
             });
-
-        // define database and user to work with decentralized network
-        this.db = new LX.Database(window.location.origin + "/gun");
-        this.user = new LX.User(this.db);
-        this.user.authOrRegister();
-        this.emit("start");
-    }
-
-
-    withUser(fn) {
-        if (this.user && this.user.username) {
-            fn(this.user);
-        }
-        else {
-            this.user.once("auth", function() {
-                fn(this.user);
-            }.bind(this));
-        }
     }
 
 

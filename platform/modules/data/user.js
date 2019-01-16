@@ -33,28 +33,28 @@ LX.User = class User extends LV.EventEmitter {
     authOrRegister(skip_check) {
         if (skip_check) {
             console.log(`${this.log_prefix} make new credentials by explicit request`)
-            this.register();
+            return this.register();
         }
         else {
             // check browser for known credentials for this user
             let creds = localStorage.getItem("lx-auth");
             if (!creds) {
-                this.register()
+                return this.register()
             }
             else {
                 try {
                     let u = creds.split(":")[0];
                     let p = creds.split(":")[1];
-                    this.authenticate(u, p)
+                    return this.authenticate(u, p)
                         .catch(err => {
                             // this database may not know about our user yet, so create it...
                             // we assume local storage is a better indicator of truth than database peer
-                            this.register(u, p);
+                            return this.register(u, p);
                         });
                 }
                 catch(e) {
                     this.clearCredentials();
-                    this.register();
+                    return this.register();
                 }
             }
         }

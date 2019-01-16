@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
     <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <link rel="stylesheet" type="text/css" href="/_/bulma/css/bulma.min.css"/>
     <link rel="stylesheet" type="text/css" href="/_/leaflet/dist/leaflet.css"/>
+    <link rel="stylesheet" type="text/css" href="/_/leaflet.locatecontrol/dist/L.Control.Locate.min.css"/>
+    <link rel="stylesheet" type="text/css" href="/styles/global.css"/>
+
     <script src="/scripts/load.js"></script>
     <style>
     #map,body, html {  
@@ -40,20 +45,34 @@
     <!-- platform setup -->
     <script>
 
-        head.load(["/platform/a.js","/platform/b.js"], function() {
-            head.load([ "/platform/c.js", "./styles/global.css", 
-                        "/_/leaflet.locatecontrol/dist/L.Control.Locate.min.css"], function() {
-                window.LT = new LX.Director();
-                LT.on("start", () => {
-                    head.load(
-                        "/_/bulma/css/bulma.min.css",
-                        "/_/@fortawesome/fontawesome-free/css/all.min.css", 
-                        "./scripts/raphael.min.js"
-                    );
-                });
-                LT.start();
+        head.js({
+            a: "/platform/a.js"
+        });
+
+        head.ready("a", function() {
+            head.js({
+                b: "/platform/b.js"
             });
         });
+
+        head.ready("b", function() {
+            head.js({
+                c: "/platform/c.js"
+            });
+        });
+
+        head.ready("c", function() {
+            window.LT = new LX.Director();
+            LT.on("start", function() {
+                head.load(
+                    "/_/@fortawesome/fontawesome-free/css/all.min.css",
+                    "./scripts/raphael.min.js"
+                );
+                LT.atlas.render();
+            });
+            LT.start();
+        });
+
     </script>
 </body>
 </html>

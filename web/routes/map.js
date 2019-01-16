@@ -44,7 +44,7 @@ module.exports = (serv) => {
 
 	const getTileFromCloud = (req, res) => {
 
-		let url = "https://maps.tilehosting.com" + req.url;
+		let url = "http://maps.tilehosting.com" + req.url;
 		//log.debug("Map tile proxy target is:", url);
 		let do_cache = false;
 

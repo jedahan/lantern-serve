@@ -1,7 +1,8 @@
 "use strict";
 const LX = window.LX || {}; if (!window.LX) window.LX = LX;
+const LV = window.LV || {}; if (!window.LV) window.LV = LV;
 
-class Atlas extends LV.EventEmitter {
+LX.Atlas = class Atlas extends LV.EventEmitter {
     
     constructor() {
         super();
@@ -27,7 +28,6 @@ class Atlas extends LV.EventEmitter {
         });
 
         this._map_clicked = 0; // used to distinguish between click and double-click
-        this.render();
 
     }
 
@@ -339,5 +339,3 @@ class Atlas extends LV.EventEmitter {
     }    
 
 };
-
-LX.Atlas = new Atlas();

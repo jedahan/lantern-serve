@@ -8,3 +8,4 @@ node_modules/
 tiles/
 tmp/
 web/public/platform/
+web/public/test.html
