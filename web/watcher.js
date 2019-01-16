@@ -41,14 +41,18 @@ module.exports = (app) => {
     * Run an executable to process a change on external system
     */
     const runChangeHook = (key,msg) => {
-        if (change_hooks.hasOwnProperty(key) && typeof(change_hooks[key]) == "string") {
+        if (change_hooks.hasOwnProperty(key)) {
             let msg_key = util.getSimpleMessage(msg);
             if (app.locals.inbox.hasOwnProperty(msg_key)) {
+                // prevent echo of incoming message
                 log.debug(`watcher -- ${(msg[1] == "|" ? " " : "")}${msg}`);
             }
-            else {
+            else if (typeof(change_hooks[key]) == "string") {
                 log.debug(`watcher -- ${(msg[1] == "|" ? " " : "")}${msg} --> ${key} hook`);
                 let result = spawnSync(change_hooks[key], [msg]);                          
+            }
+            else {
+                log.debug(`watcher -- ${(msg[1] == "|" ? " " : "")}${msg}`);
             }
         }
     }

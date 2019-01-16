@@ -67,7 +67,7 @@ module.exports = (serv) => {
 
 
 		if (!assume_internet) {
-			log.warn(`Skip offline attempt for: ${url}`);
+			// log.debug(`Skip offline attempt for: ${url}`);
 			return sendEmptyTile(res);
 		}
 
