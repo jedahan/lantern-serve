@@ -34,7 +34,7 @@ LX.PieMenu = class PieMenu extends LV.EventEmitter {
 
         items.forEach((item) => {
             if (item.icon) {
-                let icon = "imgsrc:/_/@fortawesome/fontawesome-free/svgs/solid/" + item.icon + ".svg";
+                let icon = "imgsrc:/icons/" + item.icon + ".svg";
                 final_items.push(icon);                
             }
             else if (item.label) {
