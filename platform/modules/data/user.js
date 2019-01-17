@@ -1,6 +1,3 @@
-"use strict";
-const LX = window.LX || {}; if (!window.LX) window.LX = LX;
-
 LX.User = class User extends LV.EventEmitter {
 
     constructor(db) {

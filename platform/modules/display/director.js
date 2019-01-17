@@ -1,8 +1,3 @@
-"use strict";
-const LX = window.LX || {}; if (!window.LX) window.LX = LX;
-const LV = window.LV || {}; if (!window.LV) window.LV = LV;
-
-
 LX.Director = class Director extends LV.EventEmitter {
 
     constructor() {
@@ -20,7 +15,6 @@ LX.Director = class Director extends LV.EventEmitter {
         this.db = new LX.Database(window.location.origin + "/gun");
         this.user = new LX.User(this.db);
         this.user.authOrRegister().then(() => {
-            this.loadApps();
             this.emit("start");
         });
     }

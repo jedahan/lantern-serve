@@ -1,6 +1,3 @@
-"use strict";
-const LX = window.LX || {}; if (!window.LX) window.LX = LX;
-
 LX.Database = class Database extends LV.EventEmitter {
 
     constructor(uri) {

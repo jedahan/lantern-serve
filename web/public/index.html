@@ -9,9 +9,9 @@
     <link rel="stylesheet" type="text/css" href="/_/bulma/css/bulma.min.css"/>
     <link rel="stylesheet" type="text/css" href="/_/leaflet/dist/leaflet.css"/>
     <link rel="stylesheet" type="text/css" href="/_/leaflet.locatecontrol/dist/L.Control.Locate.min.css"/>
+    <link rel="stylesheet" type="text/css" href="/_/@fortawesome/fontawesome-free/css/all.min.css"/>
     <link rel="stylesheet" type="text/css" href="/styles/global.css"/>
 
-    <script src="/scripts/load.js"></script>
     <style>
     #map,body, html {  
         height: 100%;
@@ -43,36 +43,15 @@
     
 
     <!-- platform setup -->
+    <script src="/scripts/platform.js"></script>
     <script>
-
-        head.js({
-            a: "/platform/a.js"
+        window.LT = new LX.Director();
+        LT.on("start", function() {
+            LT.atlas.render();
+            LT.loadApps();
         });
-
-        head.ready("a", function() {
-            head.js({
-                b: "/platform/b.js"
-            });
-        });
-
-        head.ready("b", function() {
-            head.js({
-                c: "/platform/c.js"
-            });
-        });
-
-        head.ready("c", function() {
-            window.LT = new LX.Director();
-            LT.on("start", function() {
-                head.load(
-                    "/_/@fortawesome/fontawesome-free/css/all.min.css",
-                    "./scripts/raphael.min.js"
-                );
-                LT.atlas.render();
-            });
-            LT.start();
-        });
-
+        LT.start();
     </script>
+    <script src="/scripts/raphael.min.js"></script>
 </body>
 </html>
