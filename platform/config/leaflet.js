@@ -11,7 +11,7 @@ LC.leaflet_map = {
     contextmenu: true,
     contextmenuWidth: 140,
     zoomControl: false,
-    maxZoom: 18
+    maxZoom: 16
 };
 
 /**
@@ -31,7 +31,7 @@ LC.leaflet_tiles = {
     attribution: false,
     dbName: "lx-tiles",
     minZoom: 3,
-    maxZoom: 20,
+    maxZoom: 16,
     useCache:  localStorage.hasOwnProperty("lx-map-cache"),
     useOnlyCache: localStorage.hasOwnProperty("lx-map-cache-only"),
     cacheMaxAge: 365*24*3600*1000,

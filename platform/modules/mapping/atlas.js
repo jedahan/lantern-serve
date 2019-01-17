@@ -13,63 +13,65 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
             center_max: 10
         };
 
-        let uri_parts = window.location.href.split('/').slice(0, 3);
-        this.setTileHost(uri_parts);
-
-        fetch("/api/info").then(data => data.json()).then(data => {
-            if (data.online) {
-                uri_parts[2] = "{s}.tile.lantern.link";
-                this.setTileHost(uri_parts);
-            }
-        });
-
+        this.setTileHost();
         this._map_clicked = 0; // used to distinguish between click and double-click
 
     }
 
 
-    setTileHost (val) {
-        this.tile_host = val.join("/");
+    setTileHost (online) {
+        let uri_parts = window.location.href.split('/').slice(0, 3);
+
+        if (online) {            
+            uri_parts[2] = "{s}.tile.lantern.link";
+        }
+
+        this.tile_host = uri_parts.join("/");
         this.tile_uri = [this.tile_host +"/c/", LC.maptiler.id, "/styles/", 
                 LC.maptiler.map, "/{z}/{x}/{y}.png?key=", LC.maptiler.key
             ].join("");
     }
 
-    render() {
-        this.setupMap();
+    render() { 
 
-        this.setViewFromCenterLocationCache();
+        fetch("/api/info").then(data => data.json()).then(data => {
 
-        // map event for when location is found...
-        this.map.on("locationfound", this.cacheUserLocation.bind(this));
+            this.setTileHost(data.online);
+            this.setupMap();
+            this.setViewFromCenterLocationCache();
 
-        // map event for when location changes...
-        this.map.on("dragend", (e) => {
+            // map event for when location is found...
+            this.map.on("locationfound", this.cacheUserLocation.bind(this));
+
+            // map event for when location changes...
+            this.map.on("dragend", (e) => {
+                this.calculateZoomClass();
+                this.cacheCenterLocation();
+            });
+
+            this.map.on("zoomend", (e) => {
+                this.calculateZoomClass();
+                this.cacheCenterLocation();
+            });
+
+            this.map.on('click', (e) => {
+                this.emit("map-click-start", e);
+                this._map_clicked+=1;
+                setTimeout(() => {
+                    if (this._map_clicked == 1) {
+                        this._map_clicked = 0;
+                        this.emit("map-click", e);
+                    }
+                }, 250);
+            });
+
+            this.map.on("dblclick", (e) => {
+                this._map_clicked = 0;
+                this.emit("map-double-click", e);
+            });
             this.calculateZoomClass();
-            this.cacheCenterLocation();
-        });
 
-        this.map.on("zoomend", (e) => {
-            this.calculateZoomClass();
-            this.cacheCenterLocation();
         });
-
-        this.map.on('click', (e) => {
-            this.emit("map-click-start", e);
-            this._map_clicked+=1;
-            setTimeout(() => {
-                if (this._map_clicked == 1) {
-                    this._map_clicked = 0;
-                    this.emit("map-click", e);
-                }
-            }, 250);
-        });
-
-        this.map.on("dblclick", (e) => {
-            this._map_clicked = 0;
-            this.emit("map-double-click", e);
-        });
-        this.calculateZoomClass();
     }
 
 
