@@ -148,36 +148,44 @@ LX.User = class User extends LV.EventEmitter {
 
         // allows either a package object or a string representation of pkg@version
         
+        let pkg_id = pkg;
+
         if (typeof(pkg) == "object") {
-            pkg = `${pkg.name}@${pkg.version}`;    
+            pkg_id = `${pkg.name}@${pkg.version}`;    
         }
 
-        let pkg_name = pkg.split("@")[0];
-        let pkg_version = pkg.split("@")[1];
+        let pkg_name = pkg_id.split("@")[0];
+        let pkg_version = pkg_id.split("@")[1];
 
         return new Promise((resolve, reject) => {
             this.node.get("packages")
                 .get(pkg_name)
                 .once((v, k) => {
                         if (v) {
-                            console.log(`${this.log_prefix} already installed: ${pkg}`);
-                            resolve(pkg);
+                            console.log(`${this.log_prefix} already installed: ${pkg_id}`);
+                            resolve(pkg_id);
                         }
                         else {
-                            console.log(`${this.log_prefix} new install: ${pkg}`);
+                            console.log(`${this.log_prefix} new install: ${pkg_id}`);
 
                             // does not erase other key/value pairs here
                             this.node.get("packages")
+                                .once((v,k) => {
+                                    if (!v) {
+                                        console.log(`${this.log_prefix} initializing packages list for user`);
+                                        this.node.get("packages").put({});
+                                    }
+                                })
                                 .get(pkg_name)
                                 .put(pkg_version, (ack) => {
                                     if (ack.err) {
                                         return reject("user_install_package_failed");
                                     }
                                     // id is name@version combined
-                                    console.log(`${this.log_prefix} install done: ${pkg}`);
-                                    this.emit("install", pkg);                            
-                                    this.feed.addOnePackage(pkg);
-                                    resolve(pkg);
+                                    console.log(`${this.log_prefix} install done: ${pkg_id}`);
+                                    this.emit("install", pkg_id);                            
+                                    this.feed.addOnePackage(pkg_id);
+                                    resolve(pkg_id);
                                 });
                         }
                     });

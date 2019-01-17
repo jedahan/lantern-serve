@@ -29,13 +29,6 @@ LX.Organization = class Organization extends LV.EventEmitter {
     //-------------------------------------------------------------------------
 
     /**
-    * Ensures that organization exists in database before we work with it
-    */
-    ensure() {
-        return this.register();
-    }
-
-    /**
     * Publish a new data package to the network
     */
     register() {
@@ -43,12 +36,13 @@ LX.Organization = class Organization extends LV.EventEmitter {
             
             this.node.once((v,k) => {
                 if (v) {
-                    console.log(`${this.log_prefix} already registered`);
+                    console.log(`${this.log_prefix} already registered organization`);
                     return resolve(v);
                 }
                 else {
                     // this node may contain fields for "members" and "packages", too
-                    this.node.put(null).put({
+                    console.log(`${this.log_prefix} starting registration for organization`);
+                    this.node.put({
                         "name": this.name,
                         "members": {},
                         "packages": {}
@@ -78,6 +72,34 @@ LX.Organization = class Organization extends LV.EventEmitter {
             });
     }
 
+
+
+    //-------------------------------------------------------------------------
+    /**
+    * Claim ownership over package
+    */
+    claim(pkg) {
+        return new Promise((resolve, reject) => {
+            // first, link organization into package
+            let node1 = pkg.node.get("organization");
+            let node2 = this.node.get("packages")
+                                .get(pkg.name);
+            node1.once((v,k) => {
+                    if (!v) {
+                        node1.put(this.node)
+                        .once(() => {
+
+                            console.log(`${this.log_prefix} claimed ${pkg.id}`)
+                            // now, organization registers existence of package
+                            node2.put(pkg.node).once(resolve);
+                        });
+                    }
+                    else {
+                        console.log(`${this.log_prefix} already claimed ${pkg.id}`)
+                    }
+                });
+        });
+    }
 
 
     //-------------------------------------------------------------------------
