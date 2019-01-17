@@ -40,7 +40,6 @@ module.exports = (serv) => {
         result.forEach((app) => {
             if (app.name[0] != ".") {
                 app.children.forEach((item) => {
-                    log.debug(item);
                     if (read_body_for.indexOf(item.extension) > -1) {
                         item.body = String(fs.readFileSync(apps_dir + "/" + app.name + "/" + item.name));
                     }

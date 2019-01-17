@@ -5,7 +5,7 @@ LX.Database = class Database extends LV.EventEmitter {
         this.uri = uri;
         this.namespace = "__LX__";
         this.stor = LV.GraphDB(this.uri); // database instance
-        this.root_node = this.stor.get(this.namespace); // root node
+        this.root_node = this.stor.get(this.namespace); // root node        
 
         this.root_node.get("org").once((v,k) => {
             if (!v) {
@@ -13,12 +13,15 @@ LX.Database = class Database extends LV.EventEmitter {
             }
         })
 
-
         this.root_node.get("pkg").once((v,k) => {
             if (!v) {
                 this.root_node.get("pkg").put({});
             }
         })
+        
+        this.root_node.once((v,k) => {
+            this.emit("ready");
+        });
     }
 
 

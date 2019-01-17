@@ -4,21 +4,12 @@ LX.Director = class Director extends LV.EventEmitter {
         super();
         this.ready = false;
         this.apps = {};
-        this.db = null;
         this.view = new LX.View();
         this.atlas = new LX.Atlas();
-        this.user = null;
-    }
-
-    start() {
         // define database and user to work with decentralized network
         this.db = new LX.Database(window.location.origin + "/gun");
         this.user = new LX.User(this.db);
-        this.user.authOrRegister().then(() => {
-            this.emit("start");
-        });
     }
-
 
     withUser(fn) {
         if (this.user && this.user.username) {

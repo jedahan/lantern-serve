@@ -40,11 +40,13 @@
     <script src="/scripts/platform.js"></script>
     <script>
         window.LT = new LX.Director();
-        LT.on("start", function() {
+        LT.loadApps();
+        // let our database load before loading tiles
+        // for maximum speed
+        LT.db.once("ready", function() {
+            LT.user.authOrRegister();
             LT.atlas.render();
-            LT.loadApps();
         });
-        LT.start();
     </script>
     <script src="/scripts/raphael.min.js"></script>
 </body>
