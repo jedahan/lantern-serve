@@ -13,7 +13,8 @@ module.exports = (serv) => {
     serv.get("/api/info", (req,res) => {
         util.checkInternet().then(status => {
             return res.status(200).json({
-                "online": status
+                "online": status,
+                "cloud": process.env.CLOUD ? true : false
             });
         });
     });

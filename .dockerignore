@@ -1,9 +1,5 @@
 tmp
-makefile
 Dockerfile
-.git
-.gitignore
 .DS_store
-node_modules
 db/*
 logs

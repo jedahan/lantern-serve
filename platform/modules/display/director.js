@@ -45,6 +45,14 @@ LX.Director = class Director extends LV.EventEmitter {
             });
     }
 
+    loadStylesheet(uri) {
+      var el = document.createElement('link');
+      el.rel = 'stylesheet';
+      el.href = uri;
+      el.type = 'text/css';
+      document.head.appendChild(el);
+    }
+
 
 
     //------------------------------------------------------------------------

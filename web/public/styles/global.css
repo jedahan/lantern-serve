@@ -30,7 +30,6 @@ body .app {
 	top: 0;
 	position: fixed !important;
     min-height: 200px;
-    background: #88cdf8;
 }
 
 #map .leaflet-control-attribution {
