@@ -1,5 +1,4 @@
 LX.App = class App extends LV.EventEmitter {
-    
 
     constructor(obj) {
         super();
@@ -7,13 +6,14 @@ LX.App = class App extends LV.EventEmitter {
         this.css_id = `lx-app-${this.name}-css`;
         this.children = obj.children;
         this.pages = [];
+        this._component_opened = {};
         this.data = {};
         this.load();
-        this._component_opened = {};
     }
 
 
 
+    //------------------------------------------------------------------------
     createPageComponent(page_id, body, logic) {
         let cmp = {
             template: body
@@ -56,7 +56,6 @@ LX.App = class App extends LV.EventEmitter {
         
         self.pages.push(page)
 
-
         self.emit("load", page);
 
         if (logic) {
@@ -74,6 +73,58 @@ LX.App = class App extends LV.EventEmitter {
         return `[a:lx-app-${this.name}]`.padEnd(20, " ");
     }
 
+
+
+    //------------------------------------------------------------------------
+    /**
+    * Setup the VueComponent with logic as defined by developer
+    */
+    load() {
+        let accepted = ["data", "computed", "methods", "open", "callback", "mounted"];
+        let image_re = /(<img[\S\s]*?src=")([\S\s]*?)("[\S\s]*?>)/ig;
+            
+        let logic = {};
+
+        this.children.forEach((child) => {
+            if (child.extension == ".css" && child.body) {
+                this.addCSS(child.body);
+            }
+
+            else if (child.extension == ".js" && child.body) {
+                let js = eval(child.body);
+                accepted.forEach((key) => {
+                    if (js.hasOwnProperty(key)) {
+                        logic[key] = js[key];
+                    }
+                });
+            }
+        });
+
+        this.children.forEach((child) => {
+            if (child.extension == ".html" && child.body) {
+                let html = child.body.replace(image_re, "$1"+ `/-/${this.name}/` + "$2$3");
+                let page_id = child.name.split(".")[0];
+                this.createPageComponent(page_id, html, logic);
+            }
+        });
+    }
+
+    /**
+    * Removes all Vue components and related code and style injection
+    */
+    unload() {
+        this.pages.forEach((page) => {
+            this.close(page.component_id);
+        });
+        setTimeout(() => {
+            // allows vue to clear DOM to avoid flashes of content
+            this.removeCSS();
+        }, 300);
+    }
+
+
+
+    //------------------------------------------------------------------------
     /**
     * Displays Vue component on the screen
     */
@@ -104,6 +155,8 @@ LX.App = class App extends LV.EventEmitter {
     }
 
 
+
+    //------------------------------------------------------------------------
     /**
     * Inject CSS into DOM, allowing apps to redefine global styles if needed
     */
@@ -125,117 +178,6 @@ LX.App = class App extends LV.EventEmitter {
         s.parentNode.removeChild(s);
     }
 
-    /**
-    * Load a single HTML page into DOM using Vue
-    */
-    loadOnePage(filename, page_id, logic) {
-        fetch(filename, {
-                headers: {
-                    "Content-Type": "text/html"
-                }
-            })
-            .then((result) => {
-                return result.text();
-            })
-            .then((html) => {
-                // rewrite src attribute to point to proper web directory
-                let image_re = /(<img[\S\s]*?src=")([\S\s]*?)("[\S\s]*?>)/ig;
-                return html.replace(image_re, "$1"+ `/-/${this.name}/` + "$2$3");
-            })
-            .then((body) => {
-                return this.createPageComponent(page_id, body, logic);
-            });
-    }
-
-    /**
-    * Load all HTML pages for app into DOM using Vue
-    */
-    loadAllPages(logic) {
-        let files = {};
-        this.children.forEach((child) => {
-            // only load html pages
-            if (child.extension != ".html") return;
-            let filename = ["/-", this.name, child.name].join("/");
-            let page_id = child.name.split(".")[0];
-            this.loadOnePage(filename, page_id, logic);
-        });    
-    }
-    
-    /**
-    * Use fetch to retrieve any sort of file from app package
-    */
-    loadOneFile(name,json) {
-        return new Promise((resolve, reject) => {
-            let exists = false;
-
-            this.children.forEach((child) => {
-                if (child.name !=  name) return;
-                exists = true;
-            });   
-            
-            if (!exists) return resolve();
-
-            let filename = ["/-", this.name,  name].join("/");  
-            return fetch(filename)
-                .then((result) => {
-                    if (result.status == 200) {
-                        if (json) {
-                            return result.json();
-                        }
-                        else {
-                            return result.text();
-                        }
-                    }
-                })
-                .then((contents) => {
-                    resolve(contents);
-                })
-                .catch((e) => {
-                    console.warn(`${this.log_prefix} Could not load file for ${this.name}: ${name}`, e);
-                })
-        });
-    }
-
-    load() {
-        let logic = {};
-        let accepted = ["data", "computed", "methods", "open", "callback", "mounted"];
-        this.loadOneFile("app.js")
-            .then((result) => {
-                if (!result) {
-                    return console.warn(`${this.log_prefix} Could not load app.js`);
-                }
-                result = eval(result);
-                accepted.forEach((key) => {
-                    if (result.hasOwnProperty(key)) {
-                        logic[key] = result[key];
-                    }
-                });
-            })
-            .then(() => {
-                return this.loadOneFile("app.css")
-                    .then((css)  => {
-                        if (css) {
-                            this.addCSS(css);
-                        }
-                    });
-            })
-            .then(() => {
-                this.loadAllPages(logic)
-            });
-    }
-
-    /**
-    * Removes all Vue components and related code and style injection
-    */
-    unload() {
-        this.pages.forEach((page) => {
-            this.close(page.component_id);
-        });
-        setTimeout(() => {
-            // allows vue to clear DOM to avoid flashes of content
-            this.removeCSS();
-        }, 300);
-    }
 
 
 }

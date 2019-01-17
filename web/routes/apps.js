@@ -34,8 +34,17 @@ module.exports = (serv) => {
         util.removeMeta(filtered_tree, "path");
         let result = ( filtered_tree.hasOwnProperty("children") ? filtered_tree.children : []);
 
+        // which type of files do we read in advance?
+        let read_body_for = [".js", ".css", ".html"];
+
         result.forEach((app) => {
             if (app.name[0] != ".") {
+                app.children.forEach((item) => {
+                    log.debug(item);
+                    if (read_body_for.indexOf(item.extension) > -1) {
+                        item.body = String(fs.readFileSync(apps_dir + "/" + app.name + "/" + item.name));
+                    }
+                })
                 final_result.push(app);
             }
         });
