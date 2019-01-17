@@ -1,6 +1,6 @@
 {
     "name": "lantern-serve",
-    "version": "0.3.1",
+    "version": "0.3.2",
     "dependencies": {
         "@fortawesome/fontawesome-free": "^5.6.3",
         "@trust/webcrypto": "*",
