@@ -68,17 +68,20 @@ module.exports = (app) => {
             return;
         }
 
-        if (packages[package_name]) {
-            log.warn("watcher -- already watching: " + package_name);
-            return;
-        }
-
-        packages[package_name] = true;
         if (v.hasOwnProperty("version")) {
-            let package_id = package_name + "@" + v.version;
+
+            // only attempt to watch a package with a current version set
+
+            let pkg_id = `${package_name}@${v.version}`;
+
+            if (packages[pkg_id]) {
+                //log.warn("watcher -- already watching: " + pkg_id);
+                return;
+            }
+            packages[pkg_id] = true;
             // listen for new and existing items
             node.get(package_name).get("data").get(v.version).map().on((item_data, item_id) => {
-                watchItem(item_id, item_data, package_id);
+                watchItem(item_id, item_data, pkg_id);
             });
         }
     }
