@@ -8,7 +8,9 @@ LX.User = class User extends LV.EventEmitter {
         this.feed = new LX.Feed(this);
 
         this.once("auth", () => {
+            console.log(`${this.log_prefix} sign-in complete`);
             this.listPackages().then((packages) => {
+                console.log(`${this.log_prefix} installed packages: ${packages.length}`);
                 this.feed.addManyPackages(packages);
             });
         });
@@ -21,11 +23,57 @@ LX.User = class User extends LV.EventEmitter {
 
     //-------------------------------------------------------------------------
 
-    clearCredentials() {
-        console.warn(`${this.log_prefix}  removing invalid creds from storage`);
-        localStorage.removeItem("lx-auth");
-        console.warn(`${this.log_prefix}  waiting for valid sign in or registration...`);
+    /**
+    * Authenticates the user with decentralized database
+    */
+    authenticate(username, password) {
+        return new Promise((resolve, reject) => {
+
+            const completeAuth = () => {
+                SEA.pair().then((pair) => {
+                    this.pair = pair;
+                    this.emit("auth", this.pair);
+                    resolve(this.pair);
+                });
+            }
+
+            this.node.auth(username, password, (ack) => {
+                if (ack.err) {
+                    console.warn(`${this.log_prefix} invalid auth`, ack.err);
+                    reject("user_auth_failed");
+                }
+                else {
+                    this.username = username;
+                    completeAuth();
+                }
+            });
+        });
     }
+
+
+    /**
+    * Registers first-time user into the decentralized database
+    */
+    register(username, password) {
+        return new Promise((resolve, reject) => {
+
+            username = username || LV.ShortID.generate();
+            password = password || LV.ShortID.generate();
+            console.log(`${this.log_prefix} create user with username: ${username}`);
+            this.node.create(username, password, (ack) => {
+                if (ack.err) {
+                    console.log(`${this.log_prefix} unable to save`, ack.err);
+                    return reject("user_register_failed");
+                }
+                console.log(`${this.log_prefix} saved to browser`);
+                let creds = localStorage.setItem("lx-auth", [username, password].join(":"));
+                this.authenticate(username, password);
+                this.emit("registered");
+                resolve();
+            });
+        });
+    }
+
 
     authOrRegister(skip_check) {
         if (skip_check) {
@@ -57,68 +105,12 @@ LX.User = class User extends LV.EventEmitter {
         }
     }
     
-    /**
-    * Authenticates the user with decentralized database
-    */
-    authenticate(username, password) {
-        return new Promise((resolve, reject) => {
-
-            const completeAuth = () => {
-                SEA.pair().then((pair) => {
-                    this.pair = pair;
-                    console.log(`${this.log_prefix} good auth`);
-                    this.emit("auth", this.pair);
-                    resolve(this.pair);
-                });
-            }
-
-            this.node.auth(username, password, (ack) => {
-                if (ack.err) {
-                    console.warn(`${this.log_prefix} bad auth`, ack.err);
-                    reject("user_auth_failed");
-                }
-                else {
-                    this.username = username;
-                    let packages_node = this.node.get("packages");
-                    packages_node.once((v,k) => {
-                        if (!v) {
-                            packages_node.put({}).once(() => {
-                                completeAuth();
-                            });
-                        }
-                        else {
-                            completeAuth();
-                        }
-                    });
-                }
-            });
-        });
+    clearCredentials() {
+        console.warn(`${this.log_prefix}  removing invalid creds from storage`);
+        localStorage.removeItem("lx-auth");
+        console.warn(`${this.log_prefix}  waiting for valid sign in or registration...`);
     }
 
-
-    /**
-    * Registers first-time user into the decentralized database
-    */
-    register(username, password) {
-        return new Promise((resolve, reject) => {
-
-            username = username || LV.ShortID.generate();
-            password = password || LV.ShortID.generate();
-            console.log(`${this.log_prefix} create user with username: ${username}`);
-            this.node.create(username, password, (ack) => {
-                if (ack.err) {
-                    console.log(`${this.log_prefix} unable to save`, ack.err);
-                    return reject("user_register_failed");
-                }
-                console.log(`${this.log_prefix} saved to browser`);
-                let creds = localStorage.setItem("lx-auth", [username, password].join(":"));
-                this.authenticate(username, password);
-                this.node.get("packages").put({});
-                this.emit("registered");
-                resolve();
-            });
-        });
-    }
 
 
     //-------------------------------------------------------------------------
@@ -153,28 +145,38 @@ LX.User = class User extends LV.EventEmitter {
     * Installs a package for a given user and thereby makes available to end-user device
     */
     install(pkg) {
+
+        // allows either a package object or a string representation of pkg@version
+        
+        if (typeof(pkg) == "object") {
+            pkg = `${pkg.name}@${pkg.version}`;    
+        }
+
+        let pkg_name = pkg.split("@")[0];
+        let pkg_version = pkg.split("@")[1];
+
         return new Promise((resolve, reject) => {
             this.node.get("packages")
-                .get(pkg.name)
+                .get(pkg_name)
                 .once((v, k) => {
                         if (v) {
-                            console.log(`${this.log_prefix} already installed: ${pkg.id}`);
+                            console.log(`${this.log_prefix} already installed: ${pkg}`);
                             resolve(pkg);
                         }
                         else {
-                            console.log(`${this.log_prefix} new install: ${pkg.id}`);
+                            console.log(`${this.log_prefix} new install: ${pkg}`);
 
                             // does not erase other key/value pairs here
                             this.node.get("packages")
-                                .get(pkg.name)
-                                .put(pkg.version, (ack) => {
+                                .get(pkg_name)
+                                .put(pkg_version, (ack) => {
                                     if (ack.err) {
                                         return reject("user_install_package_failed");
                                     }
                                     // id is name@version combined
-                                    console.log(`${this.log_prefix} install done: ${pkg.id}`);
-                                    this.emit("install", pkg.id);                            
-                                    this.feed.addOnePackage(pkg.id);
+                                    console.log(`${this.log_prefix} install done: ${pkg}`);
+                                    this.emit("install", pkg);                            
+                                    this.feed.addOnePackage(pkg);
                                     resolve(pkg);
                                 });
                         }
