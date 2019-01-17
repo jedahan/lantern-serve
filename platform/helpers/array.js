@@ -16,4 +16,4 @@ Array.prototype.getIndexForObjectWithKey = function(key, value) {
            return idx;
         }
     }
-}
+};

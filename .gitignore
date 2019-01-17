@@ -7,5 +7,6 @@ logs/
 node_modules/
 tiles/
 tmp/
-web/public/platform/
+web/public/scripts/platform.js
+web/public/styles/vendor.css
 web/public/test.html

@@ -42,8 +42,8 @@ const apps_path = path.resolve(__dirname, "..", "apps")
 server.use("/-/", express.static(apps_path))
 
 // modules
-const modules_path = path.resolve(__dirname, "../node_modules/");
-server.use("/_/", express.static(modules_path));
+const modules_path = path.resolve(__dirname, "../node_modules/@fortawesome/fontawesome-free/webfonts");
+server.use("/webfonts/", express.static(modules_path));
 
 // final routes are for any static pages and binary files
 const static_path = path.resolve(__dirname, "./public/");
