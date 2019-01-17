@@ -3,6 +3,7 @@
 const util = require("../util");
 const log = util.Logger;
 const message = require("../middleware/message");
+const bodyParser = require("body-parser");
 
 module.exports = (serv) => {
    
@@ -105,7 +106,7 @@ module.exports = (serv) => {
     * Accept messages to convert into database updates
     */
     // @todo support multi-message inbox inputs
-    serv.put("/api/inbox", message, (req, res) => {
+    serv.put("/api/inbox", bodyParser.json(), message, (req, res) => {
         let msg = req.body.message;
         // @todo can make this persistent if needed using a queue
         // log the received messaged for future output

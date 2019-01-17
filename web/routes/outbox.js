@@ -5,6 +5,7 @@ const util = require("../util");
 const log = util.Logger;
 const message = require("../middleware/message");
 
+
 module.exports = (serv) => {
 
     /**
@@ -20,7 +21,7 @@ module.exports = (serv) => {
     /**
     * Queue messages to forward to nearby devices
     */
-    serv.put("/api/outbox", message, (req, res) => {
+    serv.put("/api/outbox", bodyParser.json(), message, (req, res) => {
         // @todo could sort these by sequence to attempt
         // to control order even when we have duplicate 1s, 2s, 3s...
         let msg = res.locals.message.text;

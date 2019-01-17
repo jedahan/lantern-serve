@@ -61,44 +61,42 @@ catch(e) {
 	}
 }
 
-
 // start the web server with built-in database solution
 let http_server = http.createServer(app);
+	secure_server.listen(util.getHttpsPort(), () => {
+	    let std_server = http_server.listen(util.getHttpPort(), () => {
+	        
+		let db_path = path.resolve(__dirname, "../db/dev");
+		if (process.env.DB) {
+			db_path = path.resolve(__dirname, "../" + process.env.DB);
+		}
 
-let std_server = http_server.listen(util.getHttpPort(), () => {
+		let db = GraphDB({
+			file: db_path, 
+			web: secure_server || std_server
+		});
 
 
-	let db_path = path.resolve(__dirname, "../db/dev");
-	if (process.env.DB) {
-		db_path = path.resolve(__dirname, "../" + process.env.DB);
-	}
+		log.info(`database path = ${db_path}`);
+		
+		if (secure_server) {
+			log.info(`secure port = ${util.getHttpsPort()}`);
+		}
+		else {
+			log.warn("falling back to http for local development...");
+			log.info(`standard port = ${util.getHttpPort()}`);
+		}
 
-	let db = GraphDB({
-		file: db_path, 
-		web: secure_server || std_server
-	});
+		// attach database instance as a local app variable for express routes
+		app.locals.db = db;
 
+		// track inbox messags
+		app.locals.inbox = {};
 
-	log.info(`database path = ${db_path}`);
-	
-	if (secure_server) {
-		let secure_web = secure_server.listen(util.getHttpsPort());
-		log.info(`secure port = ${util.getHttpsPort()}`);
-	}
-	else {
-		log.warn("falling back to http for local development...");
-		log.info(`standard port = ${util.getHttpPort()}`);
-	}
+		// track outbox messages
+		app.locals.outbox = [];
 
-	// attach database instance as a local app variable for express routes
-	app.locals.db = db;
-
-	// track inbox messags
-	app.locals.inbox = {};
-
-	// track outbox messages
-	app.locals.outbox = [];
-
-	// watch for database updates
-	watch(app);
+		// watch for database updates
+		watch(app);
+    });  
 });

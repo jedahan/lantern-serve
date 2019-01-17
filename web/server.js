@@ -13,8 +13,8 @@ const express = require("express");
 const GraphDB = require("gun");
 const fs = require("fs-extra");
 const path = require("path");
+const helmet = require("helmet");
 const compression = require("compression");
-const bodyParser = require("body-parser");
 const util = require("./util");
 const log = util.Logger;
 const server = express();
@@ -23,8 +23,8 @@ const server = express();
 
 //----------------------------------------------------------------------------
 server.disable("x-powered-by");
+server.use(helmet.noCache());
 server.use(compression());
-server.use(bodyParser.json());
 server.use(GraphDB.serve);
 server.use(require("./middleware/captive"));
 server.use(require("./middleware/cors"));
