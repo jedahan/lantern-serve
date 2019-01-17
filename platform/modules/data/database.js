@@ -6,23 +6,29 @@ LX.Database = class Database extends LV.EventEmitter {
         this.namespace = "__LX__";
         this.stor = LV.GraphDB(this.uri); // database instance
         this.root_node = this.stor.get(this.namespace); // root node        
-
-        this.root_node.get("org").once((v,k) => {
-            if (!v) {
-                this.root_node.get("org").put({});
-            }
-        })
-
-        this.root_node.get("pkg").once((v,k) => {
-            if (!v) {
-                this.root_node.get("pkg").put({});
-            }
-        })
-        
         this.root_node.once((v,k) => {
+            if (v) {
+                let expected = ["org", "pkg"];
+                expected.forEach((key) => {
+                    if (!v.hasOwnProperty(key)) {
+                        console.log(`${this.log_prefix} adding top-level node: ${key}`);
+                        this.root_node.get(key).put({});
+                    }
+                });
+                console.log(`${this.log_prefix} database ready`);
+            }
+            else {
+                console.log(`${this.log_prefix} database ready but empty`);
+            }
             this.emit("ready");
         });
     }
+
+    //-------------------------------------------------------------------------
+    get log_prefix() {
+        return `[d:${this.namespace}]`.padEnd(20, " ");
+    }
+
 
 
     //-------------------------------------------------------------------------
@@ -71,7 +77,7 @@ LX.Database = class Database extends LV.EventEmitter {
     * Output basic node on .once or .map
     */
     log(v,k) {
-        console.log(`[db] Key ${k} =`, v);
+        console.log(`${this.log_prefix} Key ${k} =`, v);
     }
 
 

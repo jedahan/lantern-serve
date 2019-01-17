@@ -103,8 +103,8 @@ LX.Feed = class Feed extends LV.EventEmitter {
         this.packages[id] = true;
 
 
-        let package_node = this.db.get("pkg").get(name);
-        package_node.get("data").once((v,k) => {
+        this.db.get("pkg").get(name).get("data")
+            .once((v,k) => {
                 if (v.hasOwnProperty(version)) {
                     // verified that version exists
                     console.log(`${this.log_prefix} watching changes: ${id}`)
