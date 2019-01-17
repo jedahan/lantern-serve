@@ -211,6 +211,17 @@ LX.User = class User extends LV.EventEmitter {
     }
 
 
+    //-------------------------------------------------------------------------
+    encrypt(data) {
+        return new Promise((resolve, reject) => {
+            SEA.encrypt(data, this.pair, (enc) => {
+                SEA.sign(enc, this.pair, (signed_data) => {
+                    console.log(`${this.log_prefix} encrypted / signed data: ${signed_data}`);
+                    resolve(signed_data);
+                });
+            });  
+        });
+    }
 
 
     //-------------------------------------------------------------------------
