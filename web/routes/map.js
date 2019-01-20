@@ -2,7 +2,7 @@
 
 const fs = require("fs-extra");
 const path = require("path");
-const fetch = require("fetch-timeout");
+const request = require("request");
 const util = require("../util");
 const log = util.Logger;
 
@@ -22,11 +22,8 @@ module.exports = (serv) => {
 	* Convert URL to local file path for cached tile
 	*/
 	const getLocalPathForTile = (params) => {
-		let zxy = `${params.z}/${params.x}/${params.y}.png`;
-		let target_dir = tiles_dir + "/"+path.dirname(zxy);
-		let file_name = path.basename(zxy);
-		let file_path = target_dir + "/" + file_name;
-		return file_path;
+		let zxy = `${tiles_dir}/${params.z}_${params.x}_${params.y}.png`;
+		return zxy;
 	}
 
 
@@ -42,40 +39,31 @@ module.exports = (serv) => {
 		});
 	}
 
+	/**
+	* Use MapTiler service to proxy and save tiles to local storage
+	*/
 	const getTileFromCloud = (req, res) => {
+		let preq = request("http://maps.tilehosting.com" + req.url)	
 
-		let url = "http://maps.tilehosting.com" + req.url;
-		//log.debug("Map tile proxy target is:", url);
-		let do_cache = false;
+		// return result as quickly as possible to browser
+		preq
+			.on("response", (pres) => {
+				//log.debug("Streamed tile from cloud: " + req.url);
+			})
+			.on("error", (err) => {
+				log.error("Could not stream tile for: " + req.url);
+				log.error(err);
+				sendEmptyTile(res);
+			})
+			.pipe(res);
 
-		return fetch(url, {
-				cors: true,
-				headers: {
-					"Origin": util.getDomain()
-				}
-			}, 1000, "Unable to access map tile in time")
-			.then((body) => {
-				if (body.status == 200) {
-					do_cache = true;
-					return body.buffer();
-				}
-				else {
-					//log.warn(`Map tile request failed: ${body.statusText} (${body.status})`);
-					throw new Error("Map tile request failed");
-				}
-			})
-			.then((buffer) => {
-				res.type("png");
-				res.send(buffer);
-				return do_cache;
-			})
-			.catch((e) => {
-				//log.warn(`Map tile request failed: ${url}`);
-				return sendEmptyTile(res);
+		// also stream to file system for cache
+		preq.pipe(fs.createWriteStream(getLocalPathForTile(req.params)))
+			.on("error", (err) => {
+				log.error("Could not save tile for: " + req.url);
+				log.error(err);
 			});
 	}
- 
-
 
 	//---------------------------------------------------------------------- 
 	/**
@@ -83,33 +71,14 @@ module.exports = (serv) => {
 	*/
 	serv.get("/c/:id/styles/:map/:z/:x/:y.png", (req, res, next) => {
 		// use offline cache if available, avoids hitting external sever
-		let local_path = getLocalPathForTile(req.params);
-	  
-		//log.debug("use cached tile", local_path);
-
-		fs.readFile(local_path, (err, buffer) => {
-
+		fs.readFile(getLocalPathForTile(req.params), (err, buffer) => {
 			if (err && err.code == "ENOENT" || buffer.length < 100) {
 				if (!assume_internet) {
-					//log.debug(`Skip offline attempt for: ${url}`);
+					//log.debug(`Skip offline attempt for: ${req.url}`);
 					return sendEmptyTile(res);
 				}
 				else {
-					getTileFromCloud(req,res)
-					.then((do_cache) => {
-						if (do_cache) {
-							// also save to cache
-							// @todo this could be turned into a proper queue in the future
-							let delay = 1000 + (2000*Math.random());
-							
-							setTimeout(() => {
-								// use timeout to help prioritize immediate network requests over saving to disk
-								//log.debug(`Cache tile: ${req.url}`);
-								fs.ensureDirSync(path.dirname(local_path));
-								fs.writeFile(local_path, buffer);
-							}, delay);
-						}
-					});
+					getTileFromCloud(req,res);
 				}
 			}
 			else if (err) {

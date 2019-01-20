@@ -19,10 +19,10 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
     }
 
 
-    setTileHost (online) {
+    setTileHost (use_cloud) {
         let uri_parts = window.location.href.split('/').slice(0, 3);
 
-        if (online) {            
+        if (use_cloud) {            
             uri_parts[2] = "{s}.tile.lantern.link";
         }
 
@@ -36,7 +36,7 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
 
         fetch("/api/info").then(data => data.json()).then(data => {
 
-            this.setTileHost(data.online);
+            this.setTileHost(data.cloud);
             this.setupMap();
             this.setViewFromCenterLocationCache();
 
