@@ -15,9 +15,11 @@ services:
           - DB=db/dev
           - SSL_PRIVATE_KEY=./certs/dev.lantern.link-key.pem
           - SSL_CERTIFICATE=./certs/dev.lantern.link.pem
-          - HOOK_ADD=./test-hook
-          - HOOK_UPDATE=./test-hook
-          - HOOK_DROP=./test-hook
+          - HOOK_ADD=./test/change-hook
+          - HOOK_UPDATE=./test/change-hook
+          - HOOK_DROP=./test/change-hook
+          - HOOK_RESTORE=./test/backup-hook
+          - HOOK_BACKUP=./test/backup-hook
 
 volumes:
   apps:

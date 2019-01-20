@@ -27,6 +27,7 @@ const GraphDB = require("gun")
 const util = require("./util");
 const app = require("./server")
 const watch = require("./watcher");
+const backup = require("./backup");
 const log = util.Logger;
 
 
@@ -37,6 +38,17 @@ log.info("##############################################");
 log.info("Lantern App Server");
 log.info("##############################################");
 
+
+// choose database location
+let db_path = path.resolve(__dirname, "../db/dev");
+if (process.env.DB) {
+	db_path = path.resolve(__dirname, "../" + process.env.DB);
+}
+
+
+// run a backup of data every day
+// restores an existing database before starting server, if needed
+backup(db_path);
 
 
 //----------------------------------------------------------------------------
@@ -66,11 +78,7 @@ let http_server = http.createServer(app);
 	secure_server.listen(util.getHttpsPort(), () => {
 	    let std_server = http_server.listen(util.getHttpPort(), () => {
 	        
-		let db_path = path.resolve(__dirname, "../db/dev");
-		if (process.env.DB) {
-			db_path = path.resolve(__dirname, "../" + process.env.DB);
-		}
-
+	
 		let db = GraphDB({
 			file: db_path, 
 			web: secure_server || std_server

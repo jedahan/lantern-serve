@@ -12,7 +12,12 @@ install:
 	npm install
 	
 start: pack $(CERTS)
-	HOOK_ADD="./test-hook" HOOK_DROP="./test-hook" HOOK_UPDATE="./test-hook" npm start	
+	HOOK_ADD="./test/change-hook" \
+	HOOK_DROP="./test/change-hook" \
+	HOOK_UPDATE="./test/change-hook" \
+	HOOK_RESTORE="./test/restore-hook" \
+	HOOK_BACKUP="./test/backup-hook" \
+	npm start	
 
 run:
 	docker-compose -f dc-dev.yml up
