@@ -6,8 +6,15 @@
 const path = require("path");
 
 module.exports = (serv) => {
+
+    const dir = path.resolve(__dirname, "../../node_modules");
+
     serv.get("/styles/L.Control.Locate.min.css.map", (req, res) => {
-        res.sendFile(path.resolve(__dirname, "../../node_modules/leaflet.locatecontrol/dist/L.Control.Locate.min.css.map"))
+        res.sendFile(dir + "/leaflet.locatecontrol/dist/L.Control.Locate.min.css.map");
+    });
+
+    serv.get("/styles/files/:filename", (req, res) => {
+        res.sendFile(dir + "/typeface-montserrat/files/" + req.params.filename);
     });
 };
 
