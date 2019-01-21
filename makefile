@@ -6,7 +6,7 @@ CERTS := certs/dev.lantern.link.pem
 .PHONY: build certs clean install start run stage deploy pack $(PLATFORM)
 
 build: pack $(CERTS)
-	docker-compose -f dc-dev.yml build
+	docker-compose -f env/dc-dev.yml build
 
 install:
 	npm install
@@ -20,16 +20,16 @@ start: pack $(CERTS)
 	npm start	
 
 run:
-	docker-compose -f dc-dev.yml up
+	docker-compose -f env/dc-dev.yml up
 
 stage: pack
-	docker-compose -f dc-stage.yml build
+	docker-compose -f env/dc-stage.yml build
 	docker-compose -f dc-stage.yml up -d
 
 deploy: pack
 	triton profile set-current lantern
-	triton-compose -f dc-prod.yml build
-	triton-compose -f dc-prod.yml up -d
+	triton-compose -f env/dc-prod.yml build
+	triton-compose -f env/dc-prod.yml up -d
 
 pack: 
 	cat node_modules/bulma/css/bulma.min.css \

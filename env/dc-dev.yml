@@ -1,0 +1,25 @@
+version: '3'
+services:
+  link:
+      build:
+        context: ..
+      restart: always
+      ports:
+          - 80:80
+          - 443:443
+          - 8765:8765
+      volumes:
+          - ..:/lantern/server/
+      environment:
+          - CLOUD=false
+          - DB=db/dev
+          - SSL_PRIVATE_KEY=/lantern/server/certs/dev.lantern.link-key.pem
+          - SSL_CERTIFICATE=/lantern/server/certs/dev.lantern.link.pem
+          - HOOK_ADD=/lantern/server/test/change-hook
+          - HOOK_UPDATE=/lantern/server/test/change-hook
+          - HOOK_DROP=/lantern/server/test/change-hook
+          - HOOK_RESTORE=/lantern/server/test/backup-hook
+          - HOOK_BACKUP=/lantern/server/test/backup-hook
+
+volumes:
+  apps:

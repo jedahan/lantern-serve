@@ -2,7 +2,7 @@ version: '3'
 services:
   link:
       build:
-        context: .
+        context: ..
         args:
             apps: https://github.com/lantern-works/lantern-apps
       restart: always
