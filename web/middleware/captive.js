@@ -1,5 +1,3 @@
-"use strict"
-
 const accepted_ips = {};
 const util = require("../util");
 const log = util.Logger;

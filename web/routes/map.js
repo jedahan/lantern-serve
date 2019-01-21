@@ -1,5 +1,8 @@
-"use strict"
-
+/**
+* Map Routes
+*
+* Proxies MapTiler requests and caches offline for reliable access
+**/
 const fs = require("fs-extra");
 const path = require("path");
 const request = require("request");

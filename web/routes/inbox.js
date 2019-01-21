@@ -1,5 +1,8 @@
-"use strict"
-
+/**
+* Inbox Route
+*
+* API to manage messages to be processed and turned into database updates
+**/
 const util = require("../util");
 const log = util.Logger;
 const message = require("../middleware/message");

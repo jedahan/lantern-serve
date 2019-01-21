@@ -1,6 +1,3 @@
-"use strict"
-
-
 /**
 * Lantern HTTP Server
 *

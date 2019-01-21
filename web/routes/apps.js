@@ -1,5 +1,8 @@
-"use strict"
-
+/**
+* App Routes
+*
+* API to get and refresh custom apps available on this server
+**/
 const fs = require("fs-extra");
 const exec = require('child_process').exec;
 const directoryTree = require("directory-tree");

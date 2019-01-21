@@ -1,9 +1,13 @@
-"use strict"
-
+/**
+* Outbox Routes
+*
+* API to manage queue for messages to be sent over long-range data radio
+**/
 const bodyParser = require("body-parser");
 const util = require("../util");
 const log = util.Logger;
 const message = require("../middleware/message");
+
 
 
 module.exports = (serv) => {

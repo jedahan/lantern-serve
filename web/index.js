@@ -1,5 +1,3 @@
-"use strict"
-
 /**
 * Lantern HTTP Server
 *
@@ -8,10 +6,6 @@
 * Useful for hosting on a Raspberry Pi or cloud environment.
 *
 **/
-
-
-
-//----------------------------------------------------------------------
 const fs = require("fs-extra");
 const path = require("path");
 fs.ensureDirSync(path.resolve(__dirname, "../logs"));

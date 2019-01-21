@@ -1,5 +1,8 @@
-"use strict"
-
+/**
+* Info Routes
+*
+* Provides information about this server instance
+**/
 const util = require("../util");
 
 module.exports = (serv) => {
