@@ -35,22 +35,32 @@ describe("inbox", () => {
             });
     });
 
-    it("should process a well-formed add message", (done) => {
+
+    it("should discard an update message for missing item", (done) => {
+            putMessage({"message": `1|${conf.PKG}^missingitem.greeting=world`})
+            .then(response => response.json())
+            .then((json) => {
+                json.err.should.equal("inbox_update_failed_missing_item");
+                json.ok.should.equal(false);
+                done();
+            });
+    });
+
+
+
+    it("should add and update an item", (done) => {
             putMessage({"message": `1|${conf.PKG}+test`})
             .then(response => response.json())
             .then((json) => {
                 // could be true or false depending if we added this already
                 should.exist(json.ok);
-                done();
-            });
-    });
+                 putMessage({"message": `2|${conf.PKG}^test.me=yes`})
+                .then(response => response.json())
+                .then((json) => {
+                    json.ok.should.equal(true);
+                    done();
+                });
 
-    it("should process a well-formed update message", (done) => {
-            putMessage({"message": `2|${conf.PKG}^test.me=yes`})
-            .then(response => response.json())
-            .then((json) => {
-                json.ok.should.equal(true);
-                done();
             });
     });
 

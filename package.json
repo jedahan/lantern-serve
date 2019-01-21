@@ -11,6 +11,7 @@
         "event-emitter-es6": "^1.1.5",
         "express": "^4.16.4",
         "request": "*",
+        "node-fetch": "*",
         "fs-extra": "7.x",
         "geohash-distance": "*",
         "helmet": "*",
