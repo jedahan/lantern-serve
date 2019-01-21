@@ -12,11 +12,11 @@ install:
 	npm install
 	
 start: pack $(CERTS)
-	HOOK_ADD="./test/change-hook" \
-	HOOK_DROP="./test/change-hook" \
-	HOOK_UPDATE="./test/change-hook" \
-	HOOK_RESTORE="./test/restore-hook" \
-	HOOK_BACKUP="./test/backup-hook" \
+	HOOK_ADD="./hooks/change" \
+	HOOK_DROP="./hooks/change" \
+	HOOK_UPDATE="./hooks/change" \
+	HOOK_RESTORE="./hooks/restore" \
+	HOOK_BACKUP="./hooks/backup" \
 	npm start	
 
 run:

@@ -1,9 +1,9 @@
-tmp
-makefile
-db/*
-apps
-logs
 Dockerfile
-dc-*.yml
-tiles
-certs
+apps
+backups
+db
+env
+logs
+makefile
+web/tiles
+web/certs

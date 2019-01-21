@@ -10,6 +10,8 @@ link:
         - DB=db/prod
         - SSL_PRIVATE_KEY=/lantern/server/web/certs/privkey.pem
         - SSL_CERTIFICATE=/lantern/server/web/certs/fullchain.pem
+        - HOOK_BACKUP=/lantern/server/hooks/backup
+        - HOOK_RESTORE=/lantern/server/hooks/restore
     labels:
         - triton.cns.services=lnt
         - com.joyent.package=g4-highcpu-512M

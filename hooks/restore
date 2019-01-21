@@ -1,0 +1,13 @@
+#!/bin/bash
+
+BACKUP_DIR=$PWD/backups
+BACKUP=$BACKUP_DIR/db-backup-latest.tar.gz
+RESTORE_PATH=${1%/}
+
+if [ -z "$RESTORE_PATH" ]; then
+    echo "Please specify a valid location to restore to..."
+    exit
+fi
+RESTORE_PATH="${RESTORE_PATH}-restore"
+mkdir -p "$RESTORE_PATH"
+tar -xzvf ${BACKUP} -C ${RESTORE_PATH}

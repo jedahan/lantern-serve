@@ -19,7 +19,7 @@ module.exports = (db_path) => {
         if (process.env.hasOwnProperty("HOOK_BACKUP")) {
             let bin = path.resolve(process.env.HOOK_BACKUP);
             let result = spawnSync(bin, [db_path]); 
-            log.debug("backup result: ", result.stdout.toString()); 
+            //log.debug("backup result: ", result.stdout.toString()); 
         }
     }
 
@@ -27,7 +27,7 @@ module.exports = (db_path) => {
         if (process.env.hasOwnProperty("HOOK_RESTORE")) {
             let bin = path.resolve(process.env.HOOK_RESTORE);
             let result = spawnSync(bin, [db_path]); 
-            log.debug("restore result: ", result.stdout.toString()); 
+            //log.debug("restore result: ", result.stdout.toString()); 
         }
     }
     else {

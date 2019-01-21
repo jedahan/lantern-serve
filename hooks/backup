@@ -1,0 +1,17 @@
+#!/bin/bash
+
+BACKUP_DIR=$PWD/backups
+DATE=`date +%Y-%m-%d`
+DATABASE=$1
+if [ -z "$DATABASE" ]; then
+    echo "Please specify a database file to backup..."
+    exit
+fi
+
+BACKUP_FILE="${BACKUP_DIR}/db-backup-${DATE}.tar.gz"
+mkdir -p $BACKUP_DIR
+
+cd $1;  tar -czvf $BACKUP_FILE *
+cp -rf $BACKUP_FILE "${BACKUP_DIR}/db-backup-latest.tar.gz"
+
+echo "backup ${DATE} completed..."

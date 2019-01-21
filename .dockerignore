@@ -1,5 +1,6 @@
-tmp
-Dockerfile
 .DS_store
-db/*
+Dockerfile
+backups
+db
 logs
+makefile

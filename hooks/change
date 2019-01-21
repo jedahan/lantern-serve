@@ -8,4 +8,4 @@ if (len(sys.argv) > 1):
         if val:
             sys.stdout.write(val)
 else:
-    sys.stdout.write("no message to queue for outbox...")
+    sys.stdout.write("no change detected...")
