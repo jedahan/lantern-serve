@@ -17,7 +17,6 @@ RUN mkdir -p ./db
 COPY web ./web
 COPY certs ./certs
 RUN git clone "${APPS_URI}" ./apps;
-COPY tiles ./tiles
 
 # Run Web & Database Server
 EXPOSE 80

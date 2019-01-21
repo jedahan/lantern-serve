@@ -13,7 +13,7 @@ const log = util.Logger;
 //----------------------------------------------------------------------
 module.exports = (serv) => {
 
-	let tiles_dir = path.resolve(__dirname, "../../tiles");
+	let tiles_dir = path.resolve(__dirname, "../public/tiles");
 	let assume_internet = true;
 
 	// offer these routes a chance to bypass attempts at internet
