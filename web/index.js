@@ -50,8 +50,8 @@ backup(db_path);
 let secure_server = null;
 try {
 	// read in ssl certificate data
-	let private_key_path = process.env.SSL_PRIVATE_KEY || path.resolve(__dirname, "../certs/dev.lantern.link-key.pem");
-	let certificate_path = process.env.SSL_CERTIFICATE || path.resolve(__dirname, "../certs/dev.lantern.link.pem");
+	let private_key_path = process.env.SSL_PRIVATE_KEY || path.resolve(__dirname, "./certs/dev.lantern.link-key.pem");
+	let certificate_path = process.env.SSL_CERTIFICATE || path.resolve(__dirname, "./certs/dev.lantern.link.pem");
 	let credentials = {
 		key: fs.readFileSync(private_key_path, 'utf8'), 
 		cert: fs.readFileSync(certificate_path, 'utf8')

@@ -13,8 +13,8 @@ services:
       environment:
           - CLOUD=false
           - DB=db/dev
-          - SSL_PRIVATE_KEY=/lantern/server/certs/dev.lantern.link-key.pem
-          - SSL_CERTIFICATE=/lantern/server/certs/dev.lantern.link.pem
+          - SSL_PRIVATE_KEY=/lantern/server/web/certs/dev.lantern.link-key.pem
+          - SSL_CERTIFICATE=/lantern/server/web/certs/dev.lantern.link.pem
           - HOOK_ADD=/lantern/server/test/change-hook
           - HOOK_UPDATE=/lantern/server/test/change-hook
           - HOOK_DROP=/lantern/server/test/change-hook
