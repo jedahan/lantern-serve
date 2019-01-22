@@ -9,15 +9,6 @@ Our server runs only in secure mode. You must generate SSL certificates to match
 
 For dev.lantern.link, we use `mkcert`. Be sure to [install mkcert](https://github.com/FiloSottile/mkcert#installation) and follow the instructions for adding the CA to your local machine.
 
-### Building
-
-Make sure to have `browserify`
-
-    npm install --global browserify
-
-Build browser bundles
-
-    make build
 
 ### Run In NPM
 

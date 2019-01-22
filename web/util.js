@@ -4,6 +4,10 @@
 */
 const path = require("path");
 const fs = require("fs-extra");
+const browserify = require("browserify");
+const minify = require('@node-minify/core');
+const uglifyJS = require('@node-minify/uglify-es');
+const concat = require("concat");
 const self = {};
 
 
@@ -100,6 +104,97 @@ self.getSimpleMessage = (msg) => {
     return msg.replace(/^([0-9]+)\|/, "");
 }
     
+
+//----------------------------------------------------------------------  
+/**
+* Minify styles
+*/
+self.compressStylesheets = () => {
+    return new Promise((resolve, reject) => {
+
+        let files = [
+            "node_modules/bulma/css/bulma.min.css",
+            "node_modules/leaflet/dist/leaflet.css",
+            "node_modules/leaflet.locatecontrol/dist/L.Control.Locate.min.css",
+            "node_modules/@fortawesome/fontawesome-free/css/all.min.css",
+            "node_modules/typeface-montserrat/index.css"
+        ]
+
+        let vendor_css = path.resolve(__dirname, "./public/styles/vendor.css");
+       
+        concat(files, vendor_css);
+        resolve();
+    });
+}
+
+/**
+* Pack scripts
+*/
+
+self.packJavascript = () => {
+
+    return new Promise((resolve, reject) => {
+
+        let platform_script = path.resolve(__dirname, "./public/scripts/platform.js");
+
+        let files = [
+            "platform/header.js",
+            "platform/vendor/core.js",
+            "platform/vendor/storage.js",
+            "platform/helpers/array.js",
+            "platform/helpers/string.js",
+            "platform/helpers/math.js",
+            "platform/modules/data/database.js",
+            "platform/modules/data/organization.js",
+            "platform/modules/data/package.js",
+            "platform/modules/data/item.js",
+            "platform/modules/data/user.js",
+            "platform/modules/data/feed.js",
+            "platform/config/leaflet.js",
+            "platform/vendor/map.js",
+            "platform/modules/mapping/location.js",
+            "platform/modules/mapping/marker.js",
+            "platform/modules/mapping/atlas.js",
+            "platform/modules/display/director.js",
+            "platform/vendor/display.js",
+            "platform/modules/display/app.js",
+            "platform/modules/display/view.js",
+            "platform/modules/display/menu.js"
+        ];
+
+        let b = browserify(files);
+        let write_stream = fs.createWriteStream(platform_script);
+        b.bundle()
+            .pipe(write_stream)
+            .on("finish", () => {
+                resolve();
+            })
+            .on("error", (e) => {
+                reject(e);
+            })
+    });
+}
+
+
+/**
+* Minify scripts
+*/
+self.compressJavascript = () => {
+    return new Promise((resolve, reject) => {
+        // handle minification directly here rather than build scripts
+        let platform_min = path.resolve(__dirname, "./public/scripts/platform.min.js");
+      
+        // offer compressed versions of scripts
+        minify({
+          compressor: uglifyJS,
+          input: path.resolve(__dirname, "./public/scripts/platform.js"),
+          output: platform_min,
+          callback: resolve
+        });
+    });
+}
+
+
 
 
 //----------------------------------------------------------------------  

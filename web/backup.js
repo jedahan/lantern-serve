@@ -14,7 +14,6 @@ const log = util.Logger;
 
 //----------------------------------------------------------------------
 module.exports = (db_path) => {
-
     const back_fn = () => {
         if (process.env.hasOwnProperty("HOOK_BACKUP")) {
             let bin = path.resolve(process.env.HOOK_BACKUP);
@@ -35,4 +34,5 @@ module.exports = (db_path) => {
     }
 
     setTimeout( back_fn, 60*1000);
+    return Promise.resolve();
 }
