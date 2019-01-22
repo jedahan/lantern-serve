@@ -6,6 +6,7 @@
         "@trust/webcrypto": "*",
         "body-parser": "*",
         "bulma": "*",
+        "concat": "*",
         "compression": "^1.7.3",
         "@node-minify/core": "*",
         "@node-minify/uglify-es": "*",

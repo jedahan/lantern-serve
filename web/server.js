@@ -1,9 +1,8 @@
 /**
-* Lantern HTTP Server
+* Lantern Routes
 *
-* We serve web logic with Express and the database at the same origin.
-* This allows easy access to the database through javascript.
-* Useful for hosting on a Raspberry Pi or cloud environment.
+* Our routes make heavy use of install node modules where possible
+* to avoid duplication of code and ensure easy maintenance
 *
 **/
 const express = require("express");

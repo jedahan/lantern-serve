@@ -32,13 +32,6 @@ deploy: pack
 	triton-compose -f env/dc-prod.yml up -d
 
 pack: 
-	cat node_modules/bulma/css/bulma.min.css \
-		node_modules/leaflet/dist/leaflet.css \
-		node_modules/leaflet.locatecontrol/dist/L.Control.Locate.min.css \
-		node_modules/@fortawesome/fontawesome-free/css/all.min.css \
-		node_modules/typeface-montserrat/index.css \
-		> web/public/styles/vendor.css
-
 	browserify platform/header.js \
 		platform/vendor/core.js \
 		platform/vendor/storage.js \
