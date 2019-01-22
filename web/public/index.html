@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="apple-mobile-web-app-capable" content="yes">
     <style>
-    #map, body, html {  
-        height: 100%;
-        width: 100%;
-        padding: 0em;
-        margin: 0em;
-        background: #88cdf8;
-    }
+        [v-cloak] { display:none }
+        #map, body, html {  
+            height: 100%;
+            width: 100%;
+            padding: 0em;
+            margin: 0em;
+            background: #88cdf8;
+        }
     </style>
 </head>
 <body>
@@ -30,23 +31,23 @@
 
 
     <!-- application display -->
-    <div id="app-container">
+    <div id="app-container" v-cloak>
         <component v-for="app in app_components" v-bind:is="app" :key="app" v-bind:id="app" class="app"></component>
     </div>
     
 
     <!-- platform setup -->
-    <script src="/scripts/platform.js"></script>
+    <script src="/scripts/platform.min.js"></script>
     <script>
         window.LT = new LX.Director();
+        LT.loadStylesheet("/styles/vendor.css");
+        LT.loadStylesheet("/styles/global.css");
         LT.loadApps();
         // let our database load before loading tiles
         // for maximum speed
         LT.db.once("ready", function() {
             LT.user.authOrRegister();
             LT.atlas.render();
-            LT.loadStylesheet("/styles/vendor.css");
-            LT.loadStylesheet("/styles/global.css");
         });
     </script>
     <script src="/scripts/raphael.min.js"  async defer></script>

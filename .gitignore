@@ -7,5 +7,6 @@ node_modules
 web/certs
 web/public/tiles/
 web/public/scripts/platform.js
+web/public/scripts/platform.min.js
 web/public/styles/vendor.css
 web/public/test.html
