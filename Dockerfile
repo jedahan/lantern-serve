@@ -16,6 +16,7 @@ RUN npm install
 RUN mkdir -p ./db
 COPY web ./web
 COPY hooks ./hooks
+COPY .git ./.git
 RUN git clone "${APPS_URI}" ./apps;
 
 # Run Web & Database Server
