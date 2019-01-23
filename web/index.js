@@ -53,7 +53,7 @@ const startServer = () => {
         // start the web server with built-in database solution
         let http_server = http.createServer(app)
         secure_server.listen(util.getHttpsPort(), () => {
-			    let std_server = http_server.listen(util.getHttpPort(), () => {
+            let std_server = http_server.listen(util.getHttpPort(), () => {
                 if (secure_server) {
                     log.info(`secure port = ${util.getHttpsPort()}`)
                 } else {
@@ -67,12 +67,12 @@ const startServer = () => {
                 app.locals.outbox = []
 
                 // get sense of what sort of device we have here
-		        util.checkInternet().then(status => {
-		        	app.locals.online = status ? '1' : '0'
-		        	app.locals.cloud = process.env.CLOUD ? '1' : '0'
+                util.checkInternet().then(status => {
+                    app.locals.online = status ? '1' : '0'
+                    app.locals.cloud = process.env.CLOUD ? '1' : '0'
                     resolve(secure_server || std_server)
-		        })
-		    })
+                })
+            })
         })
     })
 }

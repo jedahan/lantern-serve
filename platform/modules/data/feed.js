@@ -11,7 +11,7 @@ module.exports = class LXFeed extends EventEmitter {
 
     // -------------------------------------------------------------------------
     get log_prefix () {
-    	return `[f:${this.user.username}]`.padEnd(20, ' ')
+        return `[f:${this.user.username}]`.padEnd(20, ' ')
     }
 
     onDataChange (val, id, pkg_id) {
@@ -69,8 +69,8 @@ module.exports = class LXFeed extends EventEmitter {
     }
 
     // -------------------------------------------------------------------------
-  	addManyPackages (packages) {
-    	packages.forEach(this.addOnePackage.bind(this))
+    addManyPackages (packages) {
+        packages.forEach(this.addOnePackage.bind(this))
     }
 
     addOnePackage (id) {
@@ -84,7 +84,7 @@ module.exports = class LXFeed extends EventEmitter {
             return
         }
 
-    	if (this.packages[id]) {
+        if (this.packages[id]) {
             console.log(`${this.log_prefix} already watching: ${id}`)
             return
         }
@@ -112,7 +112,7 @@ module.exports = class LXFeed extends EventEmitter {
     }
 
     removeManyPackages (packages) {
-    	packages.forEach(this.removeOnePackage.bind(this))
+        packages.forEach(this.removeOnePackage.bind(this))
     }
 
     removeOnePackage (id) {
@@ -123,25 +123,25 @@ module.exports = class LXFeed extends EventEmitter {
             return
         }
 
-    	console.log(`${this.log_prefix} unwatch changes for ${id}`)
-    	this.packages[id] = false
+        console.log(`${this.log_prefix} unwatch changes for ${id}`)
+        this.packages[id] = false
     }
 
     // -------------------------------------------------------------------------
     addManyTopics (topics) {
-    	topics.forEach(this.addOneTopic.bind(this))
+        topics.forEach(this.addOneTopic.bind(this))
     }
 
     addOneTopic (name) {
-    	console.log(`${this.log_prefix} add topic ${name}`)
-    	this.topics[name] = true
+        console.log(`${this.log_prefix} add topic ${name}`)
+        this.topics[name] = true
     }
 
     removeManyTopics (topics) {
-    	topics.forEach(this.removeOneTopic.bind(this))
+        topics.forEach(this.removeOneTopic.bind(this))
     }
     removeOneTopic (name) {
-    	console.log(`${this.log_prefix} remove topic ${name}`)
-    	this.topics[name] = false
+        console.log(`${this.log_prefix} remove topic ${name}`)
+        this.topics[name] = false
     }
 }

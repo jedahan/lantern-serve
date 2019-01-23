@@ -23,7 +23,7 @@ module.exports = class LXPackage extends EventEmitter {
 
     // -------------------------------------------------------------------------
     get log_prefix () {
-    	return `[p:${this.name || 'new package'}@${this.version}]`.padEnd(20, ' ')
+        return `[p:${this.name || 'new package'}@${this.version}]`.padEnd(20, ' ')
     }
 
     get name () {
@@ -136,7 +136,7 @@ module.exports = class LXPackage extends EventEmitter {
                 return reject('missing_version')
             }
 
-        	this.node.get('data').get(version || this.version)
+            this.node.get('data').get(version || this.version)
                 .put(null, (v, k) => {
                     this.emit('unpublish')
                     return resolve()
