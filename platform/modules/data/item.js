@@ -1,6 +1,5 @@
 const EventEmitter = require('event-emitter-es6')
 const shortid = require('shortid')
-const LT = window.LT
 
 module.exports = class LXItem extends EventEmitter {
     constructor (id, data, defaults) {
@@ -286,7 +285,7 @@ module.exports = class LXItem extends EventEmitter {
     */
     save (pkgName, fields, version) {
         return new Promise((resolve, reject) => {
-            if (!LT.db) {
+            if (!window.LT.db) {
                 console.log(`${this.logPrefix} Requires database to publish to`)
                 return reject('db_required')
             }
@@ -307,7 +306,7 @@ module.exports = class LXItem extends EventEmitter {
                 let item = {}
                 item[this.id] = data
 
-                let node = LT.db.get('pkg')
+                let node = window.LT.db.get('pkg')
                     .get(pkgName)
                     .get('data')
                     .get(version)
@@ -355,7 +354,7 @@ module.exports = class LXItem extends EventEmitter {
 
             // record owner when item is first exported...
             if (!this._data['owner']) {
-                this._data['owner'] = LT.user.username
+                this._data['owner'] = window.LT.user.username
             }
 
             // are we trying to change just a partial?
@@ -382,7 +381,7 @@ module.exports = class LXItem extends EventEmitter {
             if (version) {
                 completeSave(version)
             } else {
-                LT.db.get('pkg')
+                window.LT.db.get('pkg')
                     .get(pkgName)
                     .get('version')
                     .once(completeSave)
@@ -395,7 +394,7 @@ module.exports = class LXItem extends EventEmitter {
     */
     drop (pkgName, version) {
         return new Promise((resolve, reject) => {
-            if (!LT.db) {
+            if (!window.LT.db) {
                 console.error(`${this.logPrefix} requires database to remove from`)
                 return reject('db_required')
             } else if (this.mode == 'dropped') {
@@ -408,7 +407,7 @@ module.exports = class LXItem extends EventEmitter {
             }
 
             const completeDrop = (version) => {
-                LT.db.get('pkg')
+                window.LT.db.get('pkg')
                     .get(pkgName)
                     .get('data')
                     .get(version)
@@ -425,7 +424,7 @@ module.exports = class LXItem extends EventEmitter {
             if (version) {
                 completeDrop(version)
             } else {
-                LT.db.get('pkg')
+                window.LT.db.get('pkg')
                     .get(pkgName)
                     .get('version')
                     .once(completeDrop)

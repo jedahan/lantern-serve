@@ -1,7 +1,5 @@
 const Geohash = require('latlon-geohash')
 const LXItem = require('../data/item')
-const LT = window.LT
-const L = window.L
 
 module.exports = class LXMarkerItem extends LXItem {
     constructor (id, data) {
@@ -27,9 +25,9 @@ module.exports = class LXMarkerItem extends LXItem {
         })
 
         // intercept to see if we have a cached version in our atlas already
-        if (LT.atlas.markers[id]) {
+        if (window.LT.atlas.markers[id]) {
             console.warn(`${this.logPrefix} using cached marker from atlas`)
-            return LT.atlas.markers[id]
+            return window.LT.atlas.markers[id]
         }
     }
 
@@ -87,13 +85,13 @@ module.exports = class LXMarkerItem extends LXItem {
         // console.log(`${this.logPrefix} showing marker`, this);
 
         let self = this
-        this.layer = L.marker(this.latlng, {
+        this.layer = window.L.marker(this.latlng, {
             icon: this.getDivIcon(),
             draggable: false,
             autoPan: true
         })
 
-        LT.atlas.addToMap(this)
+        window.LT.atlas.addToMap(this)
 
         // console.log(`${this.logPrefix} Show`, this.layer);
 
@@ -110,7 +108,7 @@ module.exports = class LXMarkerItem extends LXItem {
     hide () {
         // console.log(`${this.logPrefix} Hide`);
         if (this.layer && this.layer._map) {
-            LT.atlas.removeFromMap(this)
+            window.LT.atlas.removeFromMap(this)
             this.emit('hide', this)
         }
     }
@@ -121,7 +119,7 @@ module.exports = class LXMarkerItem extends LXItem {
         if (this._icon) {
             cls += ' fa-' + this._icon
         }
-        return L.divIcon({
+        return window.L.divIcon({
             html: `<i class="${cls}"></i>`,
             className: `lx-marker lx-marker-${this.mode} ${this.tags.join(' ')}`
         })

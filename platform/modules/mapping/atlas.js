@@ -3,8 +3,6 @@ const LXLocation = require('./location')
 const MaptileConfig = require('../../config/maptiler')
 const LeafletTilesConfig = require('../../config/leaflet_tiles')
 const LeafletMapConfig = require('../../config/leaflet_map')
-const L = window.L
-const location = window.location
 const localStorage = window.localStorage
 
 module.exports = class LXAtlas extends EventEmitter {
@@ -26,7 +24,7 @@ module.exports = class LXAtlas extends EventEmitter {
     }
 
     setTileHost (useCloud) {
-        let uri_parts = location.href.split('/').slice(0, 3)
+        let uri_parts = window.location.href.split('/').slice(0, 3)
 
         if (useCloud) {
             uri_parts[2] = '{s}.tile.lantern.link'
@@ -82,16 +80,16 @@ module.exports = class LXAtlas extends EventEmitter {
     // ------------------------------------------------------------------------
     setupMap () {
         // bind dom element for leaflet
-        this.map = L.map('map', LeafletMapConfig)
+        this.map = window.L.map('map', LeafletMapConfig)
 
         // layer in hosted map tiles
-        L.tileLayer(this.tile_uri, LeafletTilesConfig).addTo(this.map)
+        window.L.tileLayer(this.tile_uri, LeafletTilesConfig).addTo(this.map)
 
         // stop map from going off-world
-        var sw = L.latLng(-89.98155760646617, -180)
+        var sw = window.L.latLng(-89.98155760646617, -180)
 
-        var ne = L.latLng(89.99346179538875, 180)
-        var bounds = L.latLngBounds(sw, ne)
+        var ne = window.L.latLng(89.99346179538875, 180)
+        var bounds = window.L.latLngBounds(sw, ne)
         this.map.setMaxBounds(bounds)
         this.map.on('drag', function () {
             this.map.panInsideBounds(bounds, { animate: false })
@@ -232,7 +230,7 @@ module.exports = class LXAtlas extends EventEmitter {
     */
     addPointer (latlng) {
         if (this.pointer) return
-        this.pointer = L.circle(latlng, { radius: 1 }).addTo(this.map)
+        this.pointer = window.L.circle(latlng, { radius: 1 }).addTo(this.map)
         this.emit('pointer-add', { 'latlng': latlng })
     }
 
@@ -273,7 +271,7 @@ module.exports = class LXAtlas extends EventEmitter {
         })
 
         if (all_layers.length) {
-            let group = new L.featureGroup(all_layers)
+            let group = new window.L.featureGroup(all_layers)
             this.map.fitBounds(group.getBounds())
         }
     }
