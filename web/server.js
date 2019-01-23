@@ -23,7 +23,7 @@ server.use(helmet.noCache());
 server.use(compression());
 server.use(GraphDB.serve);
 server.use(require("./middleware/captive"));
-server.use(require("./middleware/cors"));
+server.use(require("./middleware/headers"));
 server.use(require("./middleware/secure"));
 
 // auto-load routes

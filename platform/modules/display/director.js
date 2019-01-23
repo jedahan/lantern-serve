@@ -23,26 +23,42 @@ LX.Director = class Director extends LV.EventEmitter {
     }
 
     loadApps() {
-        // load in dynamic apps
-        fetch("/api/apps", {
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            })
-            .then((result) => {
-                if (result.status == 200) {
-                    return result.json()
-                }
-                else {
-                    reject(result);
-                }
-            })
-            .then((json) => {
-                json.forEach(this.createApp.bind(this));
-            })
-            .catch((err) => {
-                console.warn("[Direct] No available apps to work with");
-            });
+        return new Promise((resolve, reject) => {
+
+            // info that may be useful to the browser or environment
+            let info = {
+                apps: [],
+                online: null,
+                cloud: null
+            };
+
+            // load in dynamic apps
+            fetch("/api/apps", {
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                })
+                .then((result) => {
+                    if (result.status == 200) {
+                        info.online = result.headers.get("X-Lantern-Online");
+                        info.cloud = result.headers.get("X-Lantern-Cloud");
+                        return result.json()
+                    }
+                    else {
+                        reject(result);
+                    }
+                })
+                .then((json) => {
+                    json.forEach(item => {
+                        this.createApp(item);
+                        info.apps.push(item.name);
+                    });
+                    resolve(info);
+                })
+                .catch((err) => {
+                    console.warn("[Direct] No available apps to work with");
+                });
+        });
     }
 
     loadStylesheet(uri) {
@@ -56,14 +72,14 @@ LX.Director = class Director extends LV.EventEmitter {
 
 
     //------------------------------------------------------------------------
-    createApp(app_files) {
-        if (!app_files.children) {
-            console.warn("[Direct] Ignoring app directory with no children:", app_files.name);
+    createApp(item) {
+        if (!item.children) {
+            console.warn("[Direct] Ignoring app directory with no children:", item.name);
             return;
         }
 
-        if (!this.apps.hasOwnProperty(app_files.name)) {
-            let obj = this.apps[app_files.name] = new LX.App(app_files);
+        if (!this.apps.hasOwnProperty(item.name)) {
+            let obj = this.apps[item.name] = new LX.App(item);
 
             obj.on("load", (page) => {
                 //console.log("[Direct] App loads page: ", page.component_id );

@@ -42,12 +42,14 @@
         window.LT = new LX.Director();
         LT.loadStylesheet("/styles/vendor.css");
         LT.loadStylesheet("/styles/global.css");
-        LT.loadApps();
-        // let our database load before loading tiles
-        // for maximum speed
-        LT.db.once("ready", function() {
-            LT.user.authOrRegister();
-            LT.atlas.render();
+        LT.loadApps().then(info => {
+            console.log("[platform]", info);
+            // let our database load before loading tiles
+            // for maximum speed
+            LT.db.once("ready", function() {
+                LT.user.authOrRegister();
+                LT.atlas.render(info.cloud);
+            });
         });
     </script>
     <script src="/scripts/raphael.min.js"  async defer></script>

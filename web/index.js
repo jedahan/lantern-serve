@@ -72,7 +72,14 @@ const startServer = () => {
 				app.locals.inbox = {};
 				// track outbox messages
 				app.locals.outbox = [];
-				resolve(secure_server || std_server);
+
+				// get sense of what sort of device we have here
+		        util.checkInternet().then(status => {
+		        	app.locals.online = status ? "1" : "0";
+		        	app.locals.cloud = process.env.CLOUD ? "1" : "0";
+					resolve(secure_server || std_server);
+		        });
+
 		    });  
 		});
 	})

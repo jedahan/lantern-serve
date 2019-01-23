@@ -1,6 +1,6 @@
 LX.Atlas = class Atlas extends LV.EventEmitter {
     
-    constructor() {
+    constructor(use_cloud) {
         super();
         this.map = null; // leaflet map
         this.pointer = null; // leaflet location pointer
@@ -13,7 +13,7 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
             center_max: 10
         };
 
-        this.setTileHost();
+        this.setTileHost(use_cloud);
         this._map_clicked = 0; // used to distinguish between click and double-click
 
     }
@@ -34,44 +34,39 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
 
     render() { 
 
-        fetch("/api/info").then(data => data.json()).then(data => {
+        this.setupMap();
+        this.setViewFromCenterLocationCache();
 
-            this.setTileHost(data.cloud);
-            this.setupMap();
-            this.setViewFromCenterLocationCache();
+        // map event for when location is found...
+        this.map.on("locationfound", this.cacheUserLocation.bind(this));
 
-            // map event for when location is found...
-            this.map.on("locationfound", this.cacheUserLocation.bind(this));
-
-            // map event for when location changes...
-            this.map.on("dragend", (e) => {
-                this.calculateZoomClass();
-                this.cacheCenterLocation();
-            });
-
-            this.map.on("zoomend", (e) => {
-                this.calculateZoomClass();
-                this.cacheCenterLocation();
-            });
-
-            this.map.on('click', (e) => {
-                this.emit("map-click-start", e);
-                this._map_clicked+=1;
-                setTimeout(() => {
-                    if (this._map_clicked == 1) {
-                        this._map_clicked = 0;
-                        this.emit("map-click", e);
-                    }
-                }, 250);
-            });
-
-            this.map.on("dblclick", (e) => {
-                this._map_clicked = 0;
-                this.emit("map-double-click", e);
-            });
+        // map event for when location changes...
+        this.map.on("dragend", (e) => {
             this.calculateZoomClass();
-
+            this.cacheCenterLocation();
         });
+
+        this.map.on("zoomend", (e) => {
+            this.calculateZoomClass();
+            this.cacheCenterLocation();
+        });
+
+        this.map.on('click', (e) => {
+            this.emit("map-click-start", e);
+            this._map_clicked+=1;
+            setTimeout(() => {
+                if (this._map_clicked == 1) {
+                    this._map_clicked = 0;
+                    this.emit("map-click", e);
+                }
+            }, 250);
+        });
+
+        this.map.on("dblclick", (e) => {
+            this._map_clicked = 0;
+            this.emit("map-double-click", e);
+        });
+        this.calculateZoomClass();
     }
 
 
