@@ -1,228 +1,199 @@
 LX.Database = class Database extends LV.EventEmitter {
-
-    constructor(uri) {
-        super();
-        this.uri = uri;
-        this.namespace = "__LX__";
-        this.stor = LV.GraphDB(this.uri); // database instance
-        this.root_node = this.stor.get(this.namespace); // root node       
+    constructor (uri) {
+        super()
+        this.uri = uri
+        this.namespace = '__LX__'
+        this.stor = LV.GraphDB(this.uri) // database instance
+        this.root_node = this.stor.get(this.namespace) // root node
 
         this.setup().then(() => {
-            this.emit("ready");
-        });
+            this.emit('ready')
+        })
     }
 
-    //-------------------------------------------------------------------------
-    get log_prefix() {
-        return `[database]`.padEnd(20, " ");
+    // -------------------------------------------------------------------------
+    get log_prefix () {
+        return `[database]`.padEnd(20, ' ')
     }
 
-
-
-    //-------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     /**
     * Ensure expected nodes are available to work with
     */
-    setup() {
+    setup () {
         return new Promise((resolve, reject) => {
-            this.root_node.once((v,k) => {
+            this.root_node.once((v, k) => {
                 if (v) {
-                    console.log(`${this.log_prefix} database ready`);
+                    console.log(`${this.log_prefix} database ready`)
+                } else {
+                    console.log(`${this.log_prefix} database ready but empty`)
                 }
-                else {
-                    console.log(`${this.log_prefix} database ready but empty`);
-                }
-                
-                let expected = ["org", "pkg"];
+
+                let expected = ['org', 'pkg']
                 expected.forEach((key) => {
                     if (!v || !v.hasOwnProperty(key)) {
-                        console.log(`${this.log_prefix} adding top-level node: ${key}`);
-                        this.root_node.get(key).put({});
+                        console.log(`${this.log_prefix} adding top-level node: ${key}`)
+                        this.root_node.get(key).put({})
                     }
-                });
-                resolve();
-            });
-        });
+                })
+                resolve()
+            })
+        })
     }
 
-
-
-    //-------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     /**
     * Get node from within root namespace
     */
-    get() {
-        return this.root_node.get.apply(this.root_node, arguments);
+    get () {
+        return this.root_node.get.apply(this.root_node, arguments)
     }
 
     /**
     * Sets value from within root namespace
     */
-    put() {
-        return this.root_node.put.apply(this.root_node, arguments);
+    put () {
+        return this.root_node.put.apply(this.root_node, arguments)
     }
 
+    // -------------------------------------------------------------------------
 
-
-
-
-    //-------------------------------------------------------------------------
-   
     /**
     * Prints out value of a node selected by a path/to/node
     */
-    print(path,pointer,node) {
+    print (path, pointer, node) {
         // recursive attempt to narrow down to target node
-        if (!pointer) pointer = path;
-        if (!node) node = this.root_node;
-        let split = pointer.split("/");
-        node.get(split[0]).once((v,k) => {
+        if (!pointer) pointer = path
+        if (!node) node = this.root_node
+        let split = pointer.split('/')
+        node.get(split[0]).once((v, k) => {
             if (split.length > 1) {
-                let new_pointer = split.slice(1).join("/");
-                node = node.get(k);
-                this.print(path,new_pointer,node);
-            }
-            else {
+                let new_pointer = split.slice(1).join('/')
+                node = node.get(k)
+                this.print(path, new_pointer, node)
+            } else {
                 // we reached the target node here
-                console.log(`[DB] ${path} = `, v);
+                console.log(`[DB] ${path} = `, v)
             }
-        });
-        return split.length;
+        })
+        return split.length
     }
-
 
     /**
     * Output basic node on .once or .map
     */
-    log(v,k) {
+    log (v, k) {
         if (!k) {
             // assume get request
-            this.get(v).once((v,k) => {
-                return this.log(v,k);
-            });
-        }
-        else {
-            let pre = this.log_prefix || "[database]";
-            if (v && typeof(v) == "object") {
-                console.log(`${pre} ${k} =`,);
+            this.get(v).once((v, k) => {
+                return this.log(v, k)
+            })
+        } else {
+            let pre = this.log_prefix || '[database]'
+            if (v && typeof (v) === 'object') {
+                console.log(`${pre} ${k} =`)
                 Object.keys(v).forEach((key) => {
-                    console.log(`${pre}     ${key}:`, v[key]);                    
+                    console.log(`${pre}     ${key}:`, v[key])
                 })
-            }
-            else {
-                console.log(`${pre} ${k} =`, v);
+            } else {
+                console.log(`${pre} ${k} =`, v)
             }
         }
     }
-
-
 
     /**
     *  Print out the graph structure of a specified node
     */
-    inspect(show_deleted,json,level) {
-        let self = this;
+    inspect (show_deleted, json, level) {
+        let self = this
         if (!json) {
             return self.jsonify().then((new_json) => {
-                this.inspect(show_deleted, new_json, level);
-            });
+                this.inspect(show_deleted, new_json, level)
+            })
         }
 
-        level = level || "";
-        
+        level = level || ''
+
         Object.keys(json).forEach(k => {
+            if (k == '#') return
 
-            if (k == "#") return;
-
-            let v = json[k];
+            let v = json[k]
 
             // printable value
-            let vp = v;
-            if (typeof(v) == "String") {
-                vp = v.truncate(30);
+            let vp = v
+            if (typeof (v) === 'String') {
+                vp = v.truncate(30)
             }
 
             if (v === null) {
                 if (show_deleted) {
-                    console.log(`${level}[ø] ${k}`);
+                    console.log(`${level}[ø] ${k}`)
                 }
+            } else if (typeof (v) === 'object') {
+                let length = Object.keys(v).length
+                console.log(`${level}[+] ${k}`)
+                self.inspect(show_deleted, v, level + '  ')
+            } else {
+                console.log(`${level}|- ${k} = `, vp)
             }
-            else if (typeof(v) == "object") {
-                let length = Object.keys(v).length;
-                console.log(`${level}[+] ${k}`);
-                self.inspect(show_deleted,v,level+"  ");
-
-            }
-            else {
-                console.log(`${level}|- ${k} = `, vp);
-            }
-        });
+        })
     }
-
 
     /**
     * Exports data structure to a basic JSON object with hierarchy
     */
-    jsonify(node, tree, pointer) {
-
-        let self = this;
-        node = node || self.root_node;
-        tree = tree || {};
-        pointer = pointer || tree;
+    jsonify (node, tree, pointer) {
+        let self = this
+        node = node || self.root_node
+        tree = tree || {}
+        pointer = pointer || tree
 
         return new Promise((resolve, reject) => {
-
             if (!node) {
-                return reject("Root node missing");
+                return reject('Root node missing')
             }
 
-            node.once((v,k) => {
-                pointer[k] = {};
-                let promises = [];
+            node.once((v, k) => {
+                pointer[k] = {}
+                let promises = []
                 if (v) {
-
-
-                    let items = Object.keys(v).filter(key => key != "_");
+                    let items = Object.keys(v).filter(key => key != '_')
                     items.forEach((item) => {
-                        var promise;
-                        let val = v[item];
+                        var promise
+                        let val = v[item]
 
-
-                        if (item == "organization" || item == "packages") {
+                        if (item == 'organization' || item == 'packages') {
                             // special rule for packages to avoid circular display of organization data
                             promise = new Promise((resolve, reject) => {
-                                node.get(item).once((val,key) => {
-                                    let names = {};
-                                    
+                                node.get(item).once((val, key) => {
+                                    let names = {}
+
                                     if (val.name) {
-                                        pointer[k][item] = val.name;
-                                        return resolve(val.name);
+                                        pointer[k][item] = val.name
+                                        return resolve(val.name)
                                     }
 
                                     Object.keys(val).forEach((name) => {
-                                        if (name != "_") names[name] = true;
-                                    });
-                                    
-                                    pointer[k][item] = names;
-                                    resolve(names);
-                                });
-                            });
-                        }
-                        else if (val !== null && typeof(val) == "object") {
-                            promise = self.jsonify.apply(self, [node.get(item), tree, pointer[k]]);
-                        }
-                        else {
-                            promise = pointer[k][item] = val;
-                        }
-                        promises.push(promise);
-                    });
-                }
-              
-                Promise.all(promises).then((val) => {
-                    resolve(tree);
-                });
-            });
-        });
-    };
+                                        if (name != '_') names[name] = true
+                                    })
 
+                                    pointer[k][item] = names
+                                    resolve(names)
+                                })
+                            })
+                        } else if (val !== null && typeof (val) === 'object') {
+                            promise = self.jsonify.apply(self, [node.get(item), tree, pointer[k]])
+                        } else {
+                            promise = pointer[k][item] = val
+                        }
+                        promises.push(promise)
+                    })
+                }
+
+                Promise.all(promises).then((val) => {
+                    resolve(tree)
+                })
+            })
+        })
+    };
 }

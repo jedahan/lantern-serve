@@ -1,7 +1,6 @@
 LX.View = class View extends LV.EventEmitter {
-
-    constructor() {
-        super();
+    constructor () {
+        super()
         // setup vue object
         LV.Vue.filter('pluralize', (word, amount) => amount != 1 ? `${word}s` : word)
         this.vue = new LV.Vue({
@@ -10,8 +9,8 @@ LX.View = class View extends LV.EventEmitter {
                 app_components: [],
                 map: false
             }
-        });
-        this.data = this.vue.$data;
-        this.menu = new LX.PieMenu();
+        })
+        this.data = this.vue.$data
+        this.menu = new LX.PieMenu()
     }
 }

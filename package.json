@@ -3,28 +3,28 @@
     "version": "0.3.2",
     "dependencies": {
         "@fortawesome/fontawesome-free": "^5.6.3",
-        "@trust/webcrypto": "*",
-        "body-parser": "*",
-        "bulma": "*",
-        "browserify": "*",
-        "concat": "*",
-        "compression": "^1.7.3",
         "@node-minify/core": "*",
         "@node-minify/uglify-es": "*",
+        "@trust/webcrypto": "*",
+        "body-parser": "*",
+        "browserify": "*",
+        "bulma": "*",
+        "compression": "^1.7.3",
+        "concat": "*",
         "directory-tree": "^2.2.1",
         "event-emitter-es6": "^1.1.5",
         "express": "^4.16.4",
-        "request": "*",
-        "node-fetch": "*",
         "fs-extra": "7.x",
         "geohash-distance": "*",
-        "helmet": "*",
         "gun": "^0.9.999998",
         "gun-tag": "*",
+        "helmet": "*",
         "latlon-geohash": "*",
         "leaflet": "^1.4.0",
         "leaflet.locatecontrol": "^0.66.0",
+        "node-fetch": "*",
         "node-webcrypto-ossl": "*",
+        "request": "*",
         "shortid": "*",
         "simple-node-logger": "^18.12.21",
         "text-encoding": "^0.7.0",
@@ -41,6 +41,20 @@
         "raphael": "wheelnav/js/dist/raphael.min.js"
     },
     "scripts": {
+        "lint": "standardx",
+        "fix": "standardx --fix",
+        "test": "standardx --fix && mocha ./tests",
         "start": "node ./web/index.js"
+    },
+    "standard": {
+        "ignore": "web/public/scripts/*"
+    },
+    "eslintConfig": {
+        "rules": {
+            "indent": [
+                "error",
+                4
+            ]
+        }
     }
 }

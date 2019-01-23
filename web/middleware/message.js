@@ -1,9 +1,7 @@
-const util = require("../util");
+const util = require('../util')
 
-//----------------------------------------------------------------------
+// ----------------------------------------------------------------------
 module.exports = (req, res, next) => {
- 
-
     /**
     * Regular expressions to identify intent of message
     */
@@ -20,56 +18,51 @@ module.exports = (req, res, next) => {
     const getObject = (matches, type) => {
         let obj = {
             type: type
-        };
+        }
         let keys = {
-            0: "text",
-            1: "seq",
-            2: "package_name",
-            3: "package_version",
-            4: "item_id",
-            5: "field_key",
-            6: "field_value"
+            0: 'text',
+            1: 'seq',
+            2: 'package_name',
+            3: 'package_version',
+            4: 'item_id',
+            5: 'field_key',
+            6: 'field_value'
         }
         for (var idx in matches) {
             if (keys[idx]) {
-                obj[keys[idx]] = matches[idx];
+                obj[keys[idx]] = matches[idx]
             }
         }
-        return obj;
-    } 
+        return obj
+    }
 
     if (!req.body.message) {
         return res.status(403).json({
-            "ok": false, 
-            "message": "Ignoring empty message"
-        });
-    }
-    else {
-        if (typeof(req.body.message) != "string") {
+            'ok': false,
+            'message': 'Ignoring empty message'
+        })
+    } else {
+        if (typeof (req.body.message) !== 'string') {
             return res.status(403).json({
-                "ok": false,
-                "message": "Ignoring invalid message"
-            });
-        }
-        else {
-     
+                'ok': false,
+                'message': 'Ignoring invalid message'
+            })
+        } else {
             Object.keys(msg_regex).forEach((k) => {
-                let exp = msg_regex[k];
+                let exp = msg_regex[k]
                 if (exp.test(req.body.message)) {
-                    res.locals.message = getObject(req.body.message.match(exp), k);
+                    res.locals.message = getObject(req.body.message.match(exp), k)
                 }
-            });
+            })
 
             if (!res.locals.message) {
                 return res.status(403).json({
-                    "ok": false,
-                    "message": "Ignoring invalid message"
-                });                
-            }
-            else {
-                next();
+                    'ok': false,
+                    'message': 'Ignoring invalid message'
+                })
+            } else {
+                next()
             }
         }
     }
-
-};
+}

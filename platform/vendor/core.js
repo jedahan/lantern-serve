@@ -1,1 +1,1 @@
-LV.EventEmitter = require("event-emitter-es6");
+LV.EventEmitter = require('event-emitter-es6')

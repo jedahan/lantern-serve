@@ -1,3 +1,3 @@
-Math.limit = function(val, min, max) {
-  return val < min ? min : (val > max ? max : val);
+Math.limit = function (val, min, max) {
+    return val < min ? min : (val > max ? max : val)
 }

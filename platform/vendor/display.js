@@ -1,2 +1,2 @@
-LV.Vue = require("vue");
-LV.Wheelnav = require("wheelnav");
+LV.Vue = require('vue')
+LV.Wheelnav = require('wheelnav')

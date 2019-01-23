@@ -3,23 +3,19 @@
 *
 * Provides information about this server instance
 **/
-const util = require("../util");
+const util = require('../util')
 
 module.exports = (serv) => {
-    
-
-    
-    //---------------------------------------------------------------------- 
+    // ----------------------------------------------------------------------
     /**
     * Delivers basic server information
     */
-    serv.get("/api/info", (req,res) => {
+    serv.get('/api/info', (req, res) => {
         util.checkInternet().then(status => {
             return res.status(200).json({
-                "online": status,
-                "cloud": process.env.CLOUD ? true : false
-            });
-        });
-    });
-
-};
+                'online': status,
+                'cloud': !!process.env.CLOUD
+            })
+        })
+    })
+}

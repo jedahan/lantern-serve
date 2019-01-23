@@ -1,128 +1,116 @@
 LX.Organization = class Organization extends LV.EventEmitter {
-
-    constructor(id, name, db) {
+    constructor (id, name, db) {
         super()
         if (!id) {
-            return console.error("[Organization] requires id to construct");
+            return console.error('[Organization] requires id to construct')
         }
 
         if (!name) {
-            return console.error(`[Organiation] please name your organization`);
+            return console.error(`[Organiation] please name your organization`)
         }
 
         if (!db) {
-            return console.error("[Organization] requires database to construct");
+            return console.error('[Organization] requires database to construct')
         }
-        this.id = id;
-        this.name = name;
-        this.db = db;
-        this.node = this.db.get("org").get(this.id);
-    }
-    
-
-
-    //-------------------------------------------------------------------------
-    get log_prefix() {
-        return `[o:${this.id || "Organization"}]`.padEnd(20, " ")
+        this.id = id
+        this.name = name
+        this.db = db
+        this.node = this.db.get('org').get(this.id)
     }
 
-    //-------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    get log_prefix () {
+        return `[o:${this.id || 'Organization'}]`.padEnd(20, ' ')
+    }
+
+    // -------------------------------------------------------------------------
 
     /**
     * Publish a new data package to the network
     */
-    register() {
+    register () {
         return new Promise((resolve, reject) => {
-            
-            this.node.once((v,k) => {
+            this.node.once((v, k) => {
                 if (v) {
-                    console.log(`${this.log_prefix} already registered organization`);
-                    return resolve(v);
-                }
-                else {
+                    console.log(`${this.log_prefix} already registered organization`)
+                    return resolve(v)
+                } else {
                     // this node may contain fields for "members" and "packages", too
-                    console.log(`${this.log_prefix} starting registration for organization`);
+                    console.log(`${this.log_prefix} starting registration for organization`)
                     this.node.put({
-                        "name": this.name,
-                        "members": {},
-                        "packages": {}
+                        'name': this.name,
+                        'members': {},
+                        'packages': {}
                     }, (ack) => {
                         if (ack.err) {
-                            return reject("org_register_failed");
-                        }  
-                        console.info(`${this.log_prefix} newly registered`, this.name);
-                        this.emit("register");
-                        resolve(this.name);
-                    });
+                            return reject('org_register_failed')
+                        }
+                        console.info(`${this.log_prefix} newly registered`, this.name)
+                        this.emit('register')
+                        resolve(this.name)
+                    })
                 }
-            });
-        });
-
+            })
+        })
     }
 
-    unregister() {
+    unregister () {
         return new Promise((resolve, reject) => {
             this.node
                 .put(null)
-                .once((v,k) => {
+                .once((v, k) => {
                     console.log(`${this.log_prefix} unregistered ${this.id}`)
-                    this.emit("unregister");
-                    return resolve(v);
-                });
-            });
+                    this.emit('unregister')
+                    return resolve(v)
+                })
+        })
     }
 
-
-
-    //-------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     /**
     * Claim ownership over package
     */
-    claim(pkg) {
+    claim (pkg) {
         return new Promise((resolve, reject) => {
             // first, link organization into package
-            let node1 = pkg.node.get("organization");
-            let node2 = this.node.get("packages")
-                                .get(pkg.name);
-            node1.once((v,k) => {
-                    if (!v) {
-                        node1.put(this.node)
+            let node1 = pkg.node.get('organization')
+            let node2 = this.node.get('packages')
+                .get(pkg.name)
+            node1.once((v, k) => {
+                if (!v) {
+                    node1.put(this.node)
                         .once(() => {
-
                             console.log(`${this.log_prefix} claimed ${pkg.id}`)
                             // now, organization registers existence of package
-                            node2.put(pkg.node).once(resolve);
-                        });
-                    }
-                    else {
-                        console.log(`${this.log_prefix} already claimed ${pkg.id}`)
-                    }
-                });
-        });
+                            node2.put(pkg.node).once(resolve)
+                        })
+                } else {
+                    console.log(`${this.log_prefix} already claimed ${pkg.id}`)
+                }
+            })
+        })
     }
 
-
-    //-------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     /**
     * Add member user to the organization
     */
-    addOneMember(user) {
+    addOneMember (user) {
         return new Promise((resolve, reject) => {
-            this.node.get("members")
+            this.node.get('members')
                 .set(user)
-                .once(resolve);
-            });
+                .once(resolve)
+        })
     }
 
     /**
     * Remove member user from the organization
     */
-    removeOneMember(user) {
+    removeOneMember (user) {
         return new Promise((resolve, reject) => {
-            this.node.get("members")
+            this.node.get('members')
                 .unset(user)
-                .once(resolve);
-            });
+                .once(resolve)
+        })
     }
-
 }
