@@ -37,4 +37,4 @@ clean:
 	rm web/public/styles/vendor.css
 
 certs/dev.lantern.link.pem:
-	cd web/certs && mkcert dev.lantern.link
+	if [ ! -f ./web/certs/dev.lantern.link.pem ] ; then cd web/certs && mkcert dev.lantern.link; fi
