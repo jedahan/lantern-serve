@@ -14,7 +14,7 @@ For dev.lantern.link, we use `mkcert`. Be sure to [install mkcert](https://githu
 
 
 ```bash
-npm install & npm start
+make install & make start
 ```
 
 While developing locally, we recommend using the dev.lantern.link domain name to avoid unexpected browser errors. This points to 127.0.0.1.
