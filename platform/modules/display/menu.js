@@ -1,4 +1,7 @@
-LX.PieMenu = class PieMenu extends LV.EventEmitter {
+const EventEmitter = require('event-emitter-es6')
+require('wheelnav')
+
+module.exports = class LXPieMenu extends EventEmitter {
     constructor () {
         super()
         this._locked = false
@@ -39,7 +42,7 @@ LX.PieMenu = class PieMenu extends LV.EventEmitter {
         })
 
         // create wheel menu
-        this.wheel = new wheelnav('pie-menu')
+        this.wheel = new window.wheelnav('pie-menu')
         this.wheel.titleWidth = 22
         this.wheel.navAngle = 30
         this.wheel.wheelRadius = 100

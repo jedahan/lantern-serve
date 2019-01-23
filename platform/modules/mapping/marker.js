@@ -1,4 +1,7 @@
-LX.MarkerItem = class MarkerItem extends LX.Item {
+const Geohash = require('latlon-geohash')
+const LXItem = require('../data/item')
+
+module.exports = class LXMarkerItem extends LXItem {
     constructor (id, data) {
         // now set defaults for key compression
         super(id, data, {
@@ -60,7 +63,7 @@ LX.MarkerItem = class MarkerItem extends LX.Item {
     }
 
     get latlng () {
-        return LV.Geohash.decode(this._data.geohash)
+        return Geohash.decode(this._data.geohash)
     }
 
     get geohash () {
@@ -94,7 +97,7 @@ LX.MarkerItem = class MarkerItem extends LX.Item {
 
         this.layer.on('dragend', function (e) {
             let latlng = e.target._latlng
-            self.geohash = LV.Geohash.encode(latlng.lat, latlng.lng)
+            self.geohash = Geohash.encode(latlng.lat, latlng.lng)
         })
         this.emit('show', self)
     }

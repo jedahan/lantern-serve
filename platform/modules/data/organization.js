@@ -1,4 +1,6 @@
-LX.Organization = class Organization extends LV.EventEmitter {
+const EventEmitter = require('event-emitter-es6')
+
+module.exports = class LXOrganization extends EventEmitter {
     constructor (id, name, db) {
         super()
         if (!id) {

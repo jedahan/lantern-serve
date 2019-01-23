@@ -1,10 +1,14 @@
-LX.User = class User extends LV.EventEmitter {
+const EventEmitter = require('event-emitter-es6')
+const shortid = require('shortid')
+const LXFeed = require('./feed')
+
+module.exports = class LXUser extends EventEmitter {
     constructor (db) {
         super()
         this.db = db
         this.node = this.db.stor.user()
         this.pair = null
-        this.feed = new LX.Feed(this)
+        this.feed = new LXFeed(this)
 
         this.once('auth', () => {
             console.log(`${this.log_prefix} sign-in complete`)
@@ -51,8 +55,8 @@ LX.User = class User extends LV.EventEmitter {
     */
     register (username, password) {
         return new Promise((resolve, reject) => {
-            username = username || LV.ShortID.generate()
-            password = password || LV.ShortID.generate()
+            username = username || shortid.generate()
+            password = password || shortid.generate()
             console.log(`${this.log_prefix} create user with username: ${username}`)
             this.node.create(username, password, (ack) => {
                 if (ack.err) {

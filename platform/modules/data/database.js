@@ -1,9 +1,11 @@
-LX.Database = class Database extends LV.EventEmitter {
+const EventEmitter = require('event-emitter-es6')
+
+module.exports = class LXDatabase extends EventEmitter {
     constructor (uri) {
         super()
         this.uri = uri
         this.namespace = '__LX__'
-        this.stor = LV.GraphDB(this.uri) // database instance
+        this.stor = Gun(this.uri) // database instance
         this.root_node = this.stor.get(this.namespace) // root node
 
         this.setup().then(() => {

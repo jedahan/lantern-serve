@@ -1,13 +1,20 @@
-LX.Director = class Director extends LV.EventEmitter {
+const EventEmitter = require('event-emitter-es6')
+const LXView = require('./view')
+const LXAtlas = require('../mapping/atlas')
+const LXDatabase = require('../data/database')
+const LXUser = require('../data/user')
+const LXApp = require('../display/app')
+
+module.exports = class LXDirector extends EventEmitter {
     constructor () {
         super()
         this.ready = false
         this.apps = {}
-        this.view = new LX.View()
-        this.atlas = new LX.Atlas()
+        this.view = new LXView()
+        this.atlas = new LXAtlas()
         // define database and user to work with decentralized network
-        this.db = new LX.Database(window.location.origin + '/gun')
-        this.user = new LX.User(this.db)
+        this.db = new LXDatabase(window.location.origin + '/gun')
+        this.user = new LXUser(this.db)
     }
 
     withUser (fn) {
@@ -74,7 +81,7 @@ LX.Director = class Director extends LV.EventEmitter {
 
         if (!this.apps.hasOwnProperty(item.name)) {
             this.withUser((user) => {
-                let obj = this.apps[item.name] = new LX.App(item)
+                let obj = this.apps[item.name] = new LXApp(item)
 
                 obj.on('load', (page) => {
                     // console.log("[Direct] App loads page: ", page.component_id );

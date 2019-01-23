@@ -20,6 +20,11 @@ start: $(CERTS)
 	HOOK_BACKUP="./hooks/backup" \
 	npm start	
 
+
+pack: 
+	browserify platform/web.js --standalone LX --outfile web/public/scripts/platform.js
+	uglifyjs web/public/scripts/platform.js -o web/public/scripts/platform.min.js
+	
 run:
 	docker-compose -f env/dc-dev.yml up
 
@@ -34,6 +39,7 @@ deploy:
 
 clean:
 	rm web/public/scripts/platform.js
+	rm web/public/scripts/platform.min.js
 	rm web/public/styles/vendor.css
 
 certs/dev.lantern.link.pem:

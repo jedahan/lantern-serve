@@ -1,9 +1,13 @@
-LX.View = class View extends LV.EventEmitter {
+const EventEmitter = require('event-emitter-es6')
+const Vue = require('vue')
+const LXPieMenu = require('./menu')
+
+module.exports = class LXView extends EventEmitter {
     constructor () {
         super()
         // setup vue object
-        LV.Vue.filter('pluralize', (word, amount) => amount != 1 ? `${word}s` : word)
-        this.vue = new LV.Vue({
+        Vue.filter('pluralize', (word, amount) => amount != 1 ? `${word}s` : word)
+        this.vue = new Vue({
             el: '#app-container',
             data: {
                 app_components: [],
@@ -11,6 +15,6 @@ LX.View = class View extends LV.EventEmitter {
             }
         })
         this.data = this.vue.$data
-        this.menu = new LX.PieMenu()
+        this.menu = new LXPieMenu()
     }
 }

@@ -120,33 +120,7 @@ self.compressStylesheets = () => {
 self.packJavascript = () => {
     return new Promise((resolve, reject) => {
         let platform_script = path.resolve(__dirname, './public/scripts/platform.js')
-
-        let files = [
-            'platform/header.js',
-            'platform/vendor/core.js',
-            'platform/vendor/storage.js',
-            'platform/helpers/array.js',
-            'platform/helpers/string.js',
-            'platform/helpers/math.js',
-            'platform/modules/data/database.js',
-            'platform/modules/data/organization.js',
-            'platform/modules/data/package.js',
-            'platform/modules/data/item.js',
-            'platform/modules/data/user.js',
-            'platform/modules/data/feed.js',
-            'platform/config/leaflet.js',
-            'platform/vendor/map.js',
-            'platform/modules/mapping/location.js',
-            'platform/modules/mapping/marker.js',
-            'platform/modules/mapping/atlas.js',
-            'platform/modules/display/director.js',
-            'platform/vendor/display.js',
-            'platform/modules/display/app.js',
-            'platform/modules/display/view.js',
-            'platform/modules/display/menu.js'
-        ]
-
-        let b = browserify(files)
+        let b = browserify(['platform/web.js'])
         let write_stream = fs.createWriteStream(platform_script)
         b.bundle()
             .pipe(write_stream)

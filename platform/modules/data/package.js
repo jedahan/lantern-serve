@@ -1,4 +1,6 @@
-LX.Package = class Package extends LV.EventEmitter {
+const EventEmitter = require('event-emitter-es6')
+
+module.exports = class LXPackage extends EventEmitter {
     constructor (name, db) {
         super()
 

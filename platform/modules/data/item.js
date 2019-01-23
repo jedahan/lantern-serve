@@ -1,7 +1,10 @@
-LX.Item = class Item extends LV.EventEmitter {
+const EventEmitter = require('event-emitter-es6')
+const shortid = require('shortid')
+
+module.exports = class LXItem extends EventEmitter {
     constructor (id, data, defaults) {
         super()
-        this.id = id || LV.ShortID.generate()
+        this.id = id || shortid.generate()
         this._mode = 'draft'
 
         // create data space for data we allow to be exported to shared database

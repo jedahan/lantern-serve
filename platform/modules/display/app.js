@@ -1,4 +1,7 @@
-LX.App = class App extends LV.EventEmitter {
+const EventEmitter = require('event-emitter-es6')
+const Vue = require('vue')
+
+module.exports = class LXApp extends EventEmitter {
     constructor (obj) {
         super()
         this.name = obj.name
@@ -48,7 +51,7 @@ LX.App = class App extends LV.EventEmitter {
             }
         }
 
-        page.component = LV.Vue.component(component_id, cmp)
+        page.component = Vue.component(component_id, cmp)
 
         self.pages.push(page)
 

@@ -1,4 +1,7 @@
-LX.Atlas = class Atlas extends LV.EventEmitter {
+const EventEmitter = require('event-emitter-es6')
+const LXLocation = require('./location')
+
+module.exports = class LXAtlas extends EventEmitter {
     constructor (use_cloud) {
         super()
         this.map = null // leaflet map
@@ -141,7 +144,7 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
     * Preserves user geolocation in-memory for future use
     */
     cacheUserLocation (e) {
-        let new_geo = LX.Location.toGeohash(e.latlng, this.precision.user_max)
+        let new_geo = LXLocation.toGeohash(e.latlng, this.precision.user_max)
         if (new_geo != this.user_location) {
             this.user_location = new_geo
             console.log(`${log_prefix} New user location found: ${this.user_location}`)
@@ -160,7 +163,7 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
             let orig_ctr = this.getCenterAsString()
             // http://www.bigfastblog.com/geohash-intro
             let precision = Math.round(this.precision.center_max * (this.map.getZoom() / 20))
-            let gh = LX.Location.toGeohash(this.map.getCenter(), precision)
+            let gh = LXLocation.toGeohash(this.map.getCenter(), precision)
             // console.log(`${this.log_prefix} center geohash: ${gh}`);
             this.center = gh
             // only save to database if user has paused on this map for a few seconds

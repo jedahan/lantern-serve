@@ -1,4 +1,6 @@
-LX.Feed = class Feed extends LV.EventEmitter {
+const EventEmitter = require('event-emitter-es6')
+
+module.exports = class LXFeed extends EventEmitter {
     constructor (user) {
         super()
         this.user = user
