@@ -19,7 +19,7 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
     }
 
 
-    setTileHost (use_cloud) {
+    setTileHost(use_cloud) {
         let uri_parts = window.location.href.split('/').slice(0, 3);
 
         if (use_cloud) {            
@@ -32,8 +32,8 @@ LX.Atlas = class Atlas extends LV.EventEmitter {
             ].join("");
     }
 
-    render() { 
-
+    render(use_cloud) { 
+        this.setTileHost(use_cloud);
         this.setupMap();
         this.setViewFromCenterLocationCache();
 

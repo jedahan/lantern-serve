@@ -48,7 +48,7 @@
             // for maximum speed
             LT.db.once("ready", function() {
                 LT.user.authOrRegister();
-                LT.atlas.render(info.cloud);
+                LT.atlas.render(info.cloud == "1");
             });
         });
     </script>
