@@ -10,6 +10,7 @@ build: $(CERTS)
 
 install:
 	npm install
+	if [ ! -d ./apps ] ; then git clone https://github.com/lantern-works/lantern-apps apps; fi
 	
 start: $(CERTS)
 	HOOK_ADD="./hooks/change" \
