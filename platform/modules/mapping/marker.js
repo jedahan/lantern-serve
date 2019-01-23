@@ -1,5 +1,6 @@
 const Geohash = require('latlon-geohash')
 const LXItem = require('../data/item')
+const LT = window.LT
 
 module.exports = class LXMarkerItem extends LXItem {
     constructor (id, data) {

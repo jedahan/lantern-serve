@@ -1,4 +1,6 @@
 const EventEmitter = require('event-emitter-es6')
+const Gun = require('gun')
+const SEA = require('sea')
 
 module.exports = class LXDatabase extends EventEmitter {
     constructor (uri) {

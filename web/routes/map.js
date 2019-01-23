@@ -20,16 +20,16 @@ module.exports = (serv) => {
     })
 
     /**
-	* Convert URL to local file path for cached tile
-	*/
+    * Convert URL to local file path for cached tile
+    */
     const getLocalPathForTile = (params) => {
         let zxy = `${tiles_dir}/${params.z}_${params.x}_${params.y}.png`
         return zxy
     }
 
     /**
-	* Use special empty tile to notify user that a tile request was forbidden or failed
-	*/
+    * Use special empty tile to notify user that a tile request was forbidden or failed
+    */
     const sendEmptyTile = (res) => {
         let assets_dir = path.resolve(__dirname, '../public/assets/')
         let file_path = assets_dir + '/empty-tile.png'
@@ -40,8 +40,8 @@ module.exports = (serv) => {
     }
 
     /**
-	* Use MapTiler service to proxy and save tiles to local storage
-	*/
+    * Use MapTiler service to proxy and save tiles to local storage
+    */
     const getTileFromCloud = (req, res) => {
         let preq = request('http://maps.tilehosting.com' + req.url)
 
@@ -67,8 +67,8 @@ module.exports = (serv) => {
 
     // ----------------------------------------------------------------------
     /**
-	* MapTiler Proxy
-	*/
+    * MapTiler Proxy
+    */
     serv.get('/c/:id/styles/:map/:z/:x/:y.png', (req, res, next) => {
         // use offline cache if available, avoids hitting external sever
         fs.readFile(getLocalPathForTile(req.params), (err, buffer) => {

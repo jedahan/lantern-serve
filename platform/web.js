@@ -1,5 +1,3 @@
-require('gun')
-require('sea')
 const Geohash = require('latlon-geohash')
 require('geohash-distance')
 require('leaflet')
