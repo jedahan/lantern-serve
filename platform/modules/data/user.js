@@ -1,6 +1,8 @@
 const EventEmitter = require('event-emitter-es6')
 const shortid = require('shortid')
+const SEA = require('sea')
 const LXFeed = require('./feed')
+const localStorage = window.localStorage
 
 module.exports = class LXUser extends EventEmitter {
     constructor (db) {
@@ -11,15 +13,15 @@ module.exports = class LXUser extends EventEmitter {
         this.feed = new LXFeed(this)
 
         this.once('auth', () => {
-            console.log(`${this.log_prefix} sign-in complete`)
+            console.log(`${this.logPrefix} sign-in complete`)
             this.listPackages().then((packages) => {
-                console.log(`${this.log_prefix} installed packages: ${packages.length}`)
+                console.log(`${this.logPrefix} installed packages: ${packages.length}`)
                 this.feed.addManyPackages(packages)
             })
         })
     }
 
-    get log_prefix () {
+    get logPrefix () {
         return `[u:${this.username || 'anonymous'}]`.padEnd(20, ' ')
     }
 
@@ -40,7 +42,7 @@ module.exports = class LXUser extends EventEmitter {
 
             this.node.auth(username, password, (ack) => {
                 if (ack.err) {
-                    console.warn(`${this.log_prefix} invalid auth`, ack.err)
+                    console.warn(`${this.logPrefix} invalid auth`, ack.err)
                     reject('user_auth_failed')
                 } else {
                     this.username = username
@@ -57,13 +59,13 @@ module.exports = class LXUser extends EventEmitter {
         return new Promise((resolve, reject) => {
             username = username || shortid.generate()
             password = password || shortid.generate()
-            console.log(`${this.log_prefix} create user with username: ${username}`)
+            console.log(`${this.logPrefix} create user with username: ${username}`)
             this.node.create(username, password, (ack) => {
                 if (ack.err) {
-                    console.log(`${this.log_prefix} unable to save`, ack.err)
+                    console.log(`${this.logPrefix} unable to save`, ack.err)
                     return reject('user_register_failed')
                 }
-                console.log(`${this.log_prefix} saved to browser`)
+                console.log(`${this.logPrefix} saved to browser`)
                 let creds = localStorage.setItem('lx-auth', [username, password].join(':'))
                 this.authenticate(username, password)
                 this.emit('registered')
@@ -72,9 +74,9 @@ module.exports = class LXUser extends EventEmitter {
         })
     }
 
-    authOrRegister (skip_check) {
-        if (skip_check) {
-            console.log(`${this.log_prefix} make new credentials by explicit request`)
+    authOrRegister (skipCheck) {
+        if (skipCheck) {
+            console.log(`${this.logPrefix} make new credentials by explicit request`)
             return this.register()
         } else {
             // check browser for known credentials for this user
@@ -100,9 +102,9 @@ module.exports = class LXUser extends EventEmitter {
     }
 
     clearCredentials () {
-        console.warn(`${this.log_prefix}  removing invalid creds from storage`)
+        console.warn(`${this.logPrefix}  removing invalid creds from storage`)
         localStorage.removeItem('lx-auth')
-        console.warn(`${this.log_prefix}  waiting for valid sign in or registration...`)
+        console.warn(`${this.logPrefix}  waiting for valid sign in or registration...`)
     }
 
     // -------------------------------------------------------------------------
@@ -121,7 +123,7 @@ module.exports = class LXUser extends EventEmitter {
                 Object.keys(v).forEach((pkg) => {
                     if (pkg == '_' || pkg == '#' || v[pkg] == null) return
                     if (typeof (v[pkg]) !== 'string') {
-                        console.warn(`${this.log_prefix} Nullifying non-string value for ${pkg} package:`, v[pkg])
+                        console.warn(`${this.logPrefix} Nullifying non-string value for ${pkg} package:`, v[pkg])
                         node.get(pkg).put(null)
                     } else {
                         packages.push(pkg + '@' + v[pkg])
@@ -137,43 +139,43 @@ module.exports = class LXUser extends EventEmitter {
     install (pkg) {
         // allows either a package object or a string representation of pkg@version
 
-        let pkg_id = pkg
+        let pkgID = pkg
 
         if (typeof (pkg) === 'object') {
-            pkg_id = `${pkg.name}@${pkg.version}`
+            pkgID = `${pkg.name}@${pkg.version}`
         }
 
-        let pkg_name = pkg_id.split('@')[0]
-        let pkg_version = pkg_id.split('@')[1]
+        let pkgName = pkgID.split('@')[0]
+        let pkgVersion = pkgID.split('@')[1]
 
         return new Promise((resolve, reject) => {
             this.node.get('packages')
-                .get(pkg_name)
+                .get(pkgName)
                 .once((v, k) => {
                     if (v) {
-                        console.log(`${this.log_prefix} already installed: ${pkg_id}`)
-                        resolve(pkg_id)
+                        console.log(`${this.logPrefix} already installed: ${pkgID}`)
+                        resolve(pkgID)
                     } else {
-                        console.log(`${this.log_prefix} new install: ${pkg_id}`)
+                        console.log(`${this.logPrefix} new install: ${pkgID}`)
 
                         // does not erase other key/value pairs here
                         this.node.get('packages')
                             .once((v, k) => {
                                 if (!v) {
-                                    console.log(`${this.log_prefix} initializing packages list for user`)
+                                    console.log(`${this.logPrefix} initializing packages list for user`)
                                     this.node.get('packages').put({})
                                 }
                             })
-                            .get(pkg_name)
-                            .put(pkg_version, (ack) => {
+                            .get(pkgName)
+                            .put(pkgVersion, (ack) => {
                                 if (ack.err) {
                                     return reject('user_install_package_failed')
                                 }
                                 // id is name@version combined
-                                console.log(`${this.log_prefix} install done: ${pkg_id}`)
-                                this.emit('install', pkg_id)
-                                this.feed.addOnePackage(pkg_id)
-                                resolve(pkg_id)
+                                console.log(`${this.logPrefix} install done: ${pkgID}`)
+                                this.emit('install', pkgID)
+                                this.feed.addOnePackage(pkgID)
+                                resolve(pkgID)
                             })
                     }
                 })
@@ -188,7 +190,7 @@ module.exports = class LXUser extends EventEmitter {
             this.node.get('packages').get(pkg.name)
                 .put(null)
                 .once((v, k) => {
-                    console.log(`${this.log_prefix} uninstalled package ${pkg.name}`)
+                    console.log(`${this.logPrefix} uninstalled package ${pkg.name}`)
                     this.node.get('packages').get(pkg.name).put(null)
                     this.feed.removeOnePackage(pkg.name)
                     this.emit('uninstall', pkg.name)
@@ -201,9 +203,9 @@ module.exports = class LXUser extends EventEmitter {
     encrypt (data) {
         return new Promise((resolve, reject) => {
             SEA.encrypt(data, this.pair, (enc) => {
-                SEA.sign(enc, this.pair, (signed_data) => {
-                    console.log(`${this.log_prefix} encrypted / signed data: ${signed_data}`)
-                    resolve(signed_data)
+                SEA.sign(enc, this.pair, (signedData) => {
+                    console.log(`${this.logPrefix} encrypted / signed data: ${signedData}`)
+                    resolve(signedData)
                 })
             })
         })
@@ -219,7 +221,7 @@ module.exports = class LXUser extends EventEmitter {
             if (!v) return
             Object.keys(v).forEach((pkg) => {
                 if (pkg == '_' || v[pkg] == null) return
-                console.log(`${this.log_prefix} subscribed topics ${pkg}:`, v[pkg])
+                console.log(`${this.logPrefix} subscribed topics ${pkg}:`, v[pkg])
             })
         })
     }
@@ -229,8 +231,8 @@ module.exports = class LXUser extends EventEmitter {
     */
     subscribe (topic) {
         this.node.get('topics').get(topic).set(true).once(() => {
-            console.log(`${this.log_prefix} subscribe to topic ${topic}`)
-            this.emit('subscribe', name)
+            console.log(`${this.logPrefix} subscribe to topic ${topic}`)
+            this.emit('subscribe', topic)
         })
     }
 
@@ -239,8 +241,8 @@ module.exports = class LXUser extends EventEmitter {
     */
     unsubscribe (topic) {
         this.node.get('topics').get(topic).set(false).once(() => {
-            console.log(`${this.log_prefix} unsubscribe from topic ${topic}`)
-            this.emit('subscribe', name)
+            console.log(`${this.logPrefix} unsubscribe from topic ${topic}`)
+            this.emit('subscribe', topic)
         })
     }
 }

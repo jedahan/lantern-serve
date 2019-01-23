@@ -1,5 +1,4 @@
 const Geohash = require('latlon-geohash')
-require('geohash-distance')
 require('leaflet')
 require('leaflet.locatecontrol')
 require('./helpers/array')
@@ -23,6 +22,6 @@ window.LC.leaflet_locatecontrol = require('./config/leaflet_locatecontrol')
 window.LC.leaflet_tiles = require('./config/leaflet_tiles')
 window.LC.maptiler = require('./config/maptiler')
 window.LV = window.LV || {}
-LV.Geohash = Geohash
+window.LV.Geohash = Geohash
 
 module.exports = window.LX

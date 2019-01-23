@@ -32,16 +32,16 @@ log.info('##############################################')
 */
 const startServer = () => {
     return new Promise((resolve, reject) => {
-        let secure_server = null
+        let secureServer = null
         try {
             // read in ssl certificate data
-            let private_key_path = process.env.SSL_PRIVATE_KEY || path.resolve(__dirname, './certs/dev.lantern.link-key.pem')
-            let certificate_path = process.env.SSL_CERTIFICATE || path.resolve(__dirname, './certs/dev.lantern.link.pem')
+            let privateKeyPath = process.env.SSL_PRIVATE_KEY || path.resolve(__dirname, './certs/dev.lantern.link-key.pem')
+            let certificatePath = process.env.SSL_CERTIFICATE || path.resolve(__dirname, './certs/dev.lantern.link.pem')
             let credentials = {
-                key: fs.readFileSync(private_key_path, 'utf8'),
-                cert: fs.readFileSync(certificate_path, 'utf8')
+                key: fs.readFileSync(privateKeyPath, 'utf8'),
+                cert: fs.readFileSync(certificatePath, 'utf8')
             }
-            secure_server = https.createServer(credentials, app)
+            secureServer = https.createServer(credentials, app)
         } catch (e) {
             if (e.code == 'ENOENT') {
                 log.error(`SSL certificates not found in "certs" directory...`)
@@ -51,10 +51,10 @@ const startServer = () => {
             reject()
         }
         // start the web server with built-in database solution
-        let http_server = http.createServer(app)
-        secure_server.listen(util.getHttpsPort(), () => {
-            let std_server = http_server.listen(util.getHttpPort(), () => {
-                if (secure_server) {
+        let httpServer = http.createServer(app)
+        secureServer.listen(util.getHttpsPort(), () => {
+            let stdServer = httpServer.listen(util.getHttpPort(), () => {
+                if (secureServer) {
                     log.info(`secure port = ${util.getHttpsPort()}`)
                 } else {
                     log.warn('falling back to http for local development...')
@@ -70,7 +70,7 @@ const startServer = () => {
                 util.checkInternet().then(status => {
                     app.locals.online = status ? '1' : '0'
                     app.locals.cloud = process.env.CLOUD ? '1' : '0'
-                    resolve(secure_server || std_server)
+                    resolve(secureServer || stdServer)
                 })
             })
         })
@@ -81,34 +81,34 @@ const startServer = () => {
 * Create or use existing database
 */
 const setupDatabase = (server) => {
-    log.info(`database path = ${db_path}`)
+    log.info(`database path = ${dbPath}`)
 
     // run a backup of data every day
 
     let db = require('gun')({
-        file: db_path,
+        file: dbPath,
         web: server
     })
 
     // attach database instance as a local app variable for express routes
     app.locals.db = db
 
-    return Promise.resolve(db_path)
+    return Promise.resolve(dbPath)
 }
 
 // ----------------------------------------------------------------------------
 
 // choose database location
-let db_path = path.resolve(__dirname, '../db/dev')
+let dbPath = path.resolve(__dirname, '../db/dev')
 if (process.env.DB) {
-    db_path = path.resolve(__dirname, '../' + process.env.DB)
+    dbPath = path.resolve(__dirname, '../' + process.env.DB)
 }
 
 // restores an existing database or backs up existing one
-backup(db_path)
+backup(dbPath)
     .then(startServer)
     .then(setupDatabase)
-    .then((db_path) => {
+    .then((dbPath) => {
         return new Promise((resolve, reject) => {
             // starts watching for changes
             watch(app)

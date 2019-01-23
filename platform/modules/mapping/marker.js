@@ -1,6 +1,7 @@
 const Geohash = require('latlon-geohash')
 const LXItem = require('../data/item')
 const LT = window.LT
+const L = window.L
 
 module.exports = class LXMarkerItem extends LXItem {
     constructor (id, data) {
@@ -21,13 +22,13 @@ module.exports = class LXMarkerItem extends LXItem {
             if (this.layer) {
                 // keep dom updated to reflect mode
                 this.layer.setIcon(this.getDivIcon())
-                // console.log(`${this.log_prefix} mode = `, mode);
+                // console.log(`${this.logPrefix} mode = `, mode);
             }
         })
 
         // intercept to see if we have a cached version in our atlas already
         if (LT.atlas.markers[id]) {
-            console.warn(`${this.log_prefix} using cached marker from atlas`)
+            console.warn(`${this.logPrefix} using cached marker from atlas`)
             return LT.atlas.markers[id]
         }
     }
@@ -40,25 +41,25 @@ module.exports = class LXMarkerItem extends LXItem {
     */
     set geohash (val) {
         if (val) {
-            let starting_val = this._data.geohash
+            let startingVal = this._data.geohash
 
             try {
-                if (val == starting_val) {
+                if (val == startingVal) {
                     return
                 }
 
                 this._new.geohash = true
                 this._data.geohash = val
-                // console.log(`${this.log_prefix} location = ${this.geohash}`);
+                // console.log(`${this.logPrefix} location = ${this.geohash}`);
 
                 if (this.layer) {
                     this.layer.setLatLng(this.latlng)
                 }
-                if (starting_val) {
+                if (startingVal) {
                     this.emit('move', val)
                 }
             } catch (e) {
-                console.error(`${this.log_prefix} error with geohash`, e)
+                console.error(`${this.logPrefix} error with geohash`, e)
             }
         }
     }
@@ -79,11 +80,11 @@ module.exports = class LXMarkerItem extends LXItem {
         if (this.layer !== null) {
             return
         } else if (!this.latlng) {
-            console.error(`${this.log_prefix} cannot show marker with missing geolocation`)
+            console.error(`${this.logPrefix} cannot show marker with missing geolocation`)
             return
         }
 
-        // console.log(`${this.log_prefix} showing marker`, this);
+        // console.log(`${this.logPrefix} showing marker`, this);
 
         let self = this
         this.layer = L.marker(this.latlng, {
@@ -94,7 +95,7 @@ module.exports = class LXMarkerItem extends LXItem {
 
         LT.atlas.addToMap(this)
 
-        // console.log(`${this.log_prefix} Show`, this.layer);
+        // console.log(`${this.logPrefix} Show`, this.layer);
 
         this.layer.on('dragend', function (e) {
             let latlng = e.target._latlng
@@ -107,7 +108,7 @@ module.exports = class LXMarkerItem extends LXItem {
     * Hide from the map without altering stored data
     */
     hide () {
-        // console.log(`${this.log_prefix} Hide`);
+        // console.log(`${this.logPrefix} Hide`);
         if (this.layer && this.layer._map) {
             LT.atlas.removeFromMap(this)
             this.emit('hide', this)
@@ -132,14 +133,14 @@ module.exports = class LXMarkerItem extends LXItem {
 
     setIcon (value) {
         if (!this.layer) {
-            console.error(`${this.log_prefix} marker must have layer before icon can be set`)
+            console.error(`${this.logPrefix} marker must have layer before icon can be set`)
             return
         }
 
         if (value) {
-            // console.log(`${this.log_prefix} icon = ${value}`);
+            // console.log(`${this.logPrefix} icon = ${value}`);
         } else {
-            // console.log(`${this.log_prefix} clearing icon`);
+            // console.log(`${this.logPrefix} clearing icon`);
         }
         this._icon = value
         this.layer.setIcon(this.getDivIcon())

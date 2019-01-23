@@ -1,4 +1,4 @@
-const accepted_ips = {}
+const accepted = {}
 const util = require('../util')
 const log = util.Logger
 
@@ -7,16 +7,16 @@ module.exports = (req, res, next) => {
     let ip = util.getClientIP(req)
 
     const isClientConnected = () => {
-        return accepted_ips.hasOwnProperty(ip) && accepted_ips[ip]
+        return accepted.hasOwnProperty(ip) && accepted[ip]
     }
 
     const markClientConnected = () => {
         log.info('[captive] mark client ' + ip + ' connected')
-        accepted_ips[ip] = new Date()
+        accepted[ip] = new Date()
     }
 
     const removeClient = () => {
-        accepted_ips[ip] = false
+        accepted[ip] = false
     }
 
     const isCaptiveNetworkSupport = () => {

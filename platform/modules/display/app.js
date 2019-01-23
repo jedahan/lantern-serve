@@ -14,18 +14,18 @@ module.exports = class LXApp extends EventEmitter {
     }
 
     // ------------------------------------------------------------------------
-    createPageComponent (page_id, body, logic) {
+    createPageComponent (pageID, body, logic) {
         let cmp = {
             template: body
         }
 
-        let component_id = ['lx', 'app', this.name, page_id].join('-')
+        let componentID = ['lx', 'app', this.name, pageID].join('-')
 
         let self = this
 
         let page = {
-            'id': page_id,
-            'component_id': component_id,
+            'id': pageID,
+            'componentID': componentID,
             'app': this
         }
         if (logic) {
@@ -51,7 +51,7 @@ module.exports = class LXApp extends EventEmitter {
             }
         }
 
-        page.component = Vue.component(component_id, cmp)
+        page.component = Vue.component(componentID, cmp)
 
         self.pages.push(page)
 
@@ -62,12 +62,12 @@ module.exports = class LXApp extends EventEmitter {
                 logic.callback.call(page)
             }
             if (logic.open) {
-                self.open(component_id)
+                self.open(componentID)
             }
         }
     }
 
-    get log_prefix () {
+    get logPrefix () {
         return `[a:lx-app-${this.name}]`.padEnd(20, ' ')
     }
 
@@ -97,8 +97,8 @@ module.exports = class LXApp extends EventEmitter {
         this.children.forEach((child) => {
             if (child.extension == '.html' && child.body) {
                 let html = child.body.replace(image_re, '$1' + `/-/${this.name}/` + '$2$3')
-                let page_id = child.name.split('.')[0]
-                this.createPageComponent(page_id, html, logic)
+                let pageID = child.name.split('.')[0]
+                this.createPageComponent(pageID, html, logic)
             }
         })
     }
@@ -108,7 +108,7 @@ module.exports = class LXApp extends EventEmitter {
     */
     unload () {
         this.pages.forEach((page) => {
-            this.close(page.component_id)
+            this.close(page.componentID)
         })
         setTimeout(() => {
             // allows vue to clear DOM to avoid flashes of content
@@ -120,23 +120,23 @@ module.exports = class LXApp extends EventEmitter {
     /**
     * Displays Vue component on the screen
     */
-    open (component_id) {
-        if (this._component_opened[component_id]) {
+    open (componentID) {
+        if (this._component_opened[componentID]) {
             // skip already opened app
             return
         }
-        this._component_opened[component_id] = true
-        // console.log(`${this.log_prefix} open`);
-        this.emit('open', component_id)
+        this._component_opened[componentID] = true
+        // console.log(`${this.logPrefix} open`);
+        this.emit('open', componentID)
     }
 
     /**
     * Hides Vue component but keeps style injection for other open components
     */
-    close (component_id) {
-        this._component_opened[component_id] = false
-        // console.log(`${this.log_prefix} close`);
-        this.emit('close', component_id)
+    close (componentID) {
+        this._component_opened[componentID] = false
+        // console.log(`${this.logPrefix} close`);
+        this.emit('close', componentID)
     }
 
     /**

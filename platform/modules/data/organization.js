@@ -21,7 +21,7 @@ module.exports = class LXOrganization extends EventEmitter {
     }
 
     // -------------------------------------------------------------------------
-    get log_prefix () {
+    get logPrefix () {
         return `[o:${this.id || 'Organization'}]`.padEnd(20, ' ')
     }
 
@@ -34,11 +34,11 @@ module.exports = class LXOrganization extends EventEmitter {
         return new Promise((resolve, reject) => {
             this.node.once((v, k) => {
                 if (v) {
-                    console.log(`${this.log_prefix} already registered organization`)
+                    console.log(`${this.logPrefix} already registered organization`)
                     return resolve(v)
                 } else {
                     // this node may contain fields for "members" and "packages", too
-                    console.log(`${this.log_prefix} starting registration for organization`)
+                    console.log(`${this.logPrefix} starting registration for organization`)
                     this.node.put({
                         'name': this.name,
                         'members': {},
@@ -47,7 +47,7 @@ module.exports = class LXOrganization extends EventEmitter {
                         if (ack.err) {
                             return reject('org_register_failed')
                         }
-                        console.info(`${this.log_prefix} newly registered`, this.name)
+                        console.info(`${this.logPrefix} newly registered`, this.name)
                         this.emit('register')
                         resolve(this.name)
                     })
@@ -61,7 +61,7 @@ module.exports = class LXOrganization extends EventEmitter {
             this.node
                 .put(null)
                 .once((v, k) => {
-                    console.log(`${this.log_prefix} unregistered ${this.id}`)
+                    console.log(`${this.logPrefix} unregistered ${this.id}`)
                     this.emit('unregister')
                     return resolve(v)
                 })
@@ -82,12 +82,12 @@ module.exports = class LXOrganization extends EventEmitter {
                 if (!v) {
                     node1.put(this.node)
                         .once(() => {
-                            console.log(`${this.log_prefix} claimed ${pkg.id}`)
+                            console.log(`${this.logPrefix} claimed ${pkg.id}`)
                             // now, organization registers existence of package
                             node2.put(pkg.node).once(resolve)
                         })
                 } else {
-                    console.log(`${this.log_prefix} already claimed ${pkg.id}`)
+                    console.log(`${this.logPrefix} already claimed ${pkg.id}`)
                 }
             })
         })

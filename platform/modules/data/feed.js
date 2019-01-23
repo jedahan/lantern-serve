@@ -10,11 +10,11 @@ module.exports = class LXFeed extends EventEmitter {
     }
 
     // -------------------------------------------------------------------------
-    get log_prefix () {
+    get logPrefix () {
         return `[f:${this.user.username}]`.padEnd(20, ' ')
     }
 
-    onDataChange (val, id, pkg_id) {
+    onDataChange (val, id, pkgID) {
         var data
 
         if (val !== null && typeof (val) === 'object') {
@@ -28,11 +28,11 @@ module.exports = class LXFeed extends EventEmitter {
 
         let event = {
             id: id,
-            package: pkg_id,
+            package: pkgID,
             data: data
         }
 
-        if (this.packages[pkg_id]) {
+        if (this.packages[pkgID]) {
             this.emit('change', event)
         } else {
             console.log('skipping', event)
@@ -48,18 +48,18 @@ module.exports = class LXFeed extends EventEmitter {
                 return
             }
 
-            // console.log(`${this.log_prefix} refreshing data for:`, id)
+            // console.log(`${this.logPrefix} refreshing data for:`, id)
             let parts = id.split('@')
             let name = parts[0]
             let version = parts[1]
-            let package_node = this.db.get('pkg').get(name)
-            package_node.get('data')
+            let pkgNode = this.db.get('pkg').get(name)
+            pkgNode.get('data')
                 .get(version).once((v, k) => {
                     if (!v) return
 
                     Object.keys(v).forEach((item) => {
                         if (item == '_') return
-                        package_node.get('data').get(version).get(item)
+                        pkgNode.get('data').get(version).get(item)
                             .once((value, key) => {
                                 this.onDataChange(value, key, id)
                             })
@@ -80,12 +80,12 @@ module.exports = class LXFeed extends EventEmitter {
             name = parts[0]
             version = parts[1]
         } catch (e) {
-            console.error(`${this.log_prefix} invalid identifier provided to add package: ${id}`)
+            console.error(`${this.logPrefix} invalid identifier provided to add package: ${id}`)
             return
         }
 
         if (this.packages[id]) {
-            console.log(`${this.log_prefix} already watching: ${id}`)
+            console.log(`${this.logPrefix} already watching: ${id}`)
             return
         }
 
@@ -96,11 +96,11 @@ module.exports = class LXFeed extends EventEmitter {
             .once((v, k) => {
                 if (v.hasOwnProperty(version)) {
                     // verified that version exists
-                    console.log(`${this.log_prefix} watching changes: ${id}`)
+                    console.log(`${this.logPrefix} watching changes: ${id}`)
                 } else {
                     // disable our package subscription if we find out it is missing
                     this.packages[id] = false
-                    console.warn(`${this.log_prefix} missing package version to watch: ${id}`)
+                    console.warn(`${this.logPrefix} missing package version to watch: ${id}`)
                 }
             })
             .get(version)
@@ -119,11 +119,11 @@ module.exports = class LXFeed extends EventEmitter {
         try {
             let parts = id.split('@')
         } catch (e) {
-            console.error(`${this.log_prefix} invalid identifier provided to remove package ${id}`)
+            console.error(`${this.logPrefix} invalid identifier provided to remove package ${id}`)
             return
         }
 
-        console.log(`${this.log_prefix} unwatch changes for ${id}`)
+        console.log(`${this.logPrefix} unwatch changes for ${id}`)
         this.packages[id] = false
     }
 
@@ -133,7 +133,7 @@ module.exports = class LXFeed extends EventEmitter {
     }
 
     addOneTopic (name) {
-        console.log(`${this.log_prefix} add topic ${name}`)
+        console.log(`${this.logPrefix} add topic ${name}`)
         this.topics[name] = true
     }
 
@@ -141,7 +141,7 @@ module.exports = class LXFeed extends EventEmitter {
         topics.forEach(this.removeOneTopic.bind(this))
     }
     removeOneTopic (name) {
-        console.log(`${this.log_prefix} remove topic ${name}`)
+        console.log(`${this.logPrefix} remove topic ${name}`)
         this.topics[name] = false
     }
 }

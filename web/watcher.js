@@ -11,7 +11,7 @@ module.exports = (app) => {
     let node = app.locals.db.get('__LX__').get('pkg')
     let packages = {}
     let items = {}
-    let change_hooks = {
+    let changeHooks = {
         'add': null,
         'update': null,
         'drop': null
@@ -21,10 +21,10 @@ module.exports = (app) => {
     /**
     * Check to see if we have any change hooks from environment
     */
-    Object.keys(change_hooks).forEach((key) => {
-        let env_var = 'HOOK_' + key.toUpperCase()
-        if (process.env.hasOwnProperty(env_var)) {
-            change_hooks[key] = path.resolve(__dirname + '/../' + process.env[env_var])
+    Object.keys(changeHooks).forEach((key) => {
+        let envVar = 'HOOK_' + key.toUpperCase()
+        if (process.env.hasOwnProperty(envVar)) {
+            changeHooks[key] = path.resolve(__dirname + '/../' + process.env[envVar])
         }
     })
 
@@ -39,14 +39,14 @@ module.exports = (app) => {
     * Run an executable to process a change on external system
     */
     const runChangeHook = (key, msg) => {
-        if (change_hooks.hasOwnProperty(key)) {
-            let msg_key = util.getSimpleMessage(msg)
-            if (app.locals.inbox.hasOwnProperty(msg_key)) {
+        if (changeHooks.hasOwnProperty(key)) {
+            let msgKey = util.getSimpleMessage(msg)
+            if (app.locals.inbox.hasOwnProperty(msgKey)) {
                 // prevent echo of incoming message
                 log.debug(`watcher -- ${(msg[1] == '|' ? ' ' : '')}${msg}`)
-            } else if (typeof (change_hooks[key]) === 'string') {
+            } else if (typeof (changeHooks[key]) === 'string') {
                 log.debug(`watcher -- ${(msg[1] == '|' ? ' ' : '')}${msg} --> ${key} hook`)
-                let result = spawnSync(change_hooks[key], [msg])
+                let result = spawnSync(changeHooks[key], [msg])
             } else {
                 log.debug(`watcher -- ${(msg[1] == '|' ? ' ' : '')}${msg}`)
             }
@@ -56,25 +56,25 @@ module.exports = (app) => {
     /**
     * Watch for and announce changes to given package
     */
-    const watchPackage = (v, package_name) => {
+    const watchPackage = (v, packageName) => {
         if (v === null) {
-            log.warn('watcher -- package dropped: ' + package_name)
+            log.warn('watcher -- package dropped: ' + packageName)
             return
         }
 
         if (v.hasOwnProperty('version')) {
             // only attempt to watch a package with a current version set
 
-            let pkg_id = `${package_name}@${v.version}`
+            let pkgID = `${packageName}@${v.version}`
 
-            if (packages[pkg_id]) {
-                // log.warn("watcher -- already watching: " + pkg_id);
+            if (packages[pkgID]) {
+                // log.warn("watcher -- already watching: " + pkgID);
                 return
             }
-            packages[pkg_id] = true
+            packages[pkgID] = true
             // listen for new and existing items
-            node.get(package_name).get('data').get(v.version).map().on((item_data, item_id) => {
-                watchItem(item_id, item_data, pkg_id)
+            node.get(packageName).get('data').get(v.version).map().on((itemData, itemID) => {
+                watchItem(itemID, itemData, pkgID)
             })
         }
     }
@@ -82,39 +82,39 @@ module.exports = (app) => {
     /**
     * Watch for and announce changes to given item
     */
-    const watchItem = (item_id, item_data, package_id) => {
+    const watchItem = (itemID, itemData, packageID) => {
         // detected drop
-        if (item_data === null) {
+        if (itemData === null) {
             // this can be triggered when an item is first created due to the way we use put(null)
             // therefore, only indicate deletions if we already know about a valid item
-            if (loaded && items[item_id]) {
-                let msg = `${getSeq()}|${package_id}-${item_id}`
+            if (loaded && items[itemID]) {
+                let msg = `${getSeq()}|${packageID}-${itemID}`
                 runChangeHook('drop', msg)
             }
             return
         }
 
         // detected add
-        if (items[item_id]) return
+        if (items[itemID]) return
 
-        items[item_id] = true
+        items[itemID] = true
         if (loaded) {
-            let msg = `${getSeq()}|${package_id}+${item_id}`
+            let msg = `${getSeq()}|${packageID}+${itemID}`
             runChangeHook('add', msg)
         }
-        let package_name = package_id.split('@')[0]
-        let version = package_id.split('@')[1]
+        let packageName = packageID.split('@')[0]
+        let version = packageID.split('@')[1]
 
         // watch for field changes
-        node.get(package_name)
+        node.get(packageName)
             .get('data')
             .get(version)
-            .get(item_id)
-            .map().on((v, field_id) => {
+            .get(itemID)
+            .map().on((v, fieldID) => {
                 // @todo identify issue where inbox can trigger this code
                 // to run twice for the same database update
                 if (loaded) {
-                    let msg = `${getSeq()}|${package_id}^${item_id}.${field_id}=${v}`
+                    let msg = `${getSeq()}|${packageID}^${itemID}.${fieldID}=${v}`
                     runChangeHook('update', msg)
                 }
             })

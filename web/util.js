@@ -106,9 +106,9 @@ self.compressStylesheets = () => {
             'node_modules/typeface-montserrat/index.css'
         ]
 
-        let vendor_css = path.resolve(__dirname, './public/styles/vendor.css')
+        let vendorCSS = path.resolve(__dirname, './public/styles/vendor.css')
 
-        concat(files, vendor_css)
+        concat(files, vendorCSS)
         resolve()
     })
 }
@@ -119,11 +119,11 @@ self.compressStylesheets = () => {
 
 self.packJavascript = () => {
     return new Promise((resolve, reject) => {
-        let platform_script = path.resolve(__dirname, './public/scripts/platform.js')
+        let platformScript = path.resolve(__dirname, './public/scripts/platform.js')
         let b = browserify(['platform/web.js'])
-        let write_stream = fs.createWriteStream(platform_script)
+        let writeStream = fs.createWriteStream(platformScript)
         b.bundle()
-            .pipe(write_stream)
+            .pipe(writeStream)
             .on('finish', () => {
                 resolve()
             })
@@ -139,13 +139,13 @@ self.packJavascript = () => {
 self.compressJavascript = () => {
     return new Promise((resolve, reject) => {
         // handle minification directly here rather than build scripts
-        let platform_min = path.resolve(__dirname, './public/scripts/platform.min.js')
+        let platformMin = path.resolve(__dirname, './public/scripts/platform.min.js')
 
         // offer compressed versions of scripts
         minify({
             compressor: uglifyJS,
             input: path.resolve(__dirname, './public/scripts/platform.js'),
-            output: platform_min,
+            output: platformMin,
             callback: resolve
         })
     })

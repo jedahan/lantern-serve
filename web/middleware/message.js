@@ -6,7 +6,7 @@ module.exports = (req, res, next) => {
     * Regular expressions to identify intent of message
     */
     // @todo  allow match for multi-message separated by ;
-    const msg_regex = {
+    const msgRegex = {
         add: /([0-9]+)\|([a-z]+)@([0-9\.]+)\+([a-zA-Z0-9]+)/,
         update: /([0-9]+)\|([a-z]+)@([0-9\.]+)\^([a-zA-Z0-9]+)\.([a-z]*)\=(\w+)/,
         drop: /([0-9]+)\|([a-z]+)@([0-9\.]+)\-([a-zA-Z0-9]+)/
@@ -48,8 +48,8 @@ module.exports = (req, res, next) => {
                 'message': 'Ignoring invalid message'
             })
         } else {
-            Object.keys(msg_regex).forEach((k) => {
-                let exp = msg_regex[k]
+            Object.keys(msgRegex).forEach((k) => {
+                let exp = msgRegex[k]
                 if (exp.test(req.body.message)) {
                     res.locals.message = getObject(req.body.message.match(exp), k)
                 }

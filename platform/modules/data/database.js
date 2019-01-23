@@ -1,6 +1,5 @@
 const EventEmitter = require('event-emitter-es6')
 const Gun = require('gun')
-const SEA = require('sea')
 
 module.exports = class LXDatabase extends EventEmitter {
     constructor (uri) {
@@ -16,7 +15,7 @@ module.exports = class LXDatabase extends EventEmitter {
     }
 
     // -------------------------------------------------------------------------
-    get log_prefix () {
+    get logPrefix () {
         return `[database]`.padEnd(20, ' ')
     }
 
@@ -28,15 +27,15 @@ module.exports = class LXDatabase extends EventEmitter {
         return new Promise((resolve, reject) => {
             this.root_node.once((v, k) => {
                 if (v) {
-                    console.log(`${this.log_prefix} database ready`)
+                    console.log(`${this.logPrefix} database ready`)
                 } else {
-                    console.log(`${this.log_prefix} database ready but empty`)
+                    console.log(`${this.logPrefix} database ready but empty`)
                 }
 
                 let expected = ['org', 'pkg']
                 expected.forEach((key) => {
                     if (!v || !v.hasOwnProperty(key)) {
-                        console.log(`${this.log_prefix} adding top-level node: ${key}`)
+                        console.log(`${this.logPrefix} adding top-level node: ${key}`)
                         this.root_node.get(key).put({})
                     }
                 })
@@ -93,7 +92,7 @@ module.exports = class LXDatabase extends EventEmitter {
                 return this.log(v, k)
             })
         } else {
-            let pre = this.log_prefix || '[database]'
+            let pre = this.logPrefix || '[database]'
             if (v && typeof (v) === 'object') {
                 console.log(`${pre} ${k} =`)
                 Object.keys(v).forEach((key) => {

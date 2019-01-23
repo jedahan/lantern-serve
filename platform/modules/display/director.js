@@ -4,6 +4,8 @@ const LXAtlas = require('../mapping/atlas')
 const LXDatabase = require('../data/database')
 const LXUser = require('../data/user')
 const LXApp = require('../display/app')
+const origin = window.location.origin
+const fetch = window.fetch
 
 module.exports = class LXDirector extends EventEmitter {
     constructor () {
@@ -13,7 +15,7 @@ module.exports = class LXDirector extends EventEmitter {
         this.view = new LXView()
         this.atlas = new LXAtlas()
         // define database and user to work with decentralized network
-        this.db = new LXDatabase(window.location.origin + '/gun')
+        this.db = new LXDatabase(origin + '/gun')
         this.user = new LXUser(this.db)
     }
 
@@ -84,33 +86,33 @@ module.exports = class LXDirector extends EventEmitter {
                 let obj = this.apps[item.name] = new LXApp(item)
 
                 obj.on('load', (page) => {
-                    // console.log("[Direct] App loads page: ", page.component_id );
+                    // console.log("[Direct] App loads page: ", page.componentID );
                 })
 
-                obj.on('open', (component_id) => {
-                    // console.log("[Direct] App opens component:", component_id);
-                    this.view.data.app_components.push(component_id)
+                obj.on('open', (componentID) => {
+                    // console.log("[Direct] App opens component:", componentID);
+                    this.view.data.app_components.push(componentID)
                 })
 
-                obj.on('close', (component_id) => {
-                    // console.log("[Direct] App closes component:", component_id);
-                    this.view.data.app_components.remove(component_id)
+                obj.on('close', (componentID) => {
+                    // console.log("[Direct] App closes component:", componentID);
+                    this.view.data.app_components.remove(componentID)
                 })
             })
         }
     }
 
     // ------------------------------------------------------------------------
-    closeOneApp (app_id) {
-        if (this.apps.hasOwnProperty(app_id)) {
-            this.apps[app_id].unload()
+    closeOneApp (appID) {
+        if (this.apps.hasOwnProperty(appID)) {
+            this.apps[appID].unload()
         }
     }
 
-    openOneApp (app_id) {
-        if (this.apps.hasOwnProperty(app_id)) {
-            this.apps[app_id].pages.forEach((page) => {
-                this.apps[app_id].open(`lx-app-${app_id}-${page.id}`)
+    openOneApp (appID) {
+        if (this.apps.hasOwnProperty(appID)) {
+            this.apps[appID].pages.forEach((page) => {
+                this.apps[appID].open(`lx-app-${appID}-${page.id}`)
             })
         }
     }

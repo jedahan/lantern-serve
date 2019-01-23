@@ -1,8 +1,14 @@
 const EventEmitter = require('event-emitter-es6')
 const LXLocation = require('./location')
+const MaptileConfig = require('../../config/maptiler')
+const LeafletTilesConfig = require('../../config/leaflet_tiles')
+const LeafletMapConfig = require('../../config/leaflet_map')
+const L = window.L
+const location = window.location
+const localStorage = window.localStorage
 
 module.exports = class LXAtlas extends EventEmitter {
-    constructor (use_cloud) {
+    constructor (useCloud) {
         super()
         this.map = null // leaflet map
         this.pointer = null // leaflet location pointer
@@ -15,25 +21,25 @@ module.exports = class LXAtlas extends EventEmitter {
             center_max: 10
         }
 
-        this.setTileHost(use_cloud)
+        this.setTileHost(useCloud)
         this._map_clicked = 0 // used to distinguish between click and double-click
     }
 
-    setTileHost (use_cloud) {
-        let uri_parts = window.location.href.split('/').slice(0, 3)
+    setTileHost (useCloud) {
+        let uri_parts = location.href.split('/').slice(0, 3)
 
-        if (use_cloud) {
+        if (useCloud) {
             uri_parts[2] = '{s}.tile.lantern.link'
         }
 
         this.tile_host = uri_parts.join('/')
-        this.tile_uri = [this.tile_host + '/c/', LC.maptiler.id, '/styles/',
-            LC.maptiler.map, '/{z}/{x}/{y}.png?key=', LC.maptiler.key
+        this.tile_uri = [this.tile_host + '/c/', MaptileConfig.id, '/styles/',
+            MaptileConfig.map, '/{z}/{x}/{y}.png?key=', MaptileConfig.key
         ].join('')
     }
 
-    render (use_cloud) {
-        this.setTileHost(use_cloud)
+    render (useCloud) {
+        this.setTileHost(useCloud)
         this.setupMap()
         this.setViewFromCenterLocationCache()
 
@@ -69,17 +75,17 @@ module.exports = class LXAtlas extends EventEmitter {
         this.calculateZoomClass()
     }
 
-    get log_prefix () {
+    get logPrefix () {
         return '[atlas]'.padEnd(20, ' ')
     }
 
     // ------------------------------------------------------------------------
     setupMap () {
         // bind dom element for leaflet
-        this.map = L.map('map', LC.leaflet_map)
+        this.map = L.map('map', LeafletMapConfig)
 
         // layer in hosted map tiles
-        L.tileLayer(this.tile_uri, LC.leaflet_tiles).addTo(this.map)
+        L.tileLayer(this.tile_uri, LeafletTilesConfig).addTo(this.map)
 
         // stop map from going off-world
         var sw = L.latLng(-89.98155760646617, -180)
@@ -96,7 +102,7 @@ module.exports = class LXAtlas extends EventEmitter {
     * Fly in while zooming
     */
     zoomToPoint (latlng) {
-        this.map.flyTo(latlng, Math.limit(this.map.getZoom() + 2, 1, LC.leaflet_map.maxZoom), {
+        this.map.flyTo(latlng, Math.limit(this.map.getZoom() + 2, 1, LeafletMapConfig.maxZoom), {
             pan: {
                 animate: true,
                 duration: 1.5
@@ -144,10 +150,10 @@ module.exports = class LXAtlas extends EventEmitter {
     * Preserves user geolocation in-memory for future use
     */
     cacheUserLocation (e) {
-        let new_geo = LXLocation.toGeohash(e.latlng, this.precision.user_max)
-        if (new_geo != this.user_location) {
-            this.user_location = new_geo
-            console.log(`${log_prefix} New user location found: ${this.user_location}`)
+        let newGeo = LXLocation.toGeohash(e.latlng, this.precision.user_max)
+        if (newGeo != this.user_location) {
+            this.user_location = newGeo
+            console.log(`${this.logPrefix} New user location found: ${this.user_location}`)
         }
     }
 
@@ -160,17 +166,17 @@ module.exports = class LXAtlas extends EventEmitter {
     */
     cacheCenterLocation (timeout) {
         return new Promise((resolve, reject) => {
-            let orig_ctr = this.getCenterAsString()
+            let origCtr = this.getCenterAsString()
             // http://www.bigfastblog.com/geohash-intro
             let precision = Math.round(this.precision.center_max * (this.map.getZoom() / 20))
             let gh = LXLocation.toGeohash(this.map.getCenter(), precision)
-            // console.log(`${this.log_prefix} center geohash: ${gh}`);
+            // console.log(`${this.logPrefix} center geohash: ${gh}`);
             this.center = gh
             // only save to database if user has paused on this map for a few seconds
             setTimeout(() => {
-                let new_ctr = this.getCenterAsString()
-                if (orig_ctr == new_ctr) {
-                    localStorage.setItem('lx-ctr', new_ctr)
+                let newCtr = this.getCenterAsString()
+                if (origCtr == newCtr) {
+                    localStorage.setItem('lx-ctr', newCtr)
                 }
             }, timeout || 7000)
         })
@@ -200,7 +206,7 @@ module.exports = class LXAtlas extends EventEmitter {
     */
     addToMap (marker) {
         if (this.markers[marker.id]) {
-            console.log(`${this.log_prefix} ${marker.id} already added to map. skipping...`)
+            console.log(`${this.logPrefix} ${marker.id} already added to map. skipping...`)
             return
         }
 
@@ -283,21 +289,21 @@ module.exports = class LXAtlas extends EventEmitter {
             // are we too close to the edge for our menu?
             let pos = map.latLngToContainerPoint(latlng)
             let dimensions = document.getElementById('map').getBoundingClientRect()
-            let center_point = map.getSize().divideBy(2)
+            let centerPoint = map.getSize().divideBy(2)
 
             if (pos.x < margin || pos.x > dimensions.width - margin) {
                 let direction = (pos.x < margin ? 'subtract' : 'add')
-                let target_point = center_point[direction]([margin, 0])
-                let target_latlng = map.containerPointToLatLng(target_point)
-                map.panTo(target_latlng)
+                let targetPoint = centerPoint[direction]([margin, 0])
+                let targetLatLng = map.containerPointToLatLng(targetPoint)
+                map.panTo(targetLatLng)
                 map.once('moveend', () => {
                     resolve(latlng)
                 })
             } else if (pos.y < margin || pos.y > dimensions.height - margin) {
                 let direction = (pos.y < margin ? 'subtract' : 'add')
-                let target_point = center_point[direction]([0, margin])
-                let target_latlng = map.containerPointToLatLng(target_point)
-                map.panTo(target_latlng)
+                let targetPoint = centerPoint[direction]([0, margin])
+                let targetLatLng = map.containerPointToLatLng(targetPoint)
+                map.panTo(targetLatLng)
                 map.once('moveend', () => {
                     resolve(latlng)
                 })

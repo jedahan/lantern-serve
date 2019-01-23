@@ -11,19 +11,19 @@ const log = util.Logger
 
 // ----------------------------------------------------------------------
 module.exports = (serv) => {
-    let tiles_dir = path.resolve(__dirname, '../public/tiles')
-    let assume_internet = true
+    let tilesDir = path.resolve(__dirname, '../public/tiles')
+    let assumeInternet = true
 
     // offer these routes a chance to bypass attempts at internet
-    util.checkInternet().then((is_connected) => {
-        assume_internet = is_connected
+    util.checkInternet().then((isConnected) => {
+        assumeInternet = isConnected
     })
 
     /**
     * Convert URL to local file path for cached tile
     */
     const getLocalPathForTile = (params) => {
-        let zxy = `${tiles_dir}/${params.z}_${params.x}_${params.y}.png`
+        let zxy = `${tilesDir}/${params.z}_${params.x}_${params.y}.png`
         return zxy
     }
 
@@ -31,9 +31,9 @@ module.exports = (serv) => {
     * Use special empty tile to notify user that a tile request was forbidden or failed
     */
     const sendEmptyTile = (res) => {
-        let assets_dir = path.resolve(__dirname, '../public/assets/')
-        let file_path = assets_dir + '/empty-tile.png'
-        fs.readFile(file_path, (err, buffer) => {
+        let assetsDir = path.resolve(__dirname, '../public/assets/')
+        let filePath = assetsDir + '/empty-tile.png'
+        fs.readFile(filePath, (err, buffer) => {
             res.type('png')
             res.send(buffer)
         })
@@ -73,7 +73,7 @@ module.exports = (serv) => {
         // use offline cache if available, avoids hitting external sever
         fs.readFile(getLocalPathForTile(req.params), (err, buffer) => {
             if (err && err.code == 'ENOENT' || buffer.length < 100) {
-                if (!assume_internet) {
+                if (!assumeInternet) {
                     // log.debug(`Skip offline attempt for: ${req.url}`);
                     return sendEmptyTile(res)
                 } else {

@@ -9,12 +9,12 @@ const message = require('../middleware/message')
 const bodyParser = require('body-parser')
 
 module.exports = (serv) => {
-    const msg_apply = {}
+    const msgApply = {}
 
     /**
     * Add a node to the database
     */
-    msg_apply.add = (data, db) => {
+    msgApply.add = (data, db) => {
         return new Promise((resolve, reject) => {
             let node = getNode(data, db)
             node.once((v, k) => {
@@ -35,7 +35,7 @@ module.exports = (serv) => {
     /**
     * Update existing database field
     */
-    msg_apply.update = (data, db) => {
+    msgApply.update = (data, db) => {
         return new Promise((resolve, reject) => {
             let node = getNode(data, db)
 
@@ -59,7 +59,7 @@ module.exports = (serv) => {
     /**
     * Drop a node from database
     */
-    msg_apply.drop = (data, db) => {
+    msgApply.drop = (data, db) => {
         return new Promise((resolve, reject) => {
             let node = getNode(data, db)
             node.put(null, (ack) => {
@@ -109,14 +109,14 @@ module.exports = (serv) => {
         // @todo can make this persistent if needed using a queue
         // log the received messaged for future output
         // also allows us to prevent infinite loops (don't trigger change hooks on incoming messages)
-        let msg_key = util.getSimpleMessage(msg)
+        let msgKey = util.getSimpleMessage(msg)
 
         let inbox = res.app.locals.inbox
 
-        inbox[msg_key] = inbox[msg_key] || {}
-        inbox[msg_key][new Date().getTime()] = req.ip
+        inbox[msgKey] = inbox[msgKey] || {}
+        inbox[msgKey][new Date().getTime()] = req.ip
         log.debug('  inbox >> ' + (msg[1] == '|' ? ' ' : '') + msg)
-        let inboxfn = msg_apply[res.locals.message.type]
+        let inboxfn = msgApply[res.locals.message.type]
         inboxfn(res.locals.message, req.app.locals.db)
             .then((success) => {
                 res.status(201).json({ 'ok': success })

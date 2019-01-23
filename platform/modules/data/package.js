@@ -5,7 +5,7 @@ module.exports = class LXPackage extends EventEmitter {
         super()
 
         if (!name) {
-            console.error(`${this.log_prefix} please name your package to publish`)
+            console.error(`${this.logPrefix} please name your package to publish`)
             throw new Error('missing_name')
         }
 
@@ -22,7 +22,7 @@ module.exports = class LXPackage extends EventEmitter {
     }
 
     // -------------------------------------------------------------------------
-    get log_prefix () {
+    get logPrefix () {
         return `[p:${this.name || 'new package'}@${this.version}]`.padEnd(20, ' ')
     }
 
@@ -56,13 +56,13 @@ module.exports = class LXPackage extends EventEmitter {
                 if (v && v.hasOwnProperty('name') && v.hasOwnProperty('public') && v.hasOwnProperty('data') && v.hasOwnProperty('version')) {
                     resolve(this)
                 } else {
-                    console.log(`${this.log_prefix} creating package setup`, this._data)
+                    console.log(`${this.logPrefix} creating package setup`, this._data)
                     // required null put to make sure we have a node to work with
                     this.node.put(null).put(this._data, (ack) => {
                         if (ack.err) {
                             return reject('package_setup_err')
                         } else {
-                            console.log(`${this.log_prefix} package setup successfully`)
+                            console.log(`${this.logPrefix} package setup successfully`)
                             resolve()
                         }
                     })
@@ -102,10 +102,10 @@ module.exports = class LXPackage extends EventEmitter {
                 .then((exists) => {
                     // do not over-write pre-existing version
                     if (exists) {
-                        console.log(`${this.log_prefix} already published: ${this.id}`)
+                        console.log(`${this.logPrefix} already published: ${this.id}`)
                         resolve()
                     } else {
-                        console.log(`${this.log_prefix} will publish: ${this.id}`)
+                        console.log(`${this.logPrefix} will publish: ${this.id}`)
 
                         // required null put to make sure we have a node to work with
                         this.node.get('data').get(version).put(null).put(data, (ack) => {
@@ -116,7 +116,7 @@ module.exports = class LXPackage extends EventEmitter {
                                 if (ack.err) {
                                     return reject('package_publish_version_failed')
                                 }
-                                console.log(`${this.log_prefix} new published version: ${this.id}`)
+                                console.log(`${this.logPrefix} new published version: ${this.id}`)
                                 resolve()
                                 this.emit('publish')
                             })
@@ -132,7 +132,7 @@ module.exports = class LXPackage extends EventEmitter {
     unpublish (version) {
         return new Promise((resolve, reject) => {
             if (!version) {
-                console.error(`${this.log_prefix} please specify version to unpublish`)
+                console.error(`${this.logPrefix} please specify version to unpublish`)
                 return reject('missing_version')
             }
 

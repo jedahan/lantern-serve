@@ -1,5 +1,6 @@
 const EventEmitter = require('event-emitter-es6')
 const shortid = require('shortid')
+const LT = window.LT
 
 module.exports = class LXItem extends EventEmitter {
     constructor (id, data, defaults) {
@@ -12,13 +13,13 @@ module.exports = class LXItem extends EventEmitter {
         this._new = {}
 
         // always include these defaults
-        let global_defaults = {
+        let globalDefaults = {
             'owner': ['o'],
             'editors': ['e', []],
             'tags': ['t', []]
         }
 
-        defaults = Object.assign(global_defaults, defaults)
+        defaults = Object.assign(globalDefaults, defaults)
 
         for (var idx in defaults) {
             this._data[idx] = defaults[idx][1] || null
@@ -34,9 +35,9 @@ module.exports = class LXItem extends EventEmitter {
 
         if (data) {
             this.mode = 'shared'
-            let unpacked_data = this.unpack(data)
-            Object.keys(unpacked_data).forEach((key) => {
-                let val = unpacked_data[key]
+            let unpackagedData = this.unpack(data)
+            Object.keys(unpackagedData).forEach((key) => {
+                let val = unpackagedData[key]
                 this._data[key] = val
             })
         }
@@ -46,10 +47,10 @@ module.exports = class LXItem extends EventEmitter {
 
     // -------------------------------------------------------------------------
     inspect () {
-        console.log(`${this.log_prefix} data = ${JSON.stringify(this._data)}`)
+        console.log(`${this.logPrefix} data = ${JSON.stringify(this._data)}`)
     }
 
-    get log_prefix () {
+    get logPrefix () {
         return `[i:${this.id}]`.padEnd(20, ' ')
     }
 
@@ -149,7 +150,7 @@ module.exports = class LXItem extends EventEmitter {
         tag = this.sanitizeTag(tag)
 
         this._data.tags = this._data.tags || []
-        // console.log(`${this.log_prefix} tag = `, tag);
+        // console.log(`${this.logPrefix} tag = `, tag);
 
         // don't allow duplicate tags
         if (this._data.tags.indexOf(tag) > -1) {
@@ -198,23 +199,23 @@ module.exports = class LXItem extends EventEmitter {
     * Requires that all data variables are pre-defined in our map for safety
     */
     pack (obj) {
-        let new_obj = {}
+        let newObj = {}
         for (var idx in obj) {
             let v = obj[idx]
             if (this._key_table.hasOwnProperty(idx)) {
                 let k = this._key_table[idx]
                 if (v && v.constructor === Array) {
                     if (v.length) {
-                        new_obj[k] = '%' + v.join(',')
+                        newObj[k] = '%' + v.join(',')
                     }
                     // do not store empty arrays at all
                 } else if (v) {
-                    new_obj[k] = v
+                    newObj[k] = v
                 }
             }
         }
-        // console.log(`${this.log_prefix} Packed:`, obj, new_obj);
-        return new_obj
+        // console.log(`${this.logPrefix} Packed:`, obj, newObj);
+        return newObj
     }
 
     /**
@@ -223,7 +224,7 @@ module.exports = class LXItem extends EventEmitter {
     * Requires that all data variables are pre-defined in our map for safety
     */
     unpack (obj) {
-        let new_obj = {}
+        let newObj = {}
 
         for (var idx in obj) {
             let v = obj[idx]
@@ -240,40 +241,40 @@ module.exports = class LXItem extends EventEmitter {
                     v = v.replace('%', '').split(',')
                 }
 
-                new_obj[k] = v
+                newObj[k] = v
             }
         }
-        // console.log(`${this.log_prefix} Unpacked:`, obj, new_obj);
-        return new_obj
+        // console.log(`${this.logPrefix} Unpacked:`, obj, newObj);
+        return newObj
     }
 
     /*
     * Updates the local item with packed data
     */
     refresh (data) {
-        let new_data = this.unpack(data)
+        let newData = this.unpack(data)
 
         // only access approved data keys from our map
         // only listen for changes when we have a getter/setter pair
-        for (var idx in new_data) {
+        for (var idx in newData) {
             let pointer = this[idx] || this._data[idx] // try to use a getter if available
 
-            if (JSON.stringify(pointer) != JSON.stringify(new_data[idx])) {
+            if (JSON.stringify(pointer) != JSON.stringify(newData[idx])) {
                 if (pointer) {
                     if (typeof (pointer) === 'object') {
                         if (pointer.length) {
-                            console.log(`${this.log_prefix} changing ${idx} object to ${new_data[idx]}`)
+                            console.log(`${this.logPrefix} changing ${idx} object to ${newData[idx]}`)
                         }
                     } else if (pointer) {
-                        console.log(`${this.log_prefix} changing ${idx} from ${this[idx]} to ${new_data[idx]}`)
+                        console.log(`${this.logPrefix} changing ${idx} from ${this[idx]} to ${newData[idx]}`)
                     }
                 }
 
                 // default to use setter if available
                 if (this[idx]) {
-                    this[idx] = new_data[idx]
+                    this[idx] = newData[idx]
                 } else {
-                    this._data[idx] = new_data[idx]
+                    this._data[idx] = newData[idx]
                 }
             }
         }
@@ -283,15 +284,15 @@ module.exports = class LXItem extends EventEmitter {
     /**
     * Stores the composed item into a decentralized database
     */
-    save (package_name, fields, version) {
+    save (pkgName, fields, version) {
         return new Promise((resolve, reject) => {
             if (!LT.db) {
-                console.log(`${this.log_prefix} Requires database to publish to`)
+                console.log(`${this.logPrefix} Requires database to publish to`)
                 return reject('db_required')
             }
 
-            if (!package_name) {
-                console.log(`${this.log_prefix} Requires package to publish to`)
+            if (!pkgName) {
+                console.log(`${this.logPrefix} Requires package to publish to`)
                 return reject('name_required')
             }
 
@@ -307,7 +308,7 @@ module.exports = class LXItem extends EventEmitter {
                 item[this.id] = data
 
                 let node = LT.db.get('pkg')
-                    .get(package_name)
+                    .get(pkgName)
                     .get('data')
                     .get(version)
                     .get(this.id)
@@ -325,7 +326,7 @@ module.exports = class LXItem extends EventEmitter {
 
                             Object.keys(data).forEach((key) => {
                                 let val = data[key]
-                                console.log(`${this.log_prefix} saved`, key, val)
+                                console.log(`${this.logPrefix} saved`, key, val)
                             })
                             return resolve()
                         })
@@ -340,7 +341,7 @@ module.exports = class LXItem extends EventEmitter {
                                     this._new[item] = false
                                 })
 
-                                console.log(`${this.log_prefix} saved`, data)
+                                console.log(`${this.logPrefix} saved`, data)
                                 this.mode = 'shared' // shared mode
                                 this.emit('save')
                                 return resolve()
@@ -382,7 +383,7 @@ module.exports = class LXItem extends EventEmitter {
                 completeSave(version)
             } else {
                 LT.db.get('pkg')
-                    .get(package_name)
+                    .get(pkgName)
                     .get('version')
                     .once(completeSave)
             }
@@ -392,33 +393,29 @@ module.exports = class LXItem extends EventEmitter {
     /**
     * Clears the value of the item and nullifies in database (full delete not possible)
     */
-    drop (package_name, version) {
+    drop (pkgName, version) {
         return new Promise((resolve, reject) => {
             if (!LT.db) {
-                console.error(`${this.log_prefix} requires database to remove from`)
+                console.error(`${this.logPrefix} requires database to remove from`)
                 return reject('db_required')
             } else if (this.mode == 'dropped') {
                 // already deleted... skip...
                 return resolve()
             }
 
-            if (!package_name) {
-                return console.error(`${this.log_prefix} requires package to remove from`)
+            if (!pkgName) {
+                return console.error(`${this.logPrefix} requires package to remove from`)
             }
 
             const completeDrop = (version) => {
-                let original_data = {}
                 LT.db.get('pkg')
-                    .get(package_name)
+                    .get(pkgName)
                     .get('data')
                     .get(version)
                     .get(this.id)
-                    .once((v, k) => {
-                        original_data = v
-                    })
                     .put(null)
                     .once(() => {
-                        console.log(`${this.log_prefix} Dropped`)
+                        console.log(`${this.logPrefix} Dropped`)
                         this.mode = 'dropped'
                         this.emit('drop')
                         return resolve()
@@ -429,7 +426,7 @@ module.exports = class LXItem extends EventEmitter {
                 completeDrop(version)
             } else {
                 LT.db.get('pkg')
-                    .get(package_name)
+                    .get(pkgName)
                     .get('version')
                     .once(completeDrop)
             }

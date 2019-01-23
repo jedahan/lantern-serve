@@ -1,4 +1,5 @@
 const Geohash = require('latlon-geohash')
+const GeohashDistance = require('geohash-distance')
 const LXLocation = {}
 
 // ------------------------------------------------------------------------
@@ -34,10 +35,10 @@ LXLocation.toGeohash = function (input, precision) {
 * Calculation distance between two geolocations in kilometers
 */
 LXLocation.distanceInKm = function (a, b) {
-    let geo_a = this.toGeohash(a)
-    let geo_b = this.toGeohash(b)
-    if (geo_a && geo_b) {
-        return GeohashDistance.inKm(geo_a, geo_b)
+    let geoA = this.toGeohash(a)
+    let geoB = this.toGeohash(b)
+    if (geoA && geoB) {
+        return GeohashDistance.inKm(geoA, geoB)
     }
 }
 
@@ -45,10 +46,10 @@ LXLocation.distanceInKm = function (a, b) {
 * Calculation distance between two geolocations in miles
 */
 LXLocation.distanceInMiles = function (a, b) {
-    let geo_a = this.toGeohash(a)
-    let geo_b = this.toGeohash(b)
-    if (geo_a && geo_b) {
-        return GeohashDistance.inMiles(geo_a, geo_b)
+    let geoA = this.toGeohash(a)
+    let geoB = this.toGeohash(b)
+    if (geoA && geoB) {
+        return GeohashDistance.inMiles(geoA, geoB)
     }
 }
 

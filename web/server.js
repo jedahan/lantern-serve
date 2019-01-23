@@ -25,28 +25,28 @@ server.use(require('./middleware/headers'))
 server.use(require('./middleware/secure'))
 
 // auto-load routes
-const route_files = fs.readdirSync(path.resolve(__dirname, './routes'))
-route_files.forEach((file) => {
+const routeFiles = fs.readdirSync(path.resolve(__dirname, './routes'))
+routeFiles.forEach((file) => {
     log.debug('[route] ' + file)
     require('./routes/' + file)(server)
 })
 
 // layers for custom app functionality
-const apps_path = path.resolve(__dirname, '..', 'apps')
-server.use('/-/', express.static(apps_path))
+const appsPath = path.resolve(__dirname, '..', 'apps')
+server.use('/-/', express.static(appsPath))
 
 // modules
-const modules_path = path.resolve(__dirname, '../node_modules/@fortawesome/fontawesome-free/webfonts')
-server.use('/webfonts/', express.static(modules_path))
+const modulesPath = path.resolve(__dirname, '../node_modules/@fortawesome/fontawesome-free/webfonts')
+server.use('/webfonts/', express.static(modulesPath))
 
-const icons_path = path.resolve(__dirname, '../node_modules/@fortawesome/fontawesome-free/svgs/solid')
-server.use('/icons/', express.static(icons_path))
+const iconsPath = path.resolve(__dirname, '../node_modules/@fortawesome/fontawesome-free/svgs/solid')
+server.use('/icons/', express.static(iconsPath))
 
 // final routes are for any static pages and binary files
-const static_path = path.resolve(__dirname, './public/')
+const staticPath = path.resolve(__dirname, './public/')
 server.get('/@/', (req, res) => {
-    res.sendFile(static_path + '/captive.html')
+    res.sendFile(staticPath + '/captive.html')
 })
-server.use('/', express.static(static_path))
+server.use('/', express.static(staticPath))
 
 module.exports = server
