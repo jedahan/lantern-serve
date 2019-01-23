@@ -49,6 +49,7 @@ LX.Director = class Director extends LV.EventEmitter {
                     }
                 })
                 .then((json) => {
+
                     json.forEach(item => {
                         this.createApp(item);
                         info.apps.push(item.name);
@@ -79,20 +80,24 @@ LX.Director = class Director extends LV.EventEmitter {
         }
 
         if (!this.apps.hasOwnProperty(item.name)) {
-            let obj = this.apps[item.name] = new LX.App(item);
 
-            obj.on("load", (page) => {
-                //console.log("[Direct] App loads page: ", page.component_id );
-            });
+            this.withUser((user) => {
 
-            obj.on("open", (component_id) => {
-                //console.log("[Direct] App opens component:", component_id);
-                this.view.data.app_components.push(component_id);
-            });
+                let obj = this.apps[item.name] = new LX.App(item);
 
-            obj.on("close", (component_id) => {
-                //console.log("[Direct] App closes component:", component_id);
-                this.view.data.app_components.remove(component_id);
+                obj.on("load", (page) => {
+                    //console.log("[Direct] App loads page: ", page.component_id );
+                });
+
+                obj.on("open", (component_id) => {
+                    //console.log("[Direct] App opens component:", component_id);
+                    this.view.data.app_components.push(component_id);
+                });
+
+                obj.on("close", (component_id) => {
+                    //console.log("[Direct] App closes component:", component_id);
+                    this.view.data.app_components.remove(component_id);
+                });
             });
         }
     }
