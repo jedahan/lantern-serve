@@ -8,6 +8,14 @@
 **/
 const fs = require("fs-extra");
 const path = require("path");
+fs.ensureDirSync(path.resolve(__dirname, "../logs"));
+fs.ensureDirSync(path.resolve(__dirname, "../db"));
+fs.ensureDirSync(path.resolve(__dirname, "./public/tiles"));
+
+
+
+//----------------------------------------------------------------------
+
 const http = require("http");
 const https = require("https");
 const util = require("./util");
@@ -15,17 +23,10 @@ const app = require("./server")
 const watch = require("./watcher");
 const backup = require("./backup");
 const log = util.Logger;
-
-
-
-//----------------------------------------------------------------------
 log.setLevel(process.env.LOG_LEVEL || "debug");
 log.info("##############################################");
 log.info("Lantern App Server");
 log.info("##############################################");
-fs.ensureDirSync(path.resolve(__dirname, "../logs"));
-fs.ensureDirSync(path.resolve(__dirname, "../db"));
-fs.ensureDirSync(path.resolve(__dirname, "./public/tiles"));
 
 
 

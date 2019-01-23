@@ -1,7 +1,7 @@
 MAKEFLAGS += --warn-undefined-variables
 SHELL := /bin/bash
 TAG?=latest
-CERTS := web/certs/dev.lantern.link.pem
+CERTS := certs/dev.lantern.link.pem
 
 .PHONY: build certs clean install start run stage deploy $(PLATFORM)
 
@@ -36,4 +36,4 @@ clean:
 	rm web/public/styles/vendor.css
 
 certs/dev.lantern.link.pem:
-	cd certs && mkcert dev.lantern.link
+	cd web/certs && mkcert dev.lantern.link
