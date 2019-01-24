@@ -27,8 +27,12 @@ module.exports = class LXDatabase extends EventEmitter {
     /**
     * Ensure expected nodes are available to work with
     */
-    setup () {
+    setup (force) {
         return new Promise((resolve, reject) => {
+
+            // don't encourage full-overwrite
+            let init = (force ? null : {})
+
             this.root_node.once((v, k) => {
                 if (v) {
                     console.log(`${this.logPrefix} database ready`)
