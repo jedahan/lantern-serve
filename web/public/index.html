@@ -49,10 +49,10 @@
             LT.db.once("ready", function() {
                 LT.user.authOrRegister();
                 LT.atlas.render(info.cloud == "1");
+                LT.loadScript("/scripts/raphael.min.js");
             });
             LT.db.setup();
         });
     </script>
-    <script src="/scripts/raphael.min.js"  async defer></script>
 </body>
 </html>

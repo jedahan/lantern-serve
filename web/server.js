@@ -19,10 +19,25 @@ const server = express()
 server.disable('x-powered-by')
 server.use(helmet.noCache())
 server.use(compression())
-server.use(GraphDB.serve)
 server.use(require('./middleware/captive'))
 server.use(require('./middleware/headers'))
 server.use(require('./middleware/secure'))
+
+// final routes are for any static pages and binary files
+const staticPath = path.resolve(__dirname, './public/')
+server.get('/@/', (req, res) => {
+    res.sendFile(staticPath + '/captive.html')
+})
+server.use('/', express.static(staticPath))
+
+
+// modules
+const modulesPath = path.resolve(__dirname, '../node_modules/@fortawesome/fontawesome-free/webfonts')
+server.use('/webfonts/', express.static(modulesPath))
+
+const iconsPath = path.resolve(__dirname, '../node_modules/@fortawesome/fontawesome-free/svgs/solid')
+server.use('/icons/', express.static(iconsPath))
+
 
 // auto-load routes
 const routeFiles = fs.readdirSync(path.resolve(__dirname, './routes'))
@@ -35,18 +50,7 @@ routeFiles.forEach((file) => {
 const appsPath = path.resolve(__dirname, '..', 'apps')
 server.use('/-/', express.static(appsPath))
 
-// modules
-const modulesPath = path.resolve(__dirname, '../node_modules/@fortawesome/fontawesome-free/webfonts')
-server.use('/webfonts/', express.static(modulesPath))
 
-const iconsPath = path.resolve(__dirname, '../node_modules/@fortawesome/fontawesome-free/svgs/solid')
-server.use('/icons/', express.static(iconsPath))
-
-// final routes are for any static pages and binary files
-const staticPath = path.resolve(__dirname, './public/')
-server.get('/@/', (req, res) => {
-    res.sendFile(staticPath + '/captive.html')
-})
-server.use('/', express.static(staticPath))
+server.use(GraphDB.serve)
 
 module.exports = server
