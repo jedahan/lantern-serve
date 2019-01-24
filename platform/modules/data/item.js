@@ -356,7 +356,6 @@ module.exports = class LXItem extends EventEmitter {
                 data[fields] = this._data[fields]
             }
 
-            console.log('update', data)
             let obj = this.pack(data)
             let item = this.db.get('itm').get(this.id)
             item.once((v, k) => {
@@ -409,7 +408,6 @@ module.exports = class LXItem extends EventEmitter {
                     return resolve()
                 }
 
-                console.log('ready to drop', v, k)
                 item.put(null, (ack) => {
                     if (ack.err) {
                         return reject('drop_failed')

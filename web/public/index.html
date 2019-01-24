@@ -43,7 +43,7 @@
         LT.loadStylesheet("/styles/vendor.css");
         LT.loadStylesheet("/styles/global.css");
         LT.loadApps().then(info => {
-            console.log("[platform]", info);
+            console.log("[platform]", JSON.stringify(info));
             // let our database load before loading tiles
             // for maximum speed
             LT.db.once("ready", function() {

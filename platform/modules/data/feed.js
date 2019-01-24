@@ -86,22 +86,25 @@ module.exports = class LXFeed extends EventEmitter {
                 Object.keys(v).forEach((itemID) => {
                     if (itemID === '_') return
 
-
-
                     let targetNode = pkgNode.get(itemID)
                     let origNode = this.db.get("itm").get(itemID)
 
-                    // make sure we have node in items as expected
-                    // handle case where "itm" is cleared but data is still in package
-                    // assume we want to preserve this data
-                    origNode.once((v,k) => {
-                        if (!v) {
-                            console.warn(`${this.logPrefix} restoring orphan back into item storage`)
-                            this.db.get("itm").set(targetNode)
-                        }
-                    })
+                    targetNode.once((v,k) => {
 
-                    targetNode.once(fn)
+                        if (v) {
+                            // make sure we have node in items as expected
+                            // handle case where "itm" is cleared but data is still in package
+                            // assume we want to preserve this data
+                            origNode.once((orig_v) => {
+                                if (!orig_v) {
+                                    console.warn(`${this.logPrefix} restoring orphan back into item storage`)
+                                    this.db.get("itm").set(targetNode)
+                                }
+                            })
+                        }
+
+                        fn(v,k)
+                    })
                 })
             })
         })
