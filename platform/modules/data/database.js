@@ -8,10 +8,6 @@ module.exports = class LXDatabase extends EventEmitter {
         this.namespace = '__LX__'
         this.stor = Gun(this.uri) // database instance
         this.root_node = this.stor.get(this.namespace) // root node
-
-        this.setup().then(() => {
-            this.emit('ready')
-        })
     }
 
     // -------------------------------------------------------------------------
@@ -39,6 +35,7 @@ module.exports = class LXDatabase extends EventEmitter {
                         this.root_node.get(key).put({})
                     }
                 })
+                this.emit('ready')
                 resolve()
             })
         })
