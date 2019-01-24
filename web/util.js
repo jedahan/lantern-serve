@@ -120,7 +120,9 @@ self.compressStylesheets = () => {
 self.packJavascript = () => {
     return new Promise((resolve, reject) => {
         let platformScript = path.resolve(__dirname, './public/scripts/platform.js')
-        let b = browserify(['platform/web.js'])
+        let b = browserify(['platform/web.js'], {
+            "standalone": "LX"
+        })
         let writeStream = fs.createWriteStream(platformScript)
         b.bundle()
             .pipe(writeStream)
