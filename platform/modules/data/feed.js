@@ -41,6 +41,7 @@ module.exports = class LXFeed extends EventEmitter {
             } else {
                 event.data = v
                 this.emit('add', event)
+
             }
         })
 
@@ -84,9 +85,23 @@ module.exports = class LXFeed extends EventEmitter {
                 if (!v) return
                 Object.keys(v).forEach((itemID) => {
                     if (itemID === '_') return
-                    pkgNode
-                        .get(itemID)
-                        .once(fn)
+
+
+
+                    let targetNode = pkgNode.get(itemID)
+                    let origNode = this.db.get("itm").get(itemID)
+
+                    // make sure we have node in items as expected
+                    // handle case where "itm" is cleared but data is still in package
+                    // assume we want to preserve this data
+                    origNode.once((v,k) => {
+                        if (!v) {
+                            console.warn(`${this.logPrefix} restoring orphan back into item storage`)
+                            this.db.get("itm").set(targetNode)
+                        }
+                    })
+
+                    targetNode.once(fn)
                 })
             })
         })
