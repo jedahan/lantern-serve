@@ -34,11 +34,12 @@ After starting your container, the server will be available here: https://dev.la
 
 
 ### Development and Testing
-After starting your server as a developer: 
-```bash
-npm install -g standardx
-npm install -g mocha
-mocha
+After starting your server as a developer:
+
+```shell
+npm install
+npm lint
+npm test
 ```
 
 ### Requirements

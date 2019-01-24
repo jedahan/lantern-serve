@@ -33,7 +33,9 @@
         "wheelnav": "*"
     },
     "devDependencies": {
-        "should": "*"
+        "mocha": "^5.2.0",
+        "should": "*",
+        "standardx": "^3.0.1"
     },
     "browser": {
         "vue": "vue/dist/vue.common.js",
