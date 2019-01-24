@@ -75,13 +75,8 @@ module.exports = (serv) => {
     * Retrieve the working node for this message
     */
     const getNode = (data, db) => {
-        // in some cases package may be unknown to this device
-        // receive and store data, anyway... just to be safe...
         return db.get('__LX__')
-            .get('pkg')
-            .get(data.package_name)
-            .get('data')
-            .get(data.package_version)
+            .get('itm')
             .get(data.item_id)
     }
 

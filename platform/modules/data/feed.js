@@ -7,6 +7,7 @@ module.exports = class LXFeed extends EventEmitter {
         this.db = user.db
         this.packages = {} // only watch these
         this.topics = {} // only watch these
+        this.watched_items = {}
     }
 
     // -------------------------------------------------------------------------
@@ -14,24 +15,50 @@ module.exports = class LXFeed extends EventEmitter {
         return `[f:${this.user.username}]`.padEnd(20, ' ')
     }
 
-    onDataChange (val, id, pkgID) {
-        var data
-
-        if (val !== null && typeof (val) === 'object') {
-            data = {}
-            Object.keys(val).forEach(k => {
-                if (k !== '_') {
-                    data[k] = val[k]
-                }
-            })
+    /**
+    * Watch a single item for any updates
+    */
+    watchItem (itemID, pkgID) {
+        // never watch the same item twice
+        if (this.watched_items.hasOwnProperty(itemID)) {
+            return
         }
+        // console.log(`${this.logPrefix} Watch changes for ${itemID} within package ${pkgID}`)
+        this.watched_items[itemID] = false
 
+        let itemNode = this.db.get('itm').get(itemID)
+
+        itemNode.on((v, k) => {
+            let event = {
+                id: itemID,
+                package: pkgID
+            }
+
+            this.watched_items[itemID] = true
+
+            if (!v) {
+                this.emit('drop', event)
+            } else {
+                event.data = v
+                this.emit('add', event)
+            }
+        })
+
+        // only allow change event to trigger after an 'add' event
+        let node = itemNode.map((v, k) => {
+            if (this.watched_items[itemID] === true) {
+                this.onDataChange(itemID, pkgID, v, k)
+            }
+        })
+    }
+
+    onDataChange (itemID, pkgID, v, k) {
         let event = {
-            id: id,
+            id: itemID,
             package: pkgID,
-            data: data
+            key: k,
+            data: v
         }
-
         if (this.packages[pkgID]) {
             this.emit('change', event)
         } else {
@@ -42,29 +69,26 @@ module.exports = class LXFeed extends EventEmitter {
     /**
     * Allows for manual refresh of data from the feed
     */
-    refreshData () {
-        Object.keys(this.packages).forEach(id => {
-            if (this.packages[id] === false) {
+    forEachItem (fn) {
+        Object.keys(this.packages).forEach(pkgID => {
+            if (this.packages[pkgID] === false) {
                 return
             }
 
-            // console.log(`${this.logPrefix} refreshing data for:`, id)
-            let parts = id.split('@')
+            console.log(`${this.logPrefix} finding all items for:`, pkgID)
+            let parts = pkgID.split('@')
             let name = parts[0]
             let version = parts[1]
-            let pkgNode = this.db.get('pkg').get(name)
-            pkgNode.get('data')
-                .get(version).once((v, k) => {
-                    if (!v) return
-
-                    Object.keys(v).forEach((item) => {
-                        if (item === '_') return
-                        pkgNode.get('data').get(version).get(item)
-                            .once((value, key) => {
-                                this.onDataChange(value, key, id)
-                            })
-                    })
+            let pkgNode = this.db.get('pkg').get(name).get('data').get(version)
+            pkgNode.once((v, k) => {
+                if (!v) return
+                Object.keys(v).forEach((itemID) => {
+                    if (itemID === '_') return
+                    pkgNode
+                        .get(itemID)
+                        .once(fn)
                 })
+            })
         })
     }
 
@@ -92,23 +116,25 @@ module.exports = class LXFeed extends EventEmitter {
         // optimistically assume package exists
         this.packages[id] = true
 
-        this.db.get('pkg').get(name).get('data')
-            .once((v, k) => {
-                if (v.hasOwnProperty(version)) {
-                    // verified that version exists
-                    console.log(`${this.logPrefix} watching changes: ${id}`)
-                } else {
-                    // disable our package subscription if we find out it is missing
-                    this.packages[id] = false
-                    console.warn(`${this.logPrefix} missing package version to watch: ${id}`)
-                }
-            })
-            .get(version)
-            .map()
-            .on((v, k) => {
-                // start watching for changes
-                this.onDataChange(v, k, id)
-            })
+        let node = this.db.get('pkg').get(name).get('data')
+
+        node.once((v, k) => {
+            if (v.hasOwnProperty(version)) {
+                // verified that version exists
+                console.log(`${this.logPrefix} watching changes: ${id}`)
+                node
+                    .get(version)
+                    .map()
+                    .on((v, k) => {
+                    // start watching for changes
+                        this.watchItem(k, id)
+                    })
+            } else {
+                // disable our package subscription if we find out it is missing
+                this.packages[id] = false
+                console.warn(`${this.logPrefix} missing package version to watch: ${id}`)
+            }
+        })
     }
 
     removeManyPackages (packages) {

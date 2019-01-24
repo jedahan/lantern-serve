@@ -7,9 +7,9 @@ module.exports = (req, res, next) => {
     */
     // @todo  allow match for multi-message separated by ;
     const msgRegex = {
-        add: /([0-9]+)\|([a-z]+)@([0-9\.]+)\+([a-zA-Z0-9]+)/,
-        update: /([0-9]+)\|([a-z]+)@([0-9\.]+)\^([a-zA-Z0-9]+)\.([a-z]*)\=(\w+)/,
-        drop: /([0-9]+)\|([a-z]+)@([0-9\.]+)-([a-zA-Z0-9]+)/
+        add: /([0-9]+)\+([a-zA-Z0-9]+)/,
+        update: /([0-9]+)\^([a-zA-Z0-9]+)\.([a-z]*)\=(\w+)/,
+        drop: /([0-9]+)-([a-zA-Z0-9]+)/
     }
 
     /**
@@ -22,11 +22,9 @@ module.exports = (req, res, next) => {
         let keys = {
             0: 'text',
             1: 'seq',
-            2: 'package_name',
-            3: 'package_version',
-            4: 'item_id',
-            5: 'field_key',
-            6: 'field_value'
+            2: 'item_id',
+            3: 'field_key',
+            4: 'field_value'
         }
         for (var idx in matches) {
             if (keys[idx]) {

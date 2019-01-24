@@ -203,16 +203,20 @@ module.exports = class LXAtlas extends EventEmitter {
     * Add marker to map
     */
     addToMap (marker) {
-        if (this.markers[marker.id]) {
+        if (marker.id && this.markers.hasOwnProperty(marker.id)) {
             console.log(`${this.logPrefix} ${marker.id} already added to map. skipping...`)
             return
         }
 
         marker.layer.addTo(this.map)
-        this.markers[marker.id] = marker
-        marker.layer.on('click', (e) => {
-            this.emit('marker-click', marker)
-        })
+
+        if (marker.id) {
+            this.markers[marker.id] = marker
+            marker.layer.on('click', (e) => {
+                this.emit('marker-click', marker)
+            })
+        }
+
         this.emit('marker-add', marker)
     }
 
@@ -220,8 +224,11 @@ module.exports = class LXAtlas extends EventEmitter {
     * Remove marker from map
     */
     removeFromMap (marker) {
+        console.log(`${this.logPrefix} removing marker from map...`, marker)
         marker.layer.remove()
-        this.markers[marker.id] = null
+        if (marker.id && this.markers.hasOwnProperty(marker.id)) {
+            this.markers[marker.id] = null
+        }
         this.emit('marker-remove', marker)
     }
 

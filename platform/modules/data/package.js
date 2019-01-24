@@ -9,16 +9,22 @@ module.exports = class LXPackage extends EventEmitter {
             throw new Error('missing_name')
         }
 
-        this.db = db
+        let version = '0.0.1' // default version
+
+        if (name.indexOf('@') !== -1) {
+            let parts = name.split('@')
+            name = parts[0]
+            version = parts[1]
+        }
 
         this._data = {
             'name': name,
             'public': true, // only supporting public packages, for now
             'data': null,
-            'version': '0.0.1' // default version number
+            'version': version
         }
-
-        this.node = this.db.get('pkg').get(name)
+        this.db = db
+        this.node = this.db.get('pkg').get(this._data.name)
     }
 
     // -------------------------------------------------------------------------
@@ -89,6 +95,7 @@ module.exports = class LXPackage extends EventEmitter {
         })
     }
 
+    // -------------------------------------------------------------------------
     /**
     * Publish a new data package to the network
     */
@@ -141,6 +148,54 @@ module.exports = class LXPackage extends EventEmitter {
                     this.emit('unpublish')
                     return resolve()
                 })
+        })
+    }
+
+    // -------------------------------------------------------------------------
+    /**
+    * Adds an item to the current version of this package
+    */
+    add (item) {
+        return new Promise((resolve, reject) => {
+            // accept string id or item object
+            let id = item.id || item
+
+            console.log(`${this.logPrefix} adding item: ${id}`, item)
+
+            // attach item to the package graph
+            let item_node = this.db.get('itm').get(id)
+            this.node.get('data').get(this.version).set(item_node)
+        })
+    }
+
+    remove (item) {
+        return new Promise((resolve, reject) => {
+            // accept string id or item object
+            let id = item.id || item
+
+            console.log(`${this.logPrefix} removing item: ${id}`, item)
+
+            // attach item to the package graph
+            let item_node = this.node.get('data').get(this.version).get(id)
+            this.node.get('data').get(this.version).unset(item_node)
+        })
+    }
+
+    // -------------------------------------------------------------------------
+    /**
+    * Gets a list of all items in the current version of this package
+    */
+    getItems () {
+        return new Promise((resolve, reject) => {
+            this.node.get('data').get(this.version).once((v, k) => {
+                let item_list = []
+                Object.keys(v).forEach((item) => {
+                    if (item != '_') {
+                        item_list.push(item)
+                    }
+                })
+                resolve(item_list)
+            })
         })
     }
 }

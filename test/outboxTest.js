@@ -34,7 +34,7 @@ describe('outbox', () => {
     })
 
     it('should queue a well-formed add message', (done) => {
-        putMessage({ 'message': `1|${conf.PKG}+test` })
+        putMessage({ 'message': `1+test` })
             .then(response => response.json())
             .then((json) => {
                 // could be true or false depending if we added this already
@@ -44,7 +44,7 @@ describe('outbox', () => {
     })
 
     it('should queue a well-formed update message', (done) => {
-        putMessage({ 'message': `2|${conf.PKG}^test.me=yes` })
+        putMessage({ 'message': `2^test.me=yes` })
             .then(response => response.json())
             .then((json) => {
                 json.ok.should.equal(true)
@@ -53,7 +53,7 @@ describe('outbox', () => {
     })
 
     it('should queue a well-formed drop message', (done) => {
-        putMessage({ 'message': `3|${conf.PKG}-test` })
+        putMessage({ 'message': `3-test` })
             .then(response => response.json())
             .then((json) => {
                 json.ok.should.equal(true)

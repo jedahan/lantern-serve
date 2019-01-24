@@ -1,10 +1,9 @@
 const EventEmitter = require('event-emitter-es6')
-const shortid = require('shortid')
 
 module.exports = class LXItem extends EventEmitter {
     constructor (id, data, defaults) {
         super()
-        this.id = id || shortid.generate()
+        this.id = id
         this._mode = 'draft'
 
         // create data space for data we allow to be exported to shared database
@@ -40,6 +39,12 @@ module.exports = class LXItem extends EventEmitter {
                 this._data[key] = val
             })
         }
+
+        if (!window.LT.db) {
+            throw new Error('Requires database to be defined')
+        }
+
+        this.db = window.LT.db
 
         return this
     }
@@ -252,7 +257,6 @@ module.exports = class LXItem extends EventEmitter {
     */
     refresh (data) {
         let newData = this.unpack(data)
-
         // only access approved data keys from our map
         // only listen for changes when we have a getter/setter pair
         for (var idx in newData) {
@@ -280,155 +284,142 @@ module.exports = class LXItem extends EventEmitter {
     }
 
     // -------------------------------------------------------------------------
+
     /**
     * Stores the composed item into a decentralized database
     */
-    save (pkgName, fields, version) {
+    save (fields) {
         return new Promise((resolve, reject) => {
-            if (!window.LT.db) {
-                console.log(`${this.logPrefix} Requires database to publish to`)
-                return reject('db_required')
+            // do not operate on locked items
+            if (this.mode === 'locked') {
+                return reject('save_failed_locked')
             }
 
-            if (!pkgName) {
-                console.log(`${this.logPrefix} Requires package to publish to`)
-                return reject('name_required')
+            // if we have fields to work with, update existing object
+            if (fields) {
+                return this.update(fields).then(resolve).catch(reject)
             }
 
-            let data = {}
+            // otherwise, create a new item in the database
+            if (!this.owner) {
+                this.owner = window.LT.user.username
+            }
+            let obj = this.pack(this._data)
+            this.mode = 'locked'
 
             // save to our shared database...
-            const completeSave = (version) => {
-                if (!version) {
-                    return reject('missing_version')
-                }
+            this.db.get('itm').set(obj, (ack) => {
+                // clear new state once saved
+                Object.keys(this._new).forEach((item) => {
+                    this._new[item] = false
+                })
+                // acknowledge this item is now shared with network
+                this.mode = 'shared'
+            }).once((v, k) => {
+                // database assigns unique identifier
+                this.id = k
+                // now let our application know we are saved
+                console.log(`${this.logPrefix} saved`, obj)
+                this.emit('save')
+                resolve(v)
+            })
+        })
+    }
 
-                let item = {}
-                item[this.id] = data
+    /**
+    * Updates only specific fields for an item
+    */
+    update (fields) {
+        return new Promise((resolve, reject) => {
+            // do not operate on locked items
+            if (this.mode === 'locked') {
+                return reject('update_failed_locked')
+            }
 
-                let node = window.LT.db.get('pkg')
-                    .get(pkgName)
-                    .get('data')
-                    .get(version)
-                    .get(this.id)
+            // require an array of fields
+            if (fields.constructor !== Array) {
+                console.log(`${this.logPrefix} Update requires fields in array format: ${fields}`)
+                return reject('update_failed_invalid_fields')
+            }
 
-                node.once((v, k) => {
-                    if (v) {
-                        // update existing node
-                        node.put(data, (ack) => {
-                            // clear new state once saved
-                            Object.keys(this._new).forEach((item) => {
-                                this._new[item] = false
-                            })
-
-                            this.emit('save')
-
-                            Object.keys(data).forEach((key) => {
-                                let val = data[key]
-                                console.log(`${this.logPrefix} saved`, key, val)
-                            })
-                            return resolve()
-                        })
-                    } else {
-                        node.put(null).put(data, (ack) => {
-                            if (ack.err) {
-                                reject(ack.err)
-                            } else {
-                                // now register the node for our package
-                                // clear new state once saved
-                                Object.keys(this._new).forEach((item) => {
-                                    this._new[item] = false
-                                })
-
-                                console.log(`${this.logPrefix} saved`, data)
-                                this.mode = 'shared' // shared mode
-                                this.emit('save')
-                                return resolve()
-                            }
-                        })
+            this.mode = 'locked'
+            let data = {}
+            if (fields.constructor === Array) {
+                fields.forEach((field) => {
+                    // make sure we have an update for this field before saving
+                    // prevents extraneous data sent over network
+                    if (this._new[field]) {
+                        data[field] = this._data[field]
                     }
                 })
+            } else if (typeof (fields) === 'string') {
+                data[fields] = this._data[fields]
             }
 
-            this.mode = 'locked' // lock mode
-
-            // record owner when item is first exported...
-            if (!this._data['owner']) {
-                this._data['owner'] = window.LT.user.username
-            }
-
-            // are we trying to change just a partial?
-
-            if (fields) {
-                let obj = {}
-                if (fields.constructor === Array) {
-                    fields.forEach((field) => {
-                        // make sure we have an update for this field before saving
-                        // prevents extraneous data sent over network
-                        if (this._new[field]) {
-                            obj[field] = this._data[field]
-                        }
-                    })
-                } else if (typeof (fields) === 'string') {
-                    obj[fields] = this._data[fields]
+            console.log('update', data)
+            let obj = this.pack(data)
+            let item = this.db.get('itm').get(this.id)
+            item.once((v, k) => {
+                if (!v) {
+                    // trying to update a non-existing item
+                    return reject('update_failed_missing')
                 }
-                data = this.pack(obj)
-            } else {
-                data = this.pack(this._data)
-            }
 
-            // save to appropriate package version...
-            if (version) {
-                completeSave(version)
-            } else {
-                window.LT.db.get('pkg')
-                    .get(pkgName)
-                    .get('version')
-                    .once(completeSave)
-            }
+                item.put(obj, (ack) => {
+                    if (ack.err) {
+                        return reject('update_failed_ack')
+                    }
+
+                    Object.keys(obj).forEach((key) => {
+                        let val = obj[key]
+                        console.log(`${this.logPrefix} saved`, key, val)
+                    })
+
+                    this.emit('save', fields)
+                    this.emit('update', fields)
+                    this.mode = 'shared'
+                    return resolve()
+                })
+            })
         })
     }
 
     /**
     * Clears the value of the item and nullifies in database (full delete not possible)
     */
-    drop (pkgName, version) {
+    drop () {
         return new Promise((resolve, reject) => {
-            if (!window.LT.db) {
-                console.error(`${this.logPrefix} requires database to remove from`)
-                return reject('db_required')
-            } else if (this.mode === 'dropped') {
+            // do not operate on locked items
+            if (this.mode === 'locked') {
+                return reject('drop_failed_locked')
+            }
+
+            if (this.mode === 'dropped') {
                 // already deleted... skip...
                 return resolve()
             }
 
-            if (!pkgName) {
-                return console.error(`${this.logPrefix} requires package to remove from`)
-            }
+            console.log(this)
+            let item = this.db.get('itm').get(this.id)
 
-            const completeDrop = (version) => {
-                window.LT.db.get('pkg')
-                    .get(pkgName)
-                    .get('data')
-                    .get(version)
-                    .get(this.id)
-                    .put(null)
-                    .once(() => {
-                        console.log(`${this.logPrefix} Dropped`)
-                        this.mode = 'dropped'
-                        this.emit('drop')
-                        return resolve()
-                    })
-            }
+            item.once((v, k) => {
+                if (!v) {
+                    // already dropped
+                    console.log(`${this.logPrefix} already dropped`)
+                    return resolve()
+                }
 
-            if (version) {
-                completeDrop(version)
-            } else {
-                window.LT.db.get('pkg')
-                    .get(pkgName)
-                    .get('version')
-                    .once(completeDrop)
-            }
+                console.log('ready to drop', v, k)
+                item.put(null, (ack) => {
+                    if (ack.err) {
+                        return reject('drop_failed')
+                    }
+                    console.log(`${this.logPrefix} Dropped`)
+                    this.mode = 'dropped'
+                    this.emit('drop')
+                    return resolve()
+                })
+            })
         })
     }
 }

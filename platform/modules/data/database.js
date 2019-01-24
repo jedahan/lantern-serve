@@ -1,6 +1,14 @@
 const EventEmitter = require('event-emitter-es6')
 const Gun = require('gun')
 
+const rel_ = Gun.val.rel._ // '#'
+const node_ = Gun.node._ // '_'
+
+Gun.chain.unset = function (node) {
+    this.put({ [node[node_].put[node_][rel_]]: null })
+    return this
+}
+
 module.exports = class LXDatabase extends EventEmitter {
     constructor (uri) {
         super()
@@ -28,11 +36,18 @@ module.exports = class LXDatabase extends EventEmitter {
                     console.log(`${this.logPrefix} database ready but empty`)
                 }
 
-                let expected = ['org', 'pkg']
+                // @todo add messages to data structure
+                let expected = ['org', 'pkg', 'itm']
                 expected.forEach((key) => {
-                    if (!v || !v.hasOwnProperty(key)) {
+                    if (!v || !v.hasOwnProperty(key) || v[key] === null) {
                         console.log(`${this.logPrefix} adding top-level node: ${key}`)
-                        this.root_node.get(key).put({})
+                        this.root_node.get(key).put(null).put({}, (ack) => {
+                            if (ack.err) {
+                                reject('failed_create_node_' + key)
+                            } else {
+                                console.log(`${this.logPrefix} created top-level node: ${key}`)
+                            }
+                        })
                     }
                 })
                 this.emit('ready')

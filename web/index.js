@@ -69,7 +69,7 @@ const startServer = () => {
                 // get sense of what sort of device we have here
                 util.checkInternet().then(status => {
                     app.locals.online = status ? '1' : '0'
-                    app.locals.cloud = process.env.CLOUD == "true" ? '1' : '0'
+                    app.locals.cloud = process.env.CLOUD == 'true' ? '1' : '0'
                     resolve(secureServer || stdServer)
                 })
             })

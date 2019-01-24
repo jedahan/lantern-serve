@@ -34,7 +34,7 @@ describe('inbox', () => {
     })
 
     it('should discard an update message for missing item', (done) => {
-        putMessage({ 'message': `1|${conf.PKG}^missingitem.greeting=world` })
+        putMessage({ 'message': `1^missingitem.greeting=world` })
             .then(response => response.json())
             .then((json) => {
                 json.err.should.equal('inbox_update_failed_missing_item')
@@ -44,12 +44,12 @@ describe('inbox', () => {
     })
 
     it('should add and update an item', (done) => {
-        putMessage({ 'message': `1|${conf.PKG}+test` })
+        putMessage({ 'message': `1+test` })
             .then(response => response.json())
             .then((json) => {
                 // could be true or false depending if we added this already
                 should.exist(json.ok)
-                putMessage({ 'message': `2|${conf.PKG}^test.me=yes` })
+                putMessage({ 'message': `2^test.me=yes` })
                     .then(response => response.json())
                     .then((json) => {
                         json.ok.should.equal(true)
@@ -59,7 +59,7 @@ describe('inbox', () => {
     })
 
     it('should reject a key for unknown item', (done) => {
-        putMessage({ 'message': `3|${conf.PKG}^should.not=exist` })
+        putMessage({ 'message': `3^should.not=exist` })
             .then(response => response.json())
             .then((json) => {
                 json.ok.should.equal(false)
@@ -69,7 +69,7 @@ describe('inbox', () => {
 
     after((done) => {
         // clean up the existing node we created
-        putMessage({ 'message': `4|${conf.PKG}-test` })
+        putMessage({ 'message': `4-test` })
             .then(response => response.json())
             .then((json) => {
                 json.ok.should.equal(true)
