@@ -12,7 +12,7 @@ build: $(CERTS)
 
 install:
 	npm install
-	if [ ! -d ./apps ] ; then git clone https://github.com/lantern-works/lantern-apps apps; fi
+	git submodule update --init --recursive
 	
 start: $(CERTS)
 	HOOK_ADD="./hooks/change" \
