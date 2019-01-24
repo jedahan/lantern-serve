@@ -1,7 +1,9 @@
 MAKEFLAGS += --warn-undefined-variables
 SHELL := /bin/bash
 TAG?=latest
-CERTS := certs/dev.lantern.link.pem
+CERTDIR := ./web/certs/
+DEVHOST := dev.lantern.link
+CERTS := $(CERTDIR)$(DEVHOST).pem
 
 .PHONY: build certs clean install start run stage deploy $(PLATFORM)
 
@@ -20,8 +22,7 @@ start: $(CERTS)
 	HOOK_BACKUP="./hooks/backup" \
 	npm start	
 
-
-pack: 
+pack:
 	browserify platform/web.js --standalone LX --outfile web/public/scripts/platform.js
 	uglifyjs web/public/scripts/platform.js -o web/public/scripts/platform.min.js
 	
@@ -42,5 +43,5 @@ clean:
 	rm web/public/scripts/platform.min.js
 	rm web/public/styles/vendor.css
 
-certs/dev.lantern.link.pem:
-	if [ ! -f ./web/certs/dev.lantern.link.pem ] ; then cd web/certs && mkcert dev.lantern.link; fi
+$(CERTS):
+	cd $(CERTDIR) && mkcert $(DEVHOST)
