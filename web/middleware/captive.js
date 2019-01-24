@@ -29,27 +29,27 @@ module.exports = (req, res, next) => {
 
     // ------------------------------------------------------------------
     // only work with captive portal requests on the local device
-    if (process.env.CLOUD == 'true') {
+    if (process.env.CLOUD === 'true') {
         return next()
     }
 
     // ignore internal requests from device itself
     if (!util.isRemoteClient(req)) {
         return next()
-    } else if (req.url == '/logout') {
+    } else if (req.url === '/logout') {
         removeClient()
         res.status(200).send('Successfully Logged Out of Captive Portal')
-    } else if (req.url == '/success.txt') {
+    } else if (req.url === '/success.txt') {
         // mozilla checks for working network
         log.debug('[captive] mozilla captive portal check')
         res.status(200).send('success\n')
-    } else if (req.url == '/generate_204') {
+    } else if (req.url === '/generate_204') {
         log.debug('[captive] google captive portal check')
         sendOfflineMessage()
     }
     // check for captive portal logic
     else if (isCaptiveNetworkSupport()) {
-        if (req.url == '/hotspot-detect.html') {
+        if (req.url === '/hotspot-detect.html') {
             if (isClientConnected()) {
                 log.debug('[captive] apple captive portal success')
                 res.send('<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>')
@@ -61,7 +61,7 @@ module.exports = (req, res, next) => {
             log.error('[captive] unexpected request: ' + req.url)
         }
     } else {
-        if (req.url == '/hotspot-detect.html') {
+        if (req.url === '/hotspot-detect.html') {
             log.debug('[captive] apple serve sign-in page for captive portal')
             // automatically sign-in user on page load
             // next request (typically from within standard device browser) should pass through fine

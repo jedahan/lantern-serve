@@ -42,7 +42,7 @@ module.exports = class LXMarkerItem extends LXItem {
             let startingVal = this._data.geohash
 
             try {
-                if (val == startingVal) {
+                if (val === startingVal) {
                     return
                 }
 

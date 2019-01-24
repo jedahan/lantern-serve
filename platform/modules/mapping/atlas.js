@@ -59,7 +59,7 @@ module.exports = class LXAtlas extends EventEmitter {
             this.emit('map-click-start', e)
             this._map_clicked += 1
             setTimeout(() => {
-                if (this._map_clicked == 1) {
+                if (this._map_clicked === 1) {
                     this._map_clicked = 0
                     this.emit('map-click', e)
                 }
@@ -173,7 +173,7 @@ module.exports = class LXAtlas extends EventEmitter {
             // only save to database if user has paused on this map for a few seconds
             setTimeout(() => {
                 let newCtr = this.getCenterAsString()
-                if (origCtr == newCtr) {
+                if (origCtr === newCtr) {
                     localStorage.setItem('lx-ctr', newCtr)
                 }
             }, timeout || 7000)

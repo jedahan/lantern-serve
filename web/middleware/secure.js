@@ -10,7 +10,7 @@ module.exports = (req, res, next) => {
     // handle port numbers if you need non defaults
     let uri = 'https://' + req.hostname
     let port = util.getHttpsPort()
-    if (port != 443) {
+    if (port !== 443) {
         uri += ':' + port
     }
     uri += req.url

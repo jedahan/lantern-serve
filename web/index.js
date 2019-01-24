@@ -43,7 +43,7 @@ const startServer = () => {
             }
             secureServer = https.createServer(credentials, app)
         } catch (e) {
-            if (e.code == 'ENOENT') {
+            if (e.code === 'ENOENT') {
                 log.error(`SSL certificates not found in "certs" directory...`)
             } else {
                 log.error(e)

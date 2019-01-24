@@ -45,7 +45,7 @@ module.exports = class LXDirector extends EventEmitter {
                 }
             })
                 .then((result) => {
-                    if (result.status == 200) {
+                    if (result.status === 200) {
                         info.online = result.headers.get('X-Lantern-Online')
                         info.cloud = result.headers.get('X-Lantern-Cloud')
                         return result.json()

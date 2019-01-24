@@ -6,7 +6,7 @@ module.exports = class LXView extends EventEmitter {
     constructor () {
         super()
         // setup vue object
-        Vue.filter('pluralize', (word, amount) => amount != 1 ? `${word}s` : word)
+        Vue.filter('pluralize', (word, amount) => amount !== 1 ? `${word}s` : word)
         this.vue = new Vue({
             el: '#app-container',
             data: {

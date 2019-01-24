@@ -12,7 +12,7 @@ Array.prototype.remove = function () {
 Array.prototype.getIndexForObjectWithKey = function (key, value) {
     for (var idx in this) {
         var item = this[idx]
-        if (item.hasOwnProperty(key) && item[key] == value) {
+        if (item.hasOwnProperty(key) && item[key] === value) {
             return idx
         }
     }

@@ -121,7 +121,7 @@ module.exports = class LXUser extends EventEmitter {
                     return resolve(packages)
                 }
                 Object.keys(v).forEach((pkg) => {
-                    if (pkg == '_' || pkg == '#' || v[pkg] == null) return
+                    if (pkg === '_' || pkg === '#' || v[pkg] === null) return
                     if (typeof (v[pkg]) !== 'string') {
                         console.warn(`${this.logPrefix} Nullifying non-string value for ${pkg} package:`, v[pkg])
                         node.get(pkg).put(null)
@@ -220,7 +220,7 @@ module.exports = class LXUser extends EventEmitter {
         this.node.get('topics').once((v, k) => {
             if (!v) return
             Object.keys(v).forEach((pkg) => {
-                if (pkg == '_' || v[pkg] == null) return
+                if (pkg === '_' || v[pkg] === null) return
                 console.log(`${this.logPrefix} subscribed topics ${pkg}:`, v[pkg])
             })
         })

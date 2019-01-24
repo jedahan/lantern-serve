@@ -43,7 +43,7 @@
     "scripts": {
         "lint": "standardx",
         "fix": "standardx --fix",
-        "test": "standardx --fix && mocha ./tests",
+        "test": "mocha ./test",
         "start": "node ./web/index.js"
     },
     "standard": {

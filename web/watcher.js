@@ -43,12 +43,12 @@ module.exports = (app) => {
             let msgKey = util.getSimpleMessage(msg)
             if (app.locals.inbox.hasOwnProperty(msgKey)) {
                 // prevent echo of incoming message
-                log.debug(`watcher -- ${(msg[1] == '|' ? ' ' : '')}${msg}`)
+                log.debug(`watcher -- ${(msg[1] === '|' ? ' ' : '')}${msg}`)
             } else if (typeof (changeHooks[key]) === 'string') {
-                log.debug(`watcher -- ${(msg[1] == '|' ? ' ' : '')}${msg} --> ${key} hook`)
+                log.debug(`watcher -- ${(msg[1] === '|' ? ' ' : '')}${msg} --> ${key} hook`)
                 let result = spawnSync(changeHooks[key], [msg])
             } else {
-                log.debug(`watcher -- ${(msg[1] == '|' ? ' ' : '')}${msg}`)
+                log.debug(`watcher -- ${(msg[1] === '|' ? ' ' : '')}${msg}`)
             }
         }
     }

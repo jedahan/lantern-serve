@@ -82,9 +82,9 @@ module.exports = class LXApp extends EventEmitter {
         let logic = {}
 
         this.children.forEach((child) => {
-            if (child.extension == '.css' && child.body) {
+            if (child.extension === '.css' && child.body) {
                 this.addCSS(child.body)
-            } else if (child.extension == '.js' && child.body) {
+            } else if (child.extension === '.js' && child.body) {
                 let js = eval(child.body)
                 accepted.forEach((key) => {
                     if (js.hasOwnProperty(key)) {
@@ -95,7 +95,7 @@ module.exports = class LXApp extends EventEmitter {
         })
 
         this.children.forEach((child) => {
-            if (child.extension == '.html' && child.body) {
+            if (child.extension === '.html' && child.body) {
                 let html = child.body.replace(image_re, '$1' + `/-/${this.name}/` + '$2$3')
                 let pageID = child.name.split('.')[0]
                 this.createPageComponent(pageID, html, logic)

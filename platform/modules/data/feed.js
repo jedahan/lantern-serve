@@ -20,7 +20,7 @@ module.exports = class LXFeed extends EventEmitter {
         if (val !== null && typeof (val) === 'object') {
             data = {}
             Object.keys(val).forEach(k => {
-                if (k != '_') {
+                if (k !== '_') {
                     data[k] = val[k]
                 }
             })
@@ -44,7 +44,7 @@ module.exports = class LXFeed extends EventEmitter {
     */
     refreshData () {
         Object.keys(this.packages).forEach(id => {
-            if (this.packages[id] == false) {
+            if (this.packages[id] === false) {
                 return
             }
 
@@ -58,7 +58,7 @@ module.exports = class LXFeed extends EventEmitter {
                     if (!v) return
 
                     Object.keys(v).forEach((item) => {
-                        if (item == '_') return
+                        if (item === '_') return
                         pkgNode.get('data').get(version).get(item)
                             .once((value, key) => {
                                 this.onDataChange(value, key, id)

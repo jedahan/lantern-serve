@@ -35,7 +35,7 @@ module.exports = (serv) => {
         let readBodyFor = ['.js', '.css', '.html']
 
         result.forEach((app) => {
-            if (app.name[0] != '.') {
+            if (app.name[0] !== '.') {
                 app.children.forEach((item) => {
                     if (readBodyFor.indexOf(item.extension) > -1) {
                         item.body = String(fs.readFileSync(appsDir + '/' + app.name + '/' + item.name))

@@ -118,7 +118,7 @@ module.exports = class LXDatabase extends EventEmitter {
         level = level || ''
 
         Object.keys(json).forEach(k => {
-            if (k == '#') return
+            if (k === '#') return
 
             let v = json[k]
 
@@ -160,12 +160,12 @@ module.exports = class LXDatabase extends EventEmitter {
                 pointer[k] = {}
                 let promises = []
                 if (v) {
-                    let items = Object.keys(v).filter(key => key != '_')
+                    let items = Object.keys(v).filter(key => key !== '_')
                     items.forEach((item) => {
                         var promise
                         let val = v[item]
 
-                        if (item == 'organization' || item == 'packages') {
+                        if (item === 'organization' || item === 'packages') {
                             // special rule for packages to avoid circular display of organization data
                             promise = new Promise((resolve, reject) => {
                                 node.get(item).once((val, key) => {
@@ -177,7 +177,7 @@ module.exports = class LXDatabase extends EventEmitter {
                                     }
 
                                     Object.keys(val).forEach((name) => {
-                                        if (name != '_') names[name] = true
+                                        if (name !== '_') names[name] = true
                                     })
 
                                     pointer[k][item] = names

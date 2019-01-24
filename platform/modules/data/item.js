@@ -70,7 +70,7 @@ module.exports = class LXItem extends EventEmitter {
     */
     set owner (val) {
         if (!val) return
-        if (val != this._data.owner) {
+        if (val !== this._data.owner) {
             this._data.owner = val
             this._new.owner = true
         }
@@ -88,7 +88,7 @@ module.exports = class LXItem extends EventEmitter {
     * Sets the entire list of editors for this item
     */
     set editors (val) {
-        if (!val || val.length == 0) return
+        if (!val || val.length === 0) return
 
         if (typeof (val) === 'object') {
             val.forEach(this.editor.bind(this))
@@ -134,7 +134,7 @@ module.exports = class LXItem extends EventEmitter {
     * Sets the entire list of tags with specified array
     */
     set tags (val) {
-        if (!val || val.length == 0) return
+        if (!val || val.length === 0) return
 
         if (typeof (val) === 'object') {
             val.forEach(this.tag.bind(this))
@@ -230,12 +230,12 @@ module.exports = class LXItem extends EventEmitter {
 
             if (this._key_table_reverse.hasOwnProperty(idx)) {
                 let k = this._key_table_reverse[idx]
-                if (v[0] == 'Å') {
+                if (v[0] === 'Å') {
                     // @todo this is deprecated. remove later...
                     v = v.replace('Å', '%')
                 }
 
-                if (v[0] == '%') {
+                if (v[0] === '%') {
                     // this is an array. expand it...
                     v = v.replace('%', '').split(',')
                 }
@@ -258,7 +258,7 @@ module.exports = class LXItem extends EventEmitter {
         for (var idx in newData) {
             let pointer = this[idx] || this._data[idx] // try to use a getter if available
 
-            if (JSON.stringify(pointer) != JSON.stringify(newData[idx])) {
+            if (JSON.stringify(pointer) !== JSON.stringify(newData[idx])) {
                 if (pointer) {
                     if (typeof (pointer) === 'object') {
                         if (pointer.length) {
@@ -397,7 +397,7 @@ module.exports = class LXItem extends EventEmitter {
             if (!window.LT.db) {
                 console.error(`${this.logPrefix} requires database to remove from`)
                 return reject('db_required')
-            } else if (this.mode == 'dropped') {
+            } else if (this.mode === 'dropped') {
                 // already deleted... skip...
                 return resolve()
             }

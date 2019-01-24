@@ -72,7 +72,7 @@ module.exports = (serv) => {
     serv.get('/c/:id/styles/:map/:z/:x/:y.png', (req, res, next) => {
         // use offline cache if available, avoids hitting external sever
         fs.readFile(getLocalPathForTile(req.params), (err, buffer) => {
-            if (err && err.code == 'ENOENT' || buffer.length < 100) {
+            if (err && err.code === 'ENOENT' || buffer.length < 100) {
                 if (!assumeInternet) {
                     // log.debug(`Skip offline attempt for: ${req.url}`);
                     return sendEmptyTile(res)

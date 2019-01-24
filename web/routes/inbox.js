@@ -40,7 +40,7 @@ module.exports = (serv) => {
             let node = getNode(data, db)
 
             node.once((v, k) => {
-                if (v == undefined) {
+                if (v === undefined) {
                     reject('inbox_update_failed_missing_item')
                 } else {
                     node
@@ -115,7 +115,7 @@ module.exports = (serv) => {
 
         inbox[msgKey] = inbox[msgKey] || {}
         inbox[msgKey][new Date().getTime()] = req.ip
-        log.debug('  inbox >> ' + (msg[1] == '|' ? ' ' : '') + msg)
+        log.debug('  inbox >> ' + (msg[1] === '|' ? ' ' : '') + msg)
         let inboxfn = msgApply[res.locals.message.type]
         inboxfn(res.locals.message, req.app.locals.db)
             .then((success) => {
