@@ -38,8 +38,8 @@ After starting your server as a developer:
 
 ```shell
 npm install
-npm lint
-npm test
+npm run lint
+npm run test
 ```
 
 ### Requirements
