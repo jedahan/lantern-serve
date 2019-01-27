@@ -15,7 +15,7 @@ module.exports = class LXUser extends EventEmitter {
         this.once('auth', () => {
             console.log(`${this.logPrefix} sign-in complete`)
             this.listPackages().then((packages) => {
-                console.log(`${this.logPrefix} installed packages: ${packages.length}`)
+                console.log(`${this.logPrefix} found packages: ${packages.length}`)
                 this.feed.addManyPackages(packages)
             })
         })
@@ -138,48 +138,24 @@ module.exports = class LXUser extends EventEmitter {
     */
     install (pkg) {
         // allows either a package object or a string representation of pkg@version
-
         let pkgID = pkg
-
         if (typeof (pkg) === 'object') {
             pkgID = `${pkg.name}@${pkg.version}`
         }
-
         let pkgName = pkgID.split('@')[0]
         let pkgVersion = pkgID.split('@')[1]
-
-        return new Promise((resolve, reject) => {
-            this.node.get('packages')
-                .get(pkgName)
-                .once((v, k) => {
-                    if (v) {
-                        console.log(`${this.logPrefix} already installed: ${pkgID}`)
-                        resolve(pkgID)
-                    } else {
-                        console.log(`${this.logPrefix} new install: ${pkgID}`)
-
-                        // does not erase other key/value pairs here
-                        this.node.get('packages')
-                            .once((v, k) => {
-                                if (!v) {
-                                    console.log(`${this.logPrefix} initializing packages list for user`)
-                                    this.node.get('packages').put({})
-                                }
-                            })
-                            .get(pkgName)
-                            .put(pkgVersion, (ack) => {
-                                if (ack.err) {
-                                    return reject(new Error('user_install_package_failed'))
-                                }
-                                // id is name@version combined
-                                console.log(`${this.logPrefix} install done: ${pkgID}`)
-                                this.emit('install', pkgID)
-                                this.feed.addOnePackage(pkgID)
-                                resolve(pkgID)
-                            })
-                    }
-                })
-        })
+        
+        return this.db.getOrPut(this.node.get('packages'), {})
+            .then(saved => {
+                return this.db.getOrPut(this.node.get('packages').get(pkgName), pkgVersion)
+                    .then(saved => {
+                        console.log(`${this.logPrefix} ${saved ? 'installed ' : 'already installed'} package ${pkgID}`)
+                        if (saved) {
+                            this.emit('install', pkgID)
+                        }
+                        this.feed.addOnePackage(pkgID)
+                    })
+            })
     }
 
     /**

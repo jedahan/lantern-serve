@@ -15,7 +15,7 @@ module.exports = class LXDatabase extends EventEmitter {
         this.uri = uri
         this.namespace = '__LX__'
         this.stor = Gun(this.uri) // database instance
-        this.root_node = this.stor.get(this.namespace) // root node
+        this.node = this.stor.get(this.namespace) // root node
     }
 
     // -------------------------------------------------------------------------
@@ -25,64 +25,80 @@ module.exports = class LXDatabase extends EventEmitter {
 
     // -------------------------------------------------------------------------
     /**
-    * Ensure expected nodes are available to work with
-    */
-    setup (force) {
-        return new Promise((resolve, reject) => {
-            // don't encourage full-overwrite
-            let init = (force ? null : {})
-
-            this.root_node.once((v, k) => {
-                if (v) {
-                    console.log(`${this.logPrefix} database ready`)
-                } else {
-                    console.log(`${this.logPrefix} database ready but empty`)
-                }
-
-                // @todo add messages to data structure
-                let expected = ['org', 'pkg', 'itm']
-                expected.forEach((key) => {
-                    if (!v || !v.hasOwnProperty(key) || v[key] === null) {
-                        console.log(`${this.logPrefix} adding top-level node: ${key}`)
-                        this.root_node.get(key).put(null).put({}, (ack) => {
-                            if (ack.err) {
-                                reject('failed_create_node_' + key)
-                            } else {
-                                console.log(`${this.logPrefix} created top-level node: ${key}`)
-                            }
-                        })
-                    }
-                })
-                this.emit('ready')
-                resolve()
-            })
-        })
-    }
-
-    // -------------------------------------------------------------------------
-    /**
     * Get node from within root namespace
     */
     get () {
-        return this.root_node.get.apply(this.root_node, arguments)
+        return this.node.get.apply(this.node, arguments)
     }
 
     /**
     * Sets value from within root namespace
     */
     put () {
-        return this.root_node.put.apply(this.root_node, arguments)
+        return this.node.put.apply(this.node, arguments)
+    }
+
+    /*
+    * Ensures a single node is created within the database
+    */
+    getOrPut (targetNode, val) {
+        return new Promise((resolve, reject) => {
+            targetNode.once((v, k) => {
+                if (v) {
+                    if (typeof (v) === 'string' && v.length) {
+                        return resolve(false)
+                    } else if (typeof (v) === 'number') {
+                        return resolve(false)
+                    } else if (typeof (v) === 'object' && Object.keys(v).length) {
+                        return resolve(false)
+                    }
+                }
+                // otherwise do create the node
+                targetNode.put(val)
+                    .once((v, k) => {
+                        // won't ack an empty {} but will prepare database
+                        // for a future write to this sub-node
+                        resolve(true)
+                    })
+            })
+        })
     }
 
     // -------------------------------------------------------------------------
+    /**
+    * Ensure expected nodes are available to work with
+    */
+    setup () {
+        return new Promise((resolve, reject) => {
+            // demonstrates write ability and creates database files if non-existing
+            // database cannot be setup with simply {} structures
+            this.getOrPut(this.get('now'), new Date().getTime())
+                .then(() => {
+                    let topLevels = ['org', 'pkg', 'itm']
+                    let count = 0
+                    const check = () => {
+                        count++
+                        if (count === topLevels.length) {
+                            console.log(`${this.logPrefix} database ready`)
+                            resolve()
+                            this.emit('ready')
+                        }
+                    }
+                    topLevels.forEach((key) => {
+                        this.getOrPut(this.get(key), {}).then(check)
+                    })
+                })
+        })
+    }
 
+    // -------------------------------------------------------------------------
     /**
     * Prints out value of a node selected by a path/to/node
     */
     print (path, pointer, node) {
         // recursive attempt to narrow down to target node
         if (!pointer) pointer = path
-        if (!node) node = this.root_node
+        if (!node) node = this.node
         let split = pointer.split('/')
         node.get(split[0]).once((v, k) => {
             if (split.length > 1) {
@@ -161,7 +177,7 @@ module.exports = class LXDatabase extends EventEmitter {
     */
     jsonify (node, tree, pointer) {
         let self = this
-        node = node || self.root_node
+        node = node || self.node
         tree = tree || {}
         pointer = pointer || tree
 

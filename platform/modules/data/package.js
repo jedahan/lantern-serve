@@ -20,11 +20,13 @@ module.exports = class LXPackage extends EventEmitter {
         this._data = {
             'name': name,
             'public': true, // only supporting public packages, for now
-            'data': null,
+            'data': {},
             'version': version
         }
+        this._data.data[this.version] = {
+        }
         this.db = db
-        this.node = this.db.get('pkg').get(this._data.name)
+        this.node = this.db.get('pkg').get(this.name)
     }
 
     // -------------------------------------------------------------------------
@@ -54,96 +56,31 @@ module.exports = class LXPackage extends EventEmitter {
 
     // -------------------------------------------------------------------------
     /**
-    * Ensures that package exists in database before we work with it
+    * Publish a new data package to the network
+    *
+    * Attempts a non-destructive put in case other peers have also published
     */
-    setup () {
-        return new Promise((resolve, reject) => {
-            this.node.once((v, k) => {
-                if (v && v.hasOwnProperty('name') && v.hasOwnProperty('public') && v.hasOwnProperty('data') && v.hasOwnProperty('version')) {
-                    resolve(this)
+    publish () {
+        return this.db.getOrPut(this.node, this._data)
+            .then(saved => {
+                if (saved) {
+                    this.emit('publish')
+                    console.log(`${this.logPrefix} published version: ${this.id}`)
                 } else {
-                    console.log(`${this.logPrefix} creating package setup`, this._data)
-                    // required null put to make sure we have a node to work with
-                    this.node.put(null).put(this._data, (ack) => {
-                        if (ack.err) {
-                            return reject(new Error('package_setup_err'))
-                        } else {
-                            console.log(`${this.logPrefix} package setup successfully`)
-                            resolve()
-                        }
-                    })
+                    console.log(`${this.logPrefix} already published version: ${this.id}`)
                 }
             })
-        })
-    }
-
-    /**
-    * Looks up node and makes sure the expected version exists
-    */
-    hasVersion (version) {
-        return new Promise((resolve, reject) => {
-            // make sure package node exists
-            this.setup().then(() => {
-                this.node.get('data').once((v, k) => {
-                    if (v === null) {
-                        this.node.get('data').put({})
-                    }
-                }).get(version).once((v, k) => {
-                    resolve(!!v)
-                })
+            .catch((e) => {
+                console.error(`${this.logPrefix} failed to publish version: ${this.id}`)
             })
-        })
-    }
-
-    // -------------------------------------------------------------------------
-    /**
-    * Publish a new data package to the network
-    */
-    publish (version, data) {
-        return new Promise((resolve, reject) => {
-            // publishing defaults
-            version = version || this._data.version
-            data = data || {}
-
-            this.hasVersion(version)
-                .then((exists) => {
-                    // do not over-write pre-existing version
-                    if (exists) {
-                        console.log(`${this.logPrefix} already published: ${this.id}`)
-                        resolve()
-                    } else {
-                        console.log(`${this.logPrefix} will publish: ${this.id}`)
-
-                        // required null put to make sure we have a node to work with
-                        this.node.get('data').get(version).put(null).put(data, (ack) => {
-                            if (ack.err) {
-                                return reject(new Error('packaged_publish_data_failed'))
-                            }
-                            this.node.get('version').put(version, (ack) => {
-                                if (ack.err) {
-                                    return reject(new Error('package_publish_version_failed'))
-                                }
-                                console.log(`${this.logPrefix} new published version: ${this.id}`)
-                                resolve()
-                                this.emit('publish')
-                            })
-                        })
-                    }
-                })
-        })
     }
 
     /*
     * Unpublish removes a data package from the network
     */
-    unpublish (version) {
+    unpublish () {
         return new Promise((resolve, reject) => {
-            if (!version) {
-                console.error(`${this.logPrefix} please specify version to unpublish`)
-                return reject(new Error('missing_version'))
-            }
-
-            this.node.get('data').get(version || this.version)
+            this.node.get('data').get(this.version || this.version)
                 .put(null, (v, k) => {
                     this.emit('unpublish')
                     return resolve()
