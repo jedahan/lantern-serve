@@ -110,14 +110,14 @@ module.exports = (serv) => {
 
         inbox[msgKey] = inbox[msgKey] || {}
         inbox[msgKey][new Date().getTime()] = req.ip
-        log.debug('  inbox >> ' + (msg[1] === '|' ? ' ' : '') + msg)
+        log.debug(`${util.logPrefix('inbox')} ${msg}`)
         let inboxfn = msgApply[res.locals.message.type]
         inboxfn(res.locals.message, req.app.locals.db)
             .then((success) => {
                 res.status(201).json({ 'ok': success })
             })
             .catch((e) => {
-                res.status(500).json({ 'ok': false, 'err': e })
+                res.status(500).json({ 'ok': false, 'err': e.message })
             })
     })
 }

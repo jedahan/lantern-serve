@@ -42,7 +42,7 @@ module.exports = (serv) => {
         }
 
         if (msg) {
-            log.debug(' outbox << ' + (msg[1] === '|' ? ' ' : '') + msg)
+            log.debug(`${util.logPrefix('outbox')} ${msg}`)
             res.status(201).json(data)
         } else {
             res.status(200).json(data)
