@@ -5,7 +5,7 @@
 const util = require('./util')
 const log = util.Logger
 const path = require('path')
-const spawnSync = require('child_process').spawnSync
+const execFile = require('child_process').execFile
 
 module.exports = (app) => {
     let node = app.locals.db.get('__LX__').get('itm')
@@ -23,7 +23,7 @@ module.exports = (app) => {
     Object.keys(changeHooks).forEach((key) => {
         let envVar = 'HOOK_' + key.toUpperCase()
         if (process.env.hasOwnProperty(envVar)) {
-            changeHooks[key] = path.resolve(__dirname, '/../', process.env[envVar])
+            changeHooks[key] = path.resolve([__dirname, '..', process.env[envVar]].join("/"))
         }
     })
 
@@ -42,10 +42,19 @@ module.exports = (app) => {
             let msgKey = util.getSimpleMessage(msg)
             if (app.locals.inbox.hasOwnProperty(msgKey)) {
                 // prevent echo of incoming message
-                log.debug(`${util.logPrefix('watcher')} ${msg}`)
+                log.debug(`${util.logPrefix('watcher')} ${msg} <<`)
             } else if (typeof (changeHooks[key]) === 'string') {
-                log.debug(`${util.logPrefix('watcher')} ${msg} >>`)
-                let result = spawnSync(changeHooks[key], [msg])
+                let ps = execFile(changeHooks[key], [msg])
+                ps.stdout.on('data', (data) => {
+                    log.debug(`${util.logPrefix('watcher')} ${msg} >> `)
+                    //log.debug(`${key} hook output: ${data}`)
+                })
+
+                ps.stderr.on('data', (err) => {
+                    log.warn(`${util.logPrefix('watcher')} ${msg} !! `)
+                    log.warn(`${key} hook could not run: ${err}`)
+                })
+
             } else {
                 log.debug(`${util.logPrefix('watcher')} ${msg}`)
             }

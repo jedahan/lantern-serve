@@ -26,6 +26,7 @@ module.exports = (serv) => {
         // to control order even when we have duplicate 1s, 2s, 3s...
         let msg = res.locals.message.text
         res.app.locals.outbox.push(msg)
+        log.debug(`${util.logPrefix('outbox')} ${msg}`)
         res.status(201).json({ 'ok': true })
     })
 
@@ -42,7 +43,7 @@ module.exports = (serv) => {
         }
 
         if (msg) {
-            log.debug(`${util.logPrefix('outbox')} ${msg}`)
+            log.debug(`${util.logPrefix('outbox')} release from queue: ${msg}`)
             res.status(201).json(data)
         } else {
             res.status(200).json(data)
