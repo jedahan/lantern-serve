@@ -45,7 +45,7 @@ module.exports = class LXOrganization extends EventEmitter {
                         'packages': {}
                     }, (ack) => {
                         if (ack.err) {
-                            return reject('org_register_failed')
+                            return reject(new Error('org_register_failed'))
                         }
                         console.info(`${this.logPrefix} newly registered`, this.name)
                         this.emit('register')

@@ -52,7 +52,6 @@ module.exports = (serv) => {
     */
     serv.post('/api/apps', (req, res) => {
         exec('cd ' + appsDir + '; git pull;', (err, stdout, stderr) => {
-            let ok = false
             if (err) {
                 log.error('git pull for apps: ', err)
                 res.status(500).json({ 'ok': false })
@@ -67,10 +66,10 @@ module.exports = (serv) => {
 
         // also re-generate scripts so we're always working with the most up-to-date
         util.packJavascript()
-        .then(util.compressStylesheets)
-        .then(util.compressJavascript)
-        .then(() => {
-            log.info("javascript and stylesheets recompiled...")
-        })
+            .then(util.compressStylesheets)
+            .then(util.compressJavascript)
+            .then(() => {
+                log.info('javascript and stylesheets recompiled...')
+            })
     })
 }

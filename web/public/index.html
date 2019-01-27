@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -37,12 +37,12 @@
     
 
     <!-- platform setup -->
-    <script src="/scripts/platform.min.js"></script>
+    <script src="/scripts/platform.js"></script>
     <script>
         window.LT = new LX.Director();
         LT.loadStylesheet("/styles/vendor.css");
         LT.loadStylesheet("/styles/global.css");
-        LT.loadApps().then(info => {
+        LT.loadApps().then( info => {
             console.log("[platform]", JSON.stringify(info));
             // let our database load before loading tiles
             // for maximum speed

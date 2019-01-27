@@ -1,6 +1,6 @@
 const EventEmitter = require('event-emitter-es6')
 require('wheelnav')
-const wheelnav = window.wheelnav
+const WheelNav = window.wheelnav
 
 module.exports = class LXPieMenu extends EventEmitter {
     constructor () {
@@ -31,24 +31,24 @@ module.exports = class LXPieMenu extends EventEmitter {
         }
 
         // create icons for menu
-        let final_items = []
+        let finalitems = []
 
         items.forEach((item) => {
             if (item.icon) {
                 let icon = 'imgsrc:/icons/' + item.icon + '.svg'
-                final_items.push(icon)
+                finalitems.push(icon)
             } else if (item.label) {
-                final_items.push(item.label)
+                finalitems.push(item.label)
             }
         })
 
         // create wheel menu
-        this.wheel = new wheelnav('pie-menu')
+        this.wheel = new WheelNav('pie-menu')
         this.wheel.titleWidth = 22
         this.wheel.navAngle = 30
         this.wheel.wheelRadius = 100
         this.wheel.selectedNavItemIndex = null
-        this.wheel.createWheel(final_items)
+        this.wheel.createWheel(finalitems)
 
         let fireEvents = {}
 
@@ -60,7 +60,7 @@ module.exports = class LXPieMenu extends EventEmitter {
                 if (matchedItem.method) {
                     eventData = matchedItem.method()
                 }
-                this.close.call(this)
+                this.close()
 
                 if (matchedItem.event && !fireEvents.hasOwnProperty(matchedItem.event)) {
                     this.emit(matchedItem.event, eventData)

@@ -24,7 +24,7 @@ module.exports = (serv) => {
                 }
                 node.put({}, (ack) => {
                     if (ack.err) {
-                        return reject('inbox_add_failed')
+                        return reject(new Error('inbox_add_failed'))
                     }
                     resolve(true)
                 })
@@ -41,13 +41,13 @@ module.exports = (serv) => {
 
             node.once((v, k) => {
                 if (v === undefined) {
-                    reject('inbox_update_failed_missing_item')
+                    reject(new Error('inbox_update_failed_missing_item'))
                 } else {
                     node
                         .get(data.field_key)
                         .put(data.field_value, (ack) => {
                             if (ack.err) {
-                                return reject('inbox_update_failed')
+                                return reject(new Error('inbox_update_failed'))
                             }
                             resolve(true)
                         })
@@ -64,7 +64,7 @@ module.exports = (serv) => {
             let node = getNode(data, db)
             node.put(null, (ack) => {
                 if (ack.err) {
-                    return reject('inbox_drop_failed')
+                    return reject(new Error('inbox_drop_failed'))
                 }
                 resolve(true)
             })

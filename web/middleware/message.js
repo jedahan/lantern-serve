@@ -1,6 +1,3 @@
-const util = require('../util')
-
-// ----------------------------------------------------------------------
 module.exports = (req, res, next) => {
     /**
     * Regular expressions to identify intent of message

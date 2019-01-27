@@ -30,14 +30,12 @@ server.get('/@/', (req, res) => {
 })
 server.use('/', express.static(staticPath))
 
-
 // modules
 const modulesPath = path.resolve(__dirname, '../node_modules/@fortawesome/fontawesome-free/webfonts')
 server.use('/webfonts/', express.static(modulesPath))
 
 const iconsPath = path.resolve(__dirname, '../node_modules/@fortawesome/fontawesome-free/svgs/solid')
 server.use('/icons/', express.static(iconsPath))
-
 
 // auto-load routes
 const routeFiles = fs.readdirSync(path.resolve(__dirname, './routes'))
@@ -49,7 +47,6 @@ routeFiles.forEach((file) => {
 // layers for custom app functionality
 const appsPath = path.resolve(__dirname, '..', 'apps')
 server.use('/-/', express.static(appsPath))
-
 
 server.use(GraphDB.serve)
 

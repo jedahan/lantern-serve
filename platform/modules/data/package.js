@@ -66,7 +66,7 @@ module.exports = class LXPackage extends EventEmitter {
                     // required null put to make sure we have a node to work with
                     this.node.put(null).put(this._data, (ack) => {
                         if (ack.err) {
-                            return reject('package_setup_err')
+                            return reject(new Error('package_setup_err'))
                         } else {
                             console.log(`${this.logPrefix} package setup successfully`)
                             resolve()
@@ -117,11 +117,11 @@ module.exports = class LXPackage extends EventEmitter {
                         // required null put to make sure we have a node to work with
                         this.node.get('data').get(version).put(null).put(data, (ack) => {
                             if (ack.err) {
-                                return reject('packaged_publish_data_failed')
+                                return reject(new Error('packaged_publish_data_failed'))
                             }
                             this.node.get('version').put(version, (ack) => {
                                 if (ack.err) {
-                                    return reject('package_publish_version_failed')
+                                    return reject(new Error('package_publish_version_failed'))
                                 }
                                 console.log(`${this.logPrefix} new published version: ${this.id}`)
                                 resolve()
@@ -140,7 +140,7 @@ module.exports = class LXPackage extends EventEmitter {
         return new Promise((resolve, reject) => {
             if (!version) {
                 console.error(`${this.logPrefix} please specify version to unpublish`)
-                return reject('missing_version')
+                return reject(new Error('missing_version'))
             }
 
             this.node.get('data').get(version || this.version)
@@ -163,8 +163,8 @@ module.exports = class LXPackage extends EventEmitter {
             console.log(`${this.logPrefix} adding item: ${id}`, item)
 
             // attach item to the package graph
-            let item_node = this.db.get('itm').get(id)
-            this.node.get('data').get(this.version).set(item_node)
+            let itemNode = this.db.get('itm').get(id)
+            this.node.get('data').get(this.version).set(itemNode)
         })
     }
 
@@ -176,8 +176,8 @@ module.exports = class LXPackage extends EventEmitter {
             console.log(`${this.logPrefix} removing item: ${id}`, item)
 
             // attach item to the package graph
-            let item_node = this.node.get('data').get(this.version).get(id)
-            this.node.get('data').get(this.version).unset(item_node)
+            let itemNode = this.node.get('data').get(this.version).get(id)
+            this.node.get('data').get(this.version).unset(itemNode)
         })
     }
 
@@ -188,13 +188,13 @@ module.exports = class LXPackage extends EventEmitter {
     getItems () {
         return new Promise((resolve, reject) => {
             this.node.get('data').get(this.version).once((v, k) => {
-                let item_list = []
+                let itemList = []
                 Object.keys(v).forEach((item) => {
-                    if (item != '_') {
-                        item_list.push(item)
+                    if (item !== '_') {
+                        itemList.push(item)
                     }
                 })
-                resolve(item_list)
+                resolve(itemList)
             })
         })
     }

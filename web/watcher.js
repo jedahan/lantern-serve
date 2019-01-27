@@ -23,7 +23,7 @@ module.exports = (app) => {
     Object.keys(changeHooks).forEach((key) => {
         let envVar = 'HOOK_' + key.toUpperCase()
         if (process.env.hasOwnProperty(envVar)) {
-            changeHooks[key] = path.resolve(__dirname + '/../' + process.env[envVar])
+            changeHooks[key] = path.resolve(__dirname, '/../', process.env[envVar])
         }
     })
 
@@ -42,12 +42,12 @@ module.exports = (app) => {
             let msgKey = util.getSimpleMessage(msg)
             if (app.locals.inbox.hasOwnProperty(msgKey)) {
                 // prevent echo of incoming message
-                log.debug(`watcher -- ${(msg[1] === '|' ? ' ' : '')}${msg}`)
+                log.debug(`${util.logPrefix('watcher')} ${msg}`)
             } else if (typeof (changeHooks[key]) === 'string') {
-                log.debug(`watcher -- ${(msg[1] === '|' ? ' ' : '')}${msg} --> ${key} hook`)
+                log.debug(`${util.logPrefix('watcher')} ${msg} >>`)
                 let result = spawnSync(changeHooks[key], [msg])
             } else {
-                log.debug(`watcher -- ${(msg[1] === '|' ? ' ' : '')}${msg}`)
+                log.debug(`${util.logPrefix('watcher')} ${msg}`)
             }
         }
     }
@@ -61,7 +61,7 @@ module.exports = (app) => {
             // this can be triggered when an item is first created due to the way we use put(null)
             // therefore, only indicate deletions if we already know about a valid item
             if (loaded && items[itemID]) {
-                let msg = `${getSeq()}|-${itemID}`
+                let msg = `${getSeq()}-${itemID}`
                 runChangeHook('drop', msg)
             }
             return
@@ -72,10 +72,9 @@ module.exports = (app) => {
 
         items[itemID] = true
         if (loaded) {
-            let msg = `${getSeq()}|+${itemID}`
+            let msg = `${getSeq()}+${itemID}`
             runChangeHook('add', msg)
         }
-
 
         // watch for field changes
         node.get(itemID)
@@ -83,7 +82,7 @@ module.exports = (app) => {
                 // @todo identify issue where inbox can trigger this code
                 // to run twice for the same database update
                 if (loaded) {
-                    let msg = `${getSeq()}|^${itemID}.${fieldID}=${v}`
+                    let msg = `${getSeq()}^${itemID}.${fieldID}=${v}`
                     runChangeHook('update', msg)
                 }
             })
@@ -93,7 +92,7 @@ module.exports = (app) => {
     node.once(() => {
         // don't output initial data load
         setTimeout(() => {
-            log.debug('watcher -- waiting for changes...')
+            log.debug(`${util.logPrefix('watcher')} waiting for changes...`)
             loaded = true
         }, 300)
     }).map().on(watchItem)

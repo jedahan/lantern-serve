@@ -3,6 +3,7 @@ const LXLocation = require('./location')
 const MaptileConfig = require('../../config/maptiler')
 const LeafletTilesConfig = require('../../config/leaflet_tiles')
 const LeafletMapConfig = require('../../config/leaflet_map')
+const FeatureGroup = window.L.featureGroup
 const localStorage = window.localStorage
 
 module.exports = class LXAtlas extends EventEmitter {
@@ -20,17 +21,17 @@ module.exports = class LXAtlas extends EventEmitter {
         }
 
         this.setTileHost(useCloud)
-        this._map_clicked = 0 // used to distinguish between click and double-click
+        this._mapClicked = 0 // used to distinguish between click and double-click
     }
 
     setTileHost (useCloud) {
-        let uri_parts = window.location.href.split('/').slice(0, 3)
+        let uriParts = window.location.href.split('/').slice(0, 3)
 
         if (useCloud) {
-            uri_parts[2] = '{s}.tile.lantern.link'
+            uriParts[2] = '{s}.tile.lantern.link'
         }
 
-        this.tile_host = uri_parts.join('/')
+        this.tile_host = uriParts.join('/')
         this.tile_uri = [this.tile_host + '/c/', MaptileConfig.id, '/styles/',
             MaptileConfig.map, '/{z}/{x}/{y}.png?key=', MaptileConfig.key
         ].join('')
@@ -57,17 +58,17 @@ module.exports = class LXAtlas extends EventEmitter {
 
         this.map.on('click', (e) => {
             this.emit('map-click-start', e)
-            this._map_clicked += 1
+            this._mapClicked += 1
             setTimeout(() => {
-                if (this._map_clicked === 1) {
-                    this._map_clicked = 0
+                if (this._mapClicked === 1) {
+                    this._mapClicked = 0
                     this.emit('map-click', e)
                 }
             }, 250)
         })
 
         this.map.on('dblclick', (e) => {
-            this._map_clicked = 0
+            this._mapClicked = 0
             this.emit('map-double-click', e)
         })
         this.calculateZoomClass()
@@ -149,7 +150,7 @@ module.exports = class LXAtlas extends EventEmitter {
     */
     cacheUserLocation (e) {
         let newGeo = LXLocation.toGeohash(e.latlng, this.precision.user_max)
-        if (newGeo != this.user_location) {
+        if (newGeo !== this.user_location) {
             this.user_location = newGeo
             console.log(`${this.logPrefix} New user location found: ${this.user_location}`)
         }
@@ -266,19 +267,19 @@ module.exports = class LXAtlas extends EventEmitter {
     * Looks for all markers on map and adjusts view so all are visible
     */
     fitMapToAllMarkers () {
-        let all_layers = []
+        let allLayers = []
 
         Object.keys(this.markers).forEach((key) => {
             let marker = this.markers[key]
             // markers can include null objects from past deleted markers, so ignore those...
             if (marker !== null && marker.hasOwnProperty('layer')) {
                 let layer = marker.layer
-                all_layers.push(layer)
+                allLayers.push(layer)
             }
         })
 
-        if (all_layers.length) {
-            let group = new window.L.featureGroup(all_layers)
+        if (allLayers.length) {
+            let group = new FeatureGroup(allLayers)
             this.map.fitBounds(group.getBounds())
         }
     }

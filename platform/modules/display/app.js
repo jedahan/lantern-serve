@@ -77,7 +77,7 @@ module.exports = class LXApp extends EventEmitter {
     */
     load () {
         let accepted = ['data', 'computed', 'methods', 'open', 'callback', 'mounted']
-        let image_re = /(<img[\S\s]*?src=")([\S\s]*?)("[\S\s]*?>)/ig
+        let imageRegex = /(<img[\S\s]*?src=")([\S\s]*?)("[\S\s]*?>)/ig
 
         let logic = {}
 
@@ -96,7 +96,7 @@ module.exports = class LXApp extends EventEmitter {
 
         this.children.forEach((child) => {
             if (child.extension === '.html' && child.body) {
-                let html = child.body.replace(image_re, '$1' + `/-/${this.name}/` + '$2$3')
+                let html = child.body.replace(imageRegex, '$1' + `/-/${this.name}/` + '$2$3')
                 let pageID = child.name.split('.')[0]
                 this.createPageComponent(pageID, html, logic)
             }

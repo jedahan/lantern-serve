@@ -34,13 +34,16 @@ module.exports = (serv) => {
         let assetsDir = path.resolve(__dirname, '../public/assets/')
         let filePath = assetsDir + '/empty-tile.png'
         fs.readFile(filePath, (err, buffer) => {
+            if (err) {
+                return log.error('Could not read empty tile file')
+            }
             res.type('png')
             res.send(buffer)
         })
     }
 
     /**
-    * Use MapTiler service to proxy and save tiles to local storage
+    * Use MapTiler service to proxy and save tiles to local storage
     */
     const getTileFromCloud = (req, res) => {
         let preq = request('http://maps.tilehosting.com' + req.url)
@@ -72,7 +75,7 @@ module.exports = (serv) => {
     serv.get('/c/:id/styles/:map/:z/:x/:y.png', (req, res, next) => {
         // use offline cache if available, avoids hitting external sever
         fs.readFile(getLocalPathForTile(req.params), (err, buffer) => {
-            if (err && err.code === 'ENOENT' || buffer.length < 100) {
+            if ((err && err.code === 'ENOENT') || buffer.length < 100) {
                 if (!assumeInternet) {
                     // log.debug(`Skip offline attempt for: ${req.url}`);
                     return sendEmptyTile(res)

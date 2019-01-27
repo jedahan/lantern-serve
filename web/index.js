@@ -48,17 +48,17 @@ const startServer = () => {
             } else {
                 log.error(e)
             }
-            reject()
+            reject(e)
         }
         // start the web server with built-in database solution
         let httpServer = http.createServer(app)
         secureServer.listen(util.getHttpsPort(), () => {
             let stdServer = httpServer.listen(util.getHttpPort(), () => {
                 if (secureServer) {
-                    log.info(`secure port = ${util.getHttpsPort()}`)
+                    log.info(`${util.logPrefix('web')} secure port = ${util.getHttpsPort()}`)
                 } else {
-                    log.warn('falling back to http for local development...')
-                    log.info(`standard port = ${util.getHttpPort()}`)
+                    log.warn(`${util.logPrefix('web')} falling back to http for local development...`)
+                    log.info(`${util.logPrefix('web')} standard port = ${util.getHttpPort()}`)
                 }
 
                 // track inbox messags
@@ -69,7 +69,7 @@ const startServer = () => {
                 // get sense of what sort of device we have here
                 util.checkInternet().then(status => {
                     app.locals.online = status ? '1' : '0'
-                    app.locals.cloud = process.env.CLOUD == 'true' ? '1' : '0'
+                    app.locals.cloud = process.env.CLOUD === 'true' ? '1' : '0'
                     resolve(secureServer || stdServer)
                 })
             })
@@ -81,7 +81,7 @@ const startServer = () => {
 * Create or use existing database
 */
 const setupDatabase = (server) => {
-    log.info(`database path = ${dbPath}`)
+    log.info(`${util.logPrefix('db')} path = ${dbPath}`)
 
     // run a backup of data every day
 
@@ -118,6 +118,11 @@ backup(dbPath)
     .then(util.packJavascript)
     .then(util.compressStylesheets)
     .then(util.compressJavascript)
+    .then(() => {
+        // the above methods are useful to make sure any code updates since last start
+        // are fully considered when user makes a request via the browser
+        log.info(`${util.logPrefix('web')} platform code optimized`)
+    })
     .catch((e) => {
         log.error('Failed to start server:')
         log.error(e)

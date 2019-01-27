@@ -41,12 +41,11 @@ module.exports = class LXFeed extends EventEmitter {
             } else {
                 event.data = v
                 this.emit('add', event)
-
             }
         })
 
         // only allow change event to trigger after an 'add' event
-        let node = itemNode.map((v, k) => {
+        itemNode.map((v, k) => {
             if (this.watched_items[itemID] === true) {
                 this.onDataChange(itemID, pkgID, v, k)
             }
@@ -87,23 +86,22 @@ module.exports = class LXFeed extends EventEmitter {
                     if (itemID === '_') return
 
                     let targetNode = pkgNode.get(itemID)
-                    let origNode = this.db.get("itm").get(itemID)
+                    let origNode = this.db.get('itm').get(itemID)
 
-                    targetNode.once((v,k) => {
-
+                    targetNode.once((v, k) => {
                         if (v) {
                             // make sure we have node in items as expected
                             // handle case where "itm" is cleared but data is still in package
                             // assume we want to preserve this data
-                            origNode.once((orig_v) => {
-                                if (!orig_v) {
+                            origNode.once((origV) => {
+                                if (!origV) {
                                     console.warn(`${this.logPrefix} restoring orphan back into item storage`)
-                                    this.db.get("itm").set(targetNode)
+                                    this.db.get('itm').set(targetNode)
                                 }
                             })
                         }
 
-                        fn(v,k)
+                        fn(v, k)
                     })
                 })
             })
@@ -115,6 +113,9 @@ module.exports = class LXFeed extends EventEmitter {
         packages.forEach(this.addOnePackage.bind(this))
     }
 
+    /**
+    * @todo to avoid confusion, prevent user from watching the same package with multple versions
+    */
     addOnePackage (id) {
         var parts, name, version
         try {

@@ -26,9 +26,9 @@ module.exports = class LXItem extends EventEmitter {
 
         this._key_table = {}
         this._key_table_reverse = {}
-        for (var idx in defaults) {
-            this._key_table[idx] = defaults[idx][0]
-            this._key_table_reverse[defaults[idx][0]] = idx
+        for (var idy in defaults) {
+            this._key_table[idy] = defaults[idy][0]
+            this._key_table_reverse[defaults[idy][0]] = idy
         }
 
         if (data) {
@@ -292,7 +292,7 @@ module.exports = class LXItem extends EventEmitter {
         return new Promise((resolve, reject) => {
             // do not operate on locked items
             if (this.mode === 'locked') {
-                return reject('save_failed_locked')
+                return reject(new Error('save_failed_locked'))
             }
 
             // if we have fields to work with, update existing object
@@ -333,13 +333,13 @@ module.exports = class LXItem extends EventEmitter {
         return new Promise((resolve, reject) => {
             // do not operate on locked items
             if (this.mode === 'locked') {
-                return reject('update_failed_locked')
+                return reject(new Error('update_failed_locked'))
             }
 
             // require an array of fields
             if (fields.constructor !== Array) {
                 console.log(`${this.logPrefix} Update requires fields in array format: ${fields}`)
-                return reject('update_failed_invalid_fields')
+                return reject(new Error('update_failed_invalid_fields'))
             }
 
             this.mode = 'locked'
@@ -361,12 +361,12 @@ module.exports = class LXItem extends EventEmitter {
             item.once((v, k) => {
                 if (!v) {
                     // trying to update a non-existing item
-                    return reject('update_failed_missing')
+                    return reject(new Error('update_failed_missing'))
                 }
 
                 item.put(obj, (ack) => {
                     if (ack.err) {
-                        return reject('update_failed_ack')
+                        return reject(new Error('update_failed_ack'))
                     }
 
                     Object.keys(obj).forEach((key) => {
@@ -390,7 +390,7 @@ module.exports = class LXItem extends EventEmitter {
         return new Promise((resolve, reject) => {
             // do not operate on locked items
             if (this.mode === 'locked') {
-                return reject('drop_failed_locked')
+                return reject(new Error('drop_failed_locked'))
             }
 
             if (this.mode === 'dropped') {
@@ -410,7 +410,7 @@ module.exports = class LXItem extends EventEmitter {
 
                 item.put(null, (ack) => {
                     if (ack.err) {
-                        return reject('drop_failed')
+                        return reject(new Error('drop_failed'))
                     }
                     console.log(`${this.logPrefix} Dropped`)
                     this.mode = 'dropped'

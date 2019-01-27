@@ -30,6 +30,10 @@ self.Logger = require('simple-node-logger').createSimpleLogger({
     dateFormat: 'YYYY.MM.DD'
 })
 
+self.logPrefix = (val) => {
+    return `[${val}]`.padEnd(10, ' ')
+}
+
 /**
 * Get HTTP Non-Secure Port
 */
@@ -121,7 +125,7 @@ self.packJavascript = () => {
     return new Promise((resolve, reject) => {
         let platformScript = path.resolve(__dirname, './public/scripts/platform.js')
         let b = browserify(['platform/web.js'], {
-            "standalone": "LX"
+            'standalone': 'LX'
         })
         let writeStream = fs.createWriteStream(platformScript)
         b.bundle()

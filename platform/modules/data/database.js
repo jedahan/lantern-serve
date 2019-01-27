@@ -29,7 +29,6 @@ module.exports = class LXDatabase extends EventEmitter {
     */
     setup (force) {
         return new Promise((resolve, reject) => {
-
             // don't encourage full-overwrite
             let init = (force ? null : {})
 
@@ -78,7 +77,7 @@ module.exports = class LXDatabase extends EventEmitter {
     // -------------------------------------------------------------------------
 
     /**
-    * Prints out value of a node selected by a path/to/node
+    * Prints out value of a node selected by a path/to/node
     */
     print (path, pointer, node) {
         // recursive attempt to narrow down to target node
@@ -87,9 +86,9 @@ module.exports = class LXDatabase extends EventEmitter {
         let split = pointer.split('/')
         node.get(split[0]).once((v, k) => {
             if (split.length > 1) {
-                let new_pointer = split.slice(1).join('/')
+                let newPointer = split.slice(1).join('/')
                 node = node.get(k)
-                this.print(path, new_pointer, node)
+                this.print(path, newPointer, node)
             } else {
                 // we reached the target node here
                 console.log(`[DB] ${path} = `, v)
@@ -123,11 +122,11 @@ module.exports = class LXDatabase extends EventEmitter {
     /**
     *  Print out the graph structure of a specified node
     */
-    inspect (show_deleted, json, level) {
+    inspect (showDeleted, json, level) {
         let self = this
         if (!json) {
-            return self.jsonify().then((new_json) => {
-                this.inspect(show_deleted, new_json, level)
+            return self.jsonify().then((newJSON) => {
+                this.inspect(showDeleted, newJSON, level)
             })
         }
 
@@ -145,13 +144,12 @@ module.exports = class LXDatabase extends EventEmitter {
             }
 
             if (v === null) {
-                if (show_deleted) {
+                if (showDeleted) {
                     console.log(`${level}[ø] ${k}`)
                 }
             } else if (typeof (v) === 'object') {
-                let length = Object.keys(v).length
                 console.log(`${level}[+] ${k}`)
-                self.inspect(show_deleted, v, level + '  ')
+                self.inspect(showDeleted, v, level + '  ')
             } else {
                 console.log(`${level}|- ${k} = `, vp)
             }

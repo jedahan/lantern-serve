@@ -43,7 +43,7 @@ module.exports = class LXUser extends EventEmitter {
             this.node.auth(username, password, (ack) => {
                 if (ack.err) {
                     console.warn(`${this.logPrefix} invalid auth`, ack.err)
-                    reject('user_auth_failed')
+                    reject(new Error('user_auth_failed'))
                 } else {
                     this.username = username
                     completeAuth()
@@ -63,7 +63,7 @@ module.exports = class LXUser extends EventEmitter {
             this.node.create(username, password, (ack) => {
                 if (ack.err) {
                     console.log(`${this.logPrefix} unable to save`, ack.err)
-                    return reject('user_register_failed')
+                    return reject(new Error('user_register_failed'))
                 }
                 console.log(`${this.logPrefix} saved to browser`)
                 let creds = localStorage.setItem('lx-auth', [username, password].join(':'))
@@ -169,7 +169,7 @@ module.exports = class LXUser extends EventEmitter {
                             .get(pkgName)
                             .put(pkgVersion, (ack) => {
                                 if (ack.err) {
-                                    return reject('user_install_package_failed')
+                                    return reject(new Error('user_install_package_failed'))
                                 }
                                 // id is name@version combined
                                 console.log(`${this.logPrefix} install done: ${pkgID}`)

@@ -76,7 +76,7 @@ module.exports = class LXDirector extends EventEmitter {
 
     loadScript (uri) {
         var el = document.createElement('script')
-        el.setAttribute("type", "text/javascript")
+        el.setAttribute('type', 'text/javascript')
         el.src = uri
         document.body.appendChild(el)
     }
