@@ -117,6 +117,21 @@ module.exports = class LXAtlas extends EventEmitter {
     }
 
     /**
+    * Pan to a point
+    */
+    panToPoint (latlng) {
+        this.map.panTo(latlng, {
+             pan: {
+                animate: true,
+                duration: 1.5
+            }
+        })   
+        this.map.once('moveend', () => {
+            this.removePointer()
+        })
+    }
+
+    /**
     * Assign a semantic value we can use for styling similar to mobile breakpoints
     */
     calculateZoomClass () {
@@ -225,7 +240,7 @@ module.exports = class LXAtlas extends EventEmitter {
     * Remove marker from map
     */
     removeFromMap (marker) {
-        console.log(`${this.logPrefix} removing marker from map...`, marker)
+        //console.log(`${this.logPrefix} removing marker from map...`, marker)
         marker.layer.remove()
         if (marker.id && this.markers.hasOwnProperty(marker.id)) {
             this.markers[marker.id] = null
