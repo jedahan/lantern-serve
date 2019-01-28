@@ -23,7 +23,7 @@ module.exports = (app) => {
     Object.keys(changeHooks).forEach((key) => {
         let envVar = 'HOOK_' + key.toUpperCase()
         if (process.env.hasOwnProperty(envVar)) {
-            changeHooks[key] = path.resolve([__dirname, '..', process.env[envVar]].join('/'))
+            changeHooks[key] = path.resolve(process.env[envVar])
         }
     })
 
