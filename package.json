@@ -29,7 +29,7 @@
         "text-encoding": "^0.7.0",
         "typeface-montserrat": "0.0.54",
         "vue": "^2.5.22",
-        "vue-long-press-directive": "*",
+        "vue-press-directive": "^1.0.1",
         "wheelnav": "*"
     },
     "devDependencies": {
