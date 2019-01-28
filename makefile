@@ -24,8 +24,14 @@ start: $(CERTS)
 
 pack:
 	browserify platform/web.js --standalone LX --outfile web/public/scripts/platform.js
-	uglifyjs web/public/scripts/platform.js -o web/public/scripts/platform.min.js
-	
+	uglifyjs web/public/scripts/platform.js -o web/public/scripts/platform.min.js 
+	cat \
+     'node_modules/bulma/css/bulma.min.css' \
+     'node_modules/leaflet/dist/leaflet.css' \
+     'node_modules/leaflet.locatecontrol/dist/L.Control.Locate.min.css' \
+     'node_modules/@fortawesome/fontawesome-free/css/all.min.css' \
+     'node_modules/typeface-montserrat/index.css' \
+	>> web/public/styles/vendor.css
 run:
 	docker-compose -f env/dc-dev.yml up
 
