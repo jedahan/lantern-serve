@@ -149,7 +149,7 @@ module.exports = class LXUser extends EventEmitter {
             .then(saved => {
                 return this.db.getOrPut(this.node.get('packages').get(pkgName), pkgVersion)
                     .then(saved => {
-                        console.log(`${this.logPrefix} ${saved ? 'installed ' : 'already installed'} package ${pkgID}`)
+                        // console.log(`${this.logPrefix} ${saved ? 'installed ' : 'already installed'} package ${pkgID}`)
                         if (saved) {
                             this.emit('install', pkgID)
                         }

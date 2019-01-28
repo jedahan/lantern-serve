@@ -24,35 +24,34 @@ module.exports = class LXFeed extends EventEmitter {
             return
         }
         // console.log(`${this.logPrefix} Watch changes for ${itemID} within package ${pkgID}`)
-        this.watched_items[itemID] = false
-
+        let event = {
+            id: itemID,
+            package: pkgID
+        }
         let itemNode = this.db.get('itm').get(itemID)
-
-        itemNode.on((v, k) => {
-            let event = {
-                id: itemID,
-                package: pkgID
-            }
-
-            this.watched_items[itemID] = true
-
+        itemNode.once((v, k) => {
             if (!v) {
                 this.emit('drop', event)
+                this.watched_items[itemID] = false
             } else {
                 event.data = v
                 this.emit('add', event)
+                setTimeout(() => {
+                    this.watched_items[itemID] = true
+                }, 2000) // ensures initial data load is complete ( @todo find more elegant solution )
             }
         })
-
         // only allow change event to trigger after an 'add' event
-        itemNode.map((v, k) => {
-            if (this.watched_items[itemID] === true) {
-                this.onDataChange(itemID, pkgID, v, k)
+        itemNode.map().on((v, k) => {
+            if (this.watched_items[itemID] !== true) {
+                return
             }
-        })
+            this.markDataChange(itemID, pkgID, v, k)
+        }, {change: true})
+
     }
 
-    onDataChange (itemID, pkgID, v, k) {
+    markDataChange (itemID, pkgID, v, k) {
         let event = {
             id: itemID,
             package: pkgID,
@@ -140,7 +139,6 @@ module.exports = class LXFeed extends EventEmitter {
         node.once((v, k) => {
             if (v && v.hasOwnProperty(version)) {
                 // verified that version exists
-                console.log(`${this.logPrefix} watching changes: ${id}`)
                 node
                     .get(version)
                     .map()
@@ -148,6 +146,7 @@ module.exports = class LXFeed extends EventEmitter {
                     // start watching for changes
                         this.watchItem(k, id)
                     })
+                    console.log(`${this.logPrefix} watching changes: ${id}`)
             } else {
                 // disable our package subscription if we find out it is missing
                 this.packages[id] = false

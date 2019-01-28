@@ -67,7 +67,7 @@ module.exports = class LXPackage extends EventEmitter {
                     this.emit('publish')
                     console.log(`${this.logPrefix} published version: ${this.id}`)
                 } else {
-                    console.log(`${this.logPrefix} already published version: ${this.id}`)
+                    //console.log(`${this.logPrefix} already published version: ${this.id}`)
                 }
             })
             .catch((e) => {

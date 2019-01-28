@@ -49,7 +49,7 @@ module.exports = class LXOrganization extends EventEmitter {
                     console.info(`${this.logPrefix} registered`, this.name)
                     this.emit('register')
                 } else {
-                    console.info(`${this.logPrefix} already registered`, this.name)
+                    // console.info(`${this.logPrefix} already registered`, this.name)
                 }
             })
     }
@@ -77,13 +77,13 @@ module.exports = class LXOrganization extends EventEmitter {
         // first, link organization into package
         return this.db.getOrPut(this.node.get('packages'), {})
             .then((saved) => {
-                console.log(`${this.logPrefix} ${saved ? 'linked' : 'already linked'} ${pkg.id}`)
+                // console.log(`${this.logPrefix} ${saved ? 'linked' : 'already linked'} ${pkg.id}`)
 
                 this.node.get('packages').set(pkg.node)
 
                 return this.db.getOrPut(pkg.node.get('organization'), this.node)
                     .then((saved) => {
-                        console.log(`${this.logPrefix} ${saved ? 'claimed' : 'already claimed'} ${pkg.id}`)
+                        // console.log(`${this.logPrefix} ${saved ? 'claimed' : 'already claimed'} ${pkg.id}`)
                     })
             })
     }
