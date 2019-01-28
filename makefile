@@ -23,8 +23,7 @@ start: $(CERTS)
 	npm start	
 
 pack:
-	browserify platform/web.js --standalone LX --outfile web/public/scripts/platform.js
-	uglifyjs web/public/scripts/platform.js -o web/public/scripts/platform.min.js 
+  npm run pack
 	cat \
      'node_modules/bulma/css/bulma.min.css' \
      'node_modules/leaflet/dist/leaflet.css' \
@@ -32,6 +31,7 @@ pack:
      'node_modules/@fortawesome/fontawesome-free/css/all.min.css' \
      'node_modules/typeface-montserrat/index.css' \
 	>> web/public/styles/vendor.css
+
 run:
 	docker-compose -f env/dc-dev.yml up
 
