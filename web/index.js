@@ -115,13 +115,20 @@ backup(dbPath)
             setTimeout(resolve, 1000)
         })
     })
-    .then(util.packJavascript)
-    .then(util.compressStylesheets)
-    .then(util.compressJavascript)
     .then(() => {
-        // the above methods are useful to make sure any code updates since last start
-        // are fully considered when user makes a request via the browser
-        log.info(`${util.logPrefix('web')} platform code optimized`)
+        // make sure we always compile latest assets in cloud
+        // local machines will typically have scripts already generated
+        // and we may want to avoid long load times
+        if (process.env.CLOUD) {
+           util.packJavascript()
+                .then(util.compressStylesheets)
+                .then(util.compressJavascript)
+                .then(() => {
+                    // the above methods are useful to make sure any code updates since last start
+                    // are fully considered when user makes a request via the browser
+                    log.info(`${util.logPrefix('web')} platform code rebuilt`)
+                })
+        }
     })
     .catch((e) => {
         log.error('Failed to start server:')

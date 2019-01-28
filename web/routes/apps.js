@@ -63,13 +63,5 @@ module.exports = (serv) => {
                 log.info('git pull for apps: ', stdout)
             }
         })
-
-        // also re-generate scripts so we're always working with the most up-to-date
-        util.packJavascript()
-            .then(util.compressStylesheets)
-            .then(util.compressJavascript)
-            .then(() => {
-                log.info('javascript and stylesheets recompiled...')
-            })
     })
 }

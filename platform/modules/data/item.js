@@ -4,8 +4,8 @@ module.exports = class LXItem extends EventEmitter {
     constructor (db, defaults) {
         super()
         this.id = null
-     
-        if (!db || db.constructor.name !== "LXDatabase") {
+
+        if (!db || db.constructor.name !== 'LXDatabase') {
             throw new Error('Requires database to be defined')
         }
 
@@ -63,7 +63,7 @@ module.exports = class LXItem extends EventEmitter {
                 if (this._new[key] == val) {
                     delete this._new[key]
                 }
-                // if we're passing in data, we assume it's coming from 
+                // if we're passing in data, we assume it's coming from
                 // an exising data source and therefore item is shared
                 this._mode = 'shared'
             })
@@ -221,7 +221,7 @@ module.exports = class LXItem extends EventEmitter {
                         newObj[k] = '%' + v.join(',')
                     }
                     // do not store empty arrays at all
-                } else if (v) {
+                } else if (v !== undefined) {
                     newObj[k] = v
                 }
             }
@@ -242,16 +242,17 @@ module.exports = class LXItem extends EventEmitter {
             let v = obj[idx]
             if (this._key_table_reverse.hasOwnProperty(idx)) {
                 let k = this._key_table_reverse[idx]
-                if (v[0] === 'Å') {
-                    // @todo this is deprecated. remove later...
-                    v = v.replace('Å', '%')
-                }
 
-                if (v[0] === '%') {
-                    // this is an array. expand it...
-                    v = v.replace('%', '').split(',')
+                if (typeof(v) === 'string') {
+                    if (v[0] === 'Å') {
+                        // @todo this is deprecated. remove later...
+                        v = v.replace('Å', '%')
+                    }
+                    if (v[0] === '%') {
+                        // this is an array. expand it...
+                        v = v.replace('%', '').split(',')
+                    }
                 }
-
                 newObj[k] = v
             }
         }
@@ -366,7 +367,6 @@ module.exports = class LXItem extends EventEmitter {
                     // trying to update a non-existing item
                     return reject(new Error('update_failed_missing'))
                 }
-
                 item.put(obj, (ack) => {
                     if (ack.err) {
                         return reject(new Error('update_failed_ack'))

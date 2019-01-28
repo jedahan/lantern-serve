@@ -3,10 +3,11 @@ const LXItem = require('../data/item')
 
 module.exports = class LXMarkerItem extends LXItem {
     constructor (db) {
-        // now set defaults for key compression
+    // now set defaults for key compression
         super(db, {
             'geohash': ['g'],
-            'ping': ['p', []]
+            'ping': ['p', []],
+            'score': ['s']
         })
 
         this._icon = null
@@ -64,6 +65,34 @@ module.exports = class LXMarkerItem extends LXItem {
         return this._data.geohash
     }
 
+    // -------------------------------------------------------------------------
+    get score () {
+        if (this._data.score && isFinite(this._data.score)) {
+            return Math.round(parseFloat(this._data.score) * 100) / 100
+        }
+        else {
+            return 0.00
+        }
+    }
+
+    set score (val) {
+        if (val !== undefined) {
+            try {
+                // cast to number
+                let number = val
+                if (typeof (val) !== 'Number') {
+                    number = Math.round(parseFloat(val) * 100) / 100
+                }
+                this._data.score = number
+                this._new.score = true
+            } catch (e) {
+                // could not make a number out of this score. skip...
+                console.error(`${this.logPrefix} error with score`, val)
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
     /**
     * Get the identity of most recent ping
     */
@@ -74,36 +103,35 @@ module.exports = class LXMarkerItem extends LXItem {
     /**
     * Ping should identify username of ping source
     */
-    set ping(val) {
-        if (val && typeof(val) === 'object' && val.toString() !== this._data.ping.toString()) {
+    set ping (val) {
+        if (val && typeof (val) === 'object' && val.toString() !== this._data.ping.toString()) {
             this._data.ping = val
             this._new.ping = true
         }
-    } 
+    }
 
-
-   /**
+    // -------------------------------------------------------------------------
+    /**
     * Computes a marker title based on available categories
     */
     getCategory (categories) {
-        let title = "";
-        let cat = "";
+        let title = ''
+        let cat = ''
         for (var idx in categories) {
-            let item = categories[idx];
+            let item = categories[idx]
             for (var idy in item) {
-                let tag = item[idy].tag;
+                let tag = item[idy].tag
                 if (this.tags.indexOf(tag) != -1) {
-                    if (idx == "main") {
-                        cat = item[idy].label;
-                    }
-                    else {
-                        title = item[idy].label;
-                        return title;
+                    if (idx == 'main') {
+                        cat = item[idy].label
+                    } else {
+                        title = item[idy].label
+                        return title
                     }
                 }
             }
         }
-        return "Unknown Category";
+        return 'Unknown Category'
     }
 
     // -------------------------------------------------------------------------
@@ -142,13 +170,12 @@ module.exports = class LXMarkerItem extends LXItem {
     * Hide from the map without altering stored data
     */
     hide () {
-        // console.log(`${this.logPrefix} Hide`);
+    // console.log(`${this.logPrefix} Hide`);
         if (this.layer && this.layer._map) {
             window.LT.atlas.removeFromMap(this)
             this.emit('hide', this)
         }
     }
-
 
     /**
     * Selects this marker for interaction
