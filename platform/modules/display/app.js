@@ -85,12 +85,18 @@ module.exports = class LXApp extends EventEmitter {
             if (child.extension === '.css' && child.body) {
                 this.addCSS(child.body)
             } else if (child.extension === '.js' && child.body) {
-                let js = eval(child.body)
-                accepted.forEach((key) => {
-                    if (js.hasOwnProperty(key)) {
-                        logic[key] = js[key]
-                    }
-                })
+                try {
+                    let js = eval(child.body)
+                    accepted.forEach((key) => {
+                            if (js.hasOwnProperty(key)) {
+                                logic[key] = js[key]
+                            }
+                        })
+                }
+                catch ( e ) {
+                    console.log(`${this.logPrefix} Failed to load javascript`)
+                    console.log(e)
+                }
             }
         })
 
