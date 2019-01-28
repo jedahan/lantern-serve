@@ -88,6 +88,31 @@ module.exports = class LXMarkerItem extends LXItem {
         }
     } 
 
+
+   /**
+    * Computes a marker title based on available categories
+    */
+    getCategory (categories) {
+        let title = "";
+        let cat = "";
+        for (var idx in categories) {
+            let item = categories[idx];
+            for (var idy in item) {
+                let tag = item[idy].tag;
+                if (this.tags.indexOf(tag) != -1) {
+                    if (idx == "main") {
+                        cat = item[idy].label;
+                    }
+                    else {
+                        title = item[idy].label;
+                        return title;
+                    }
+                }
+            }
+        }
+        return "Unknown Category";
+    }
+
     // -------------------------------------------------------------------------
     /**
     * Show on map
