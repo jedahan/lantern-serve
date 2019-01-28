@@ -5,7 +5,8 @@ module.exports = class LXMarkerItem extends LXItem {
     constructor (id, data) {
         // now set defaults for key compression
         super(id, data, {
-            'geohash': ['g']
+            'geohash': ['g'],
+            'ping': ['p', []]
         })
 
         this._icon = null
@@ -70,6 +71,23 @@ module.exports = class LXMarkerItem extends LXItem {
         return this._data.geohash
     }
 
+    /**
+    * Get the identity of most recent ping
+    */
+    get ping () {
+        return this._data.ping
+    }
+
+    /**
+    * Ping should identify username of ping source
+    */
+    set ping(val) {
+        if (val && typeof(val) === 'object' && val.toString() !== this._data.ping.toString()) {
+            this._data.ping = val
+            this._new.ping = true
+        }
+    } 
+
     // -------------------------------------------------------------------------
     /**
     * Show on map
@@ -111,6 +129,14 @@ module.exports = class LXMarkerItem extends LXItem {
             window.LT.atlas.removeFromMap(this)
             this.emit('hide', this)
         }
+    }
+
+
+    /**
+    * Selects this marker for interaction
+    */
+    focus () {
+        this.emit('focus', this)
     }
 
     // -------------------------------------------------------------------------

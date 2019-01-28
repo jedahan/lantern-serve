@@ -346,7 +346,7 @@ ul.menu i {
 	padding-right: 0px;
 }
 
-ul.menu .inline-btn, .button.is-secondary {
+ul.menu .inline-btn, section .inline-btn, .button.is-secondary {
 	text-align: center;
     color: #3273dc;
     border: none;
@@ -355,6 +355,7 @@ ul.menu .inline-btn, .button.is-secondary {
 	padding-right: 1.25em;
 	font-size: smaller;
 	text-transform: uppercase;
+	cursor: pointer;
 }
 
 

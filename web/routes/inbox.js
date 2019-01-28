@@ -112,6 +112,8 @@ module.exports = (serv) => {
         inbox[msgKey][new Date().getTime()] = req.ip
         log.debug(`${util.logPrefix('inbox')} ${msg}`)
         let inboxfn = msgApply[res.locals.message.type]
+        // @todo only run this if our sequence appears to be greater than current database
+        // tries to make sure we only update old items
         inboxfn(res.locals.message, req.app.locals.db)
             .then((success) => {
                 res.status(201).json({ 'ok': success })
