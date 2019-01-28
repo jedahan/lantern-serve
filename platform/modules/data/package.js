@@ -97,7 +97,7 @@ module.exports = class LXPackage extends EventEmitter {
             // accept string id or item object
             let id = item.id || item
 
-            console.log(`${this.logPrefix} adding item: ${id}`, item)
+            console.log(`${this.logPrefix} adding item: ${id}`)
 
             // attach item to the package graph
             let itemNode = this.db.get('itm').get(id)
@@ -110,11 +110,13 @@ module.exports = class LXPackage extends EventEmitter {
             // accept string id or item object
             let id = item.id || item
 
-            console.log(`${this.logPrefix} removing item: ${id}`, item)
+            console.log(`${this.logPrefix} removing item: ${id}`)
 
             // attach item to the package graph
-            let itemNode = this.node.get('data').get(this.version).get(id)
-            this.node.get('data').get(this.version).unset(itemNode)
+            let itemNode =  this.db.get('itm').get(id)
+            this.node.get('data').get(this.version).unset(itemNode).once(() => {
+                resolve()
+            })
         })
     }
 

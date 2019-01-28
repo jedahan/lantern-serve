@@ -29,8 +29,11 @@ module.exports = class LXFeed extends EventEmitter {
             package: pkgID
         }
         let itemNode = this.db.get('itm').get(itemID)
-        itemNode.once((v, k) => {
+        itemNode.on((v, k) => {
             if (!v) {
+                if (this.watched_items[itemID] !== true) {
+                    return
+                }
                 this.emit('drop', event)
                 this.watched_items[itemID] = false
             } else {
