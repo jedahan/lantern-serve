@@ -37,7 +37,7 @@
         "mocha": "^5.2.0",
         "should": "*",
         "standardx": "^3.0.1",
-        "uglifyjs": "^2.4.11"
+        "uglify-es": "^3.3.9"
     },
     "browser": {
         "vue": "vue/dist/vue.common.js",
