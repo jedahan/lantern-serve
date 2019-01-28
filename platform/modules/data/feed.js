@@ -130,7 +130,7 @@ module.exports = class LXFeed extends EventEmitter {
         }
 
         if (this.packages[id]) {
-            console.log(`${this.logPrefix} already watching: ${id}`)
+            //console.log(`${this.logPrefix} already watching: ${id}`)
             return
         }
 

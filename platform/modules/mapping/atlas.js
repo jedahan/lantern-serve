@@ -4,15 +4,19 @@ const MaptileConfig = require('../../config/maptiler')
 const LeafletTilesConfig = require('../../config/leaflet_tiles')
 const LeafletMapConfig = require('../../config/leaflet_map')
 const FeatureGroup = window.L.featureGroup
-const localStorage = window.localStorage
 
 module.exports = class LXAtlas extends EventEmitter {
-    constructor (useCloud) {
+    constructor (clientStorage, useCloud) {
         super()
+
+        if (!clientStorage) {
+            return console.error('User requires client-side storage to construct')
+        }
+        this.clientStorage = clientStorage
         this.map = null // leaflet map
         this.pointer = null // leaflet location pointer
         this.center = null
-        this.user_location = null
+        this.userLocation = null
         this.markers = {
         }
         this.precision = {
@@ -64,7 +68,7 @@ module.exports = class LXAtlas extends EventEmitter {
                     this._mapClicked = 0
                     this.emit('map-click', e)
                 }
-            }, 250)
+            }, 200)
         })
 
         this.map.on('dblclick', (e) => {
@@ -165,9 +169,9 @@ module.exports = class LXAtlas extends EventEmitter {
     */
     cacheUserLocation (e) {
         let newGeo = LXLocation.toGeohash(e.latlng, this.precision.user_max)
-        if (newGeo !== this.user_location) {
-            this.user_location = newGeo
-            console.log(`${this.logPrefix} New user location found: ${this.user_location}`)
+        if (newGeo !== this.userLocation) {
+            this.userLocation = newGeo
+            console.log(`${this.logPrefix} New user location found: ${this.userLocation}`)
         }
     }
 
@@ -190,7 +194,7 @@ module.exports = class LXAtlas extends EventEmitter {
             setTimeout(() => {
                 let newCtr = this.getCenterAsString()
                 if (origCtr === newCtr) {
-                    localStorage.setItem('lx-ctr', newCtr)
+                    this.clientStorage.setItem('lx-ctr', newCtr)
                 }
             }, timeout || 7000)
         })
@@ -200,7 +204,7 @@ module.exports = class LXAtlas extends EventEmitter {
     * Use saved per-user location to center map
     */
     setViewFromCenterLocationCache () {
-        let ctr = localStorage.getItem('lx-ctr')
+        let ctr = this.clientStorage.getItem('lx-ctr')
         try {
             let parts = ctr.split('/')
             this.map.setView([parts[0], parts[1]], parts[2])

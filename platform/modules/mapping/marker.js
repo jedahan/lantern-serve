@@ -2,9 +2,9 @@ const Geohash = require('latlon-geohash')
 const LXItem = require('../data/item')
 
 module.exports = class LXMarkerItem extends LXItem {
-    constructor (id, data) {
+    constructor (db) {
         // now set defaults for key compression
-        super(id, data, {
+        super(db, {
             'geohash': ['g'],
             'ping': ['p', []]
         })
@@ -16,7 +16,6 @@ module.exports = class LXMarkerItem extends LXItem {
         this.on('remove', () => {
             this.hide()
         })
-
         this.on('mode', (mode) => {
             if (this.layer) {
                 // keep dom updated to reflect mode
@@ -24,12 +23,6 @@ module.exports = class LXMarkerItem extends LXItem {
                 // console.log(`${this.logPrefix} mode = `, mode);
             }
         })
-
-        // intercept to see if we have a cached version in our atlas already
-        if (window.LT.atlas.markers[id]) {
-            console.warn(`${this.logPrefix} using cached marker from atlas`)
-            return window.LT.atlas.markers[id]
-        }
     }
 
     // -------------------------------------------------------------------------

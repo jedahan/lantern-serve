@@ -1,9 +1,15 @@
 const EventEmitter = require('event-emitter-es6')
 
 module.exports = class LXItem extends EventEmitter {
-    constructor (id, data, defaults) {
+    constructor (db, defaults) {
         super()
-        this.id = id
+        this.id = null
+     
+        if (!db || db.constructor.name !== "LXDatabase") {
+            throw new Error('Requires database to be defined')
+        }
+
+        this.db = db
         this._mode = 'draft'
 
         // create data space for data we allow to be exported to shared database
@@ -31,21 +37,6 @@ module.exports = class LXItem extends EventEmitter {
             this._key_table_reverse[defaults[idy][0]] = idy
         }
 
-        if (data) {
-            this.mode = 'shared'
-            let unpackagedData = this.unpack(data)
-            Object.keys(unpackagedData).forEach((key) => {
-                let val = unpackagedData[key]
-                this._data[key] = val
-            })
-        }
-
-        if (!window.LT.db) {
-            throw new Error('Requires database to be defined')
-        }
-
-        this.db = window.LT.db
-
         return this
     }
 
@@ -58,8 +49,25 @@ module.exports = class LXItem extends EventEmitter {
         return `[i:${this.id}]`.padEnd(20, ' ')
     }
 
+    // ------------------------------------------------------------------- DATA
     get data () {
         return this._data
+    }
+
+    set data (val) {
+        if (val) {
+            let unpackagedData = this.unpack(val)
+            Object.keys(unpackagedData).forEach((key) => {
+                let val = unpackagedData[key]
+                this._data[key] = val
+                if (this._new[key] == val) {
+                    delete this._new[key]
+                }
+                // if we're passing in data, we assume it's coming from 
+                // an exising data source and therefore item is shared
+                this._mode = 'shared'
+            })
+        }
     }
 
     // ------------------------------------------------------------------- OWNER
@@ -232,7 +240,6 @@ module.exports = class LXItem extends EventEmitter {
 
         for (var idx in obj) {
             let v = obj[idx]
-
             if (this._key_table_reverse.hasOwnProperty(idx)) {
                 let k = this._key_table_reverse[idx]
                 if (v[0] === 'Å') {
@@ -300,10 +307,6 @@ module.exports = class LXItem extends EventEmitter {
                 return this.update(fields).then(resolve).catch(reject)
             }
 
-            // otherwise, create a new item in the database
-            if (!this.owner) {
-                this.owner = window.LT.user.username
-            }
             let obj = this.pack(this._data)
             this.mode = 'locked'
 
@@ -397,8 +400,6 @@ module.exports = class LXItem extends EventEmitter {
                 // already deleted... skip...
                 return resolve()
             }
-
-            console.log(this)
             let item = this.db.get('itm').get(this.id)
 
             item.once((v, k) => {

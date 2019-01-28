@@ -4,7 +4,6 @@ const LXAtlas = require('../mapping/atlas')
 const LXDatabase = require('../data/database')
 const LXUser = require('../data/user')
 const LXApp = require('../display/app')
-const origin = window.location.origin
 const fetch = window.fetch
 
 module.exports = class LXDirector extends EventEmitter {
@@ -13,10 +12,10 @@ module.exports = class LXDirector extends EventEmitter {
         this.ready = false
         this.apps = {}
         this.view = new LXView()
-        this.atlas = new LXAtlas()
+        this.atlas = new LXAtlas(window.localStorage)
         // define database and user to work with decentralized network
-        this.db = new LXDatabase(origin + '/gun')
-        this.user = new LXUser(this.db)
+        this.db = new LXDatabase(window.location.origin + '/gun')
+        this.user = new LXUser(this.db, window.localStorage)
     }
 
     withUser (fn) {

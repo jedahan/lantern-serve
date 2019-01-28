@@ -9,6 +9,10 @@ module.exports = class LXPackage extends EventEmitter {
             throw new Error('missing_name')
         }
 
+        if (!db || db.constructor.name !== "LXDatabase") {
+            return console.error('Package requires database to construct')
+        }
+
         let version = '0.0.1' // default version
 
         if (name.indexOf('@') !== -1) {

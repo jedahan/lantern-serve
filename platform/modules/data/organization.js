@@ -11,9 +11,10 @@ module.exports = class LXOrganization extends EventEmitter {
             return console.error(`[Organiation] please name your organization`)
         }
 
-        if (!db) {
+        if (!db || db.constructor.name !== "LXDatabase") {
             return console.error('[Organization] requires database to construct')
         }
+        
         this.id = id
         this.db = db
         this._data = {

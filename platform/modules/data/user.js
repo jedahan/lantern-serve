@@ -2,15 +2,24 @@ const EventEmitter = require('event-emitter-es6')
 const shortid = require('shortid')
 const SEA = require('sea')
 const LXFeed = require('./feed')
-const localStorage = window.localStorage
 
 module.exports = class LXUser extends EventEmitter {
-    constructor (db) {
-        super()
+    constructor (db, clientStorage) {
+        super()      
+
+        if (!db || db.constructor.name !== "LXDatabase") {
+            return console.error('User requires database to construct')
+        }
+        if (!clientStorage) {
+            return console.error('User requires client-side storage to construct')
+        }
+
+
         this.db = db
         this.node = this.db.stor.user()
         this.pair = null
         this.feed = new LXFeed(this)
+        this.clientStorage = clientStorage // typically browser localStorage
 
         this.once('auth', () => {
             console.log(`${this.logPrefix} sign-in complete`)
@@ -66,7 +75,7 @@ module.exports = class LXUser extends EventEmitter {
                     return reject(new Error('user_register_failed'))
                 }
                 console.log(`${this.logPrefix} saved to browser`)
-                let creds = localStorage.setItem('lx-auth', [username, password].join(':'))
+                let creds = this.clientStorage.setItem('lx-auth', [username, password].join(':'))
                 this.authenticate(username, password)
                 this.emit('registered')
                 resolve()
@@ -80,7 +89,7 @@ module.exports = class LXUser extends EventEmitter {
             return this.register()
         } else {
             // check browser for known credentials for this user
-            let creds = localStorage.getItem('lx-auth')
+            let creds = this.clientStorage.getItem('lx-auth')
             if (!creds) {
                 return this.register()
             } else {
@@ -103,7 +112,7 @@ module.exports = class LXUser extends EventEmitter {
 
     clearCredentials () {
         console.warn(`${this.logPrefix}  removing invalid creds from storage`)
-        localStorage.removeItem('lx-auth')
+        this.clientStorage.removeItem('lx-auth')
         console.warn(`${this.logPrefix}  waiting for valid sign in or registration...`)
     }
 
