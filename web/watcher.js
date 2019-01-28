@@ -23,7 +23,7 @@ module.exports = (app) => {
     Object.keys(changeHooks).forEach((key) => {
         let envVar = 'HOOK_' + key.toUpperCase()
         if (process.env.hasOwnProperty(envVar)) {
-            changeHooks[key] = path.resolve([__dirname, '..', process.env[envVar]].join("/"))
+            changeHooks[key] = path.resolve([__dirname, '..', process.env[envVar]].join('/'))
         }
     })
 
@@ -47,14 +47,13 @@ module.exports = (app) => {
                 let ps = execFile(changeHooks[key], [msg])
                 ps.stdout.on('data', (data) => {
                     log.debug(`${util.logPrefix('watcher')} ${msg} >> `)
-                    //log.debug(`${key} hook output: ${data}`)
+                    // log.debug(`${key} hook output: ${data}`)
                 })
 
                 ps.stderr.on('data', (err) => {
                     log.warn(`${util.logPrefix('watcher')} ${msg} !! `)
                     log.warn(`${key} hook could not run: ${err}`)
                 })
-
             } else {
                 log.debug(`${util.logPrefix('watcher')} ${msg}`)
             }

@@ -5,15 +5,14 @@ const LXFeed = require('./feed')
 
 module.exports = class LXUser extends EventEmitter {
     constructor (db, clientStorage) {
-        super()      
+        super()
 
-        if (!db || db.constructor.name !== "LXDatabase") {
+        if (!db || db.constructor.name !== 'LXDatabase') {
             return console.error('User requires database to construct')
         }
         if (!clientStorage) {
             return console.error('User requires client-side storage to construct')
         }
-
 
         this.db = db
         this.node = this.db.stor.user()
@@ -153,7 +152,7 @@ module.exports = class LXUser extends EventEmitter {
         }
         let pkgName = pkgID.split('@')[0]
         let pkgVersion = pkgID.split('@')[1]
-        
+
         return this.db.getOrPut(this.node.get('packages'), {})
             .then(saved => {
                 return this.db.getOrPut(this.node.get('packages').get(pkgName), pkgVersion)

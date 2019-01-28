@@ -9,7 +9,7 @@ module.exports = class LXPackage extends EventEmitter {
             throw new Error('missing_name')
         }
 
-        if (!db || db.constructor.name !== "LXDatabase") {
+        if (!db || db.constructor.name !== 'LXDatabase') {
             return console.error('Package requires database to construct')
         }
 
@@ -71,7 +71,7 @@ module.exports = class LXPackage extends EventEmitter {
                     this.emit('publish')
                     console.log(`${this.logPrefix} published version: ${this.id}`)
                 } else {
-                    //console.log(`${this.logPrefix} already published version: ${this.id}`)
+                    // console.log(`${this.logPrefix} already published version: ${this.id}`)
                 }
             })
             .catch((e) => {
@@ -117,7 +117,7 @@ module.exports = class LXPackage extends EventEmitter {
             console.log(`${this.logPrefix} removing item: ${id}`)
 
             // attach item to the package graph
-            let itemNode =  this.db.get('itm').get(id)
+            let itemNode = this.db.get('itm').get(id)
             this.node.get('data').get(this.version).unset(itemNode).once(() => {
                 resolve()
             })

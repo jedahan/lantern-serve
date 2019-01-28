@@ -50,8 +50,7 @@ module.exports = class LXFeed extends EventEmitter {
                 return
             }
             this.markDataChange(itemID, pkgID, v, k)
-        }, {change: true})
-
+        }, { change: true })
     }
 
     markDataChange (itemID, pkgID, v, k) {
@@ -130,7 +129,7 @@ module.exports = class LXFeed extends EventEmitter {
         }
 
         if (this.packages[id]) {
-            //console.log(`${this.logPrefix} already watching: ${id}`)
+            // console.log(`${this.logPrefix} already watching: ${id}`)
             return
         }
 
@@ -149,7 +148,7 @@ module.exports = class LXFeed extends EventEmitter {
                     // start watching for changes
                         this.watchItem(k, id)
                     })
-                    console.log(`${this.logPrefix} watching changes: ${id}`)
+                console.log(`${this.logPrefix} watching changes: ${id}`)
             } else {
                 // disable our package subscription if we find out it is missing
                 this.packages[id] = false
